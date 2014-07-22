@@ -8,4 +8,14 @@
 	</buildSpec>
 	<natures>
 	</natures>
+	<filteredResources>
+		<filter>
+			<id>1406053200789</id>
+			<name></name>
+			<type>30</type>
+			<matcher>
+				<id>com.google.dart.tools.core.packagesFolderMatcher</id>
+			</matcher>
+		</filter>
+	</filteredResources>
 </projectDescription>
