@@ -7,7 +7,7 @@ import "package:json_object/json_object.dart";
 import 'lib/menu.dart';
 import 'lib/nedb.dart';
 
-class Basics {
+class Dragster {
   Element _dragSourceEl;
   Element _columns = document.querySelector('#columns');
   List<Element> _columItems = document.querySelectorAll('#columns .column');
@@ -42,7 +42,7 @@ class Basics {
 
   void _start() {
 
-    Widget tmpWidget = new WidgetImpl();
+    Menu menu = new MenuImpl();
     
     var dataSource = _columns.dataset['source'];
     var request = HttpRequest.getString(dataSource).then(_onDataLoaded);
@@ -349,8 +349,8 @@ class Basics {
 }
 
 void main() {
-  var basics = new Basics();
-  basics._start();
+  var dragster = new Dragster();
+  dragster._start();
 }
 
 class NullNodeValidator implements NodeValidator {
