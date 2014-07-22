@@ -6,7 +6,7 @@ void main() {
   dragdrop.start();
   
   
-  var injector = new Injector(new ExampleModule());
+  var injector = new Injector(new Dragster());
     var billingService = injector.getInstance(BillingService);
     var creditCard = new CreditCard("VISA");
     var order = new Order("Dart: Up and Running");
@@ -17,7 +17,7 @@ void main() {
 }
 
 
-class ExampleModule extends Module {
+class Dragster extends Module {
   configure() {
     // bind CreditCardProcessor to a singleton
     register(CreditProcessor).toInstance(new CreditProcessorImpl());
