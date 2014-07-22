@@ -9,9 +9,6 @@ class Nedb {
   
   
   Nedb() {
-    
-    
-    
     }
   
   JsObject getDb(){

@@ -3,7 +3,7 @@ library menu;
 import 'dart:html';
 import 'dart:convert';
 
-import '../dragster.dart';
+import 'dragdrop.dart';
 
 abstract class Menu {
   void start();
@@ -32,10 +32,11 @@ class MenuImpl extends Menu {
   Element _menuPercentage = document.getElementById('menu-percentage');
   List<Element> _menuInputItems = new List(8);
   
-  Dragster dragster = new DragsterImpl();
-  
+  DragDrop _dragdrop;
   void start(){
     
+    _dragdrop = new DragDropImpl();
+     
     
     
     _showMenuElement.onClick.listen(_showMenu);
@@ -123,7 +124,7 @@ class MenuImpl extends Menu {
     InputElement inputBox = event.target;
     switch (inputBox.id) {
       case 'menu-display':
-        dragster.resizeScreen(inputBox.value);
+        _dragdrop.resizeScreen(inputBox.value);
         break;
       case 'menu-version':
         break;
@@ -147,19 +148,19 @@ class MenuImpl extends Menu {
     Element menuTarget = event.target;
     switch (menuTarget.innerHtml.trim().toLowerCase()) {
       case '320':
-        dragster.resizeScreen('320');
+        _dragdrop.resizeScreen('320');
         break;
       case '640':
-        dragster.resizeScreen('640');
+        _dragdrop.resizeScreen('640');
         break;
       case '768':
-        dragster.resizeScreen('768');
+        _dragdrop.resizeScreen('768');
         break;
       case '960':
-        dragster.resizeScreen('960');
+        _dragdrop.resizeScreen('960');
         break;
       case '1280':
-        dragster.resizeScreen('1280');
+        _dragdrop.resizeScreen('1280');
         break;
       case 'load':
         _load();
