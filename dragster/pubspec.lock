@@ -33,6 +33,10 @@ packages:
     description: csslib
     source: hosted
     version: "0.10.0+1"
+  dice:
+    description: dice
+    source: hosted
+    version: "1.5.1"
   hop:
     description: hop
     source: hosted
@@ -53,6 +57,10 @@ packages:
     description: logging
     source: hosted
     version: "0.9.1+1"
+  meta:
+    description: meta
+    source: hosted
+    version: "0.8.8"
   path:
     description: path
     source: hosted
