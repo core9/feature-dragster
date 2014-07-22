@@ -68,14 +68,14 @@ class Basics {
       item.onClick.listen(_onClickMenuItem);
     }
 
-    _fillMenuInputItems(_menuHostnameJsonDatalist, "/data/hostnames.json");
-    _fillMenuInputItems(_menuPageJsonDatalist, "/data/pages.json");
-    _fillMenuInputItems(_menuVersionJsonDatalist, "/data/versions.json");
-    _fillMenuInputItems(_menuStatusJsonDatalist, "/data/status.json");
-    _fillMenuInputItems(_menuDisplayJsonDatalist, "/data/displays.json");
-    _fillMenuInputItems(_menuUseragentJsonDatalist, "/data/useragents.json");
-    _fillMenuInputItems(_menuPeriodJsonDatalist, "/data/periods.json");
-    _fillMenuInputItems(_menuPercentageJsonDatalist, "/data/percentages.json");
+    _fillMenuInputItems(_menuHostnameJsonDatalist, "/dragster/data/hostnames.json");
+    _fillMenuInputItems(_menuPageJsonDatalist, "/dragster/data/pages.json");
+    _fillMenuInputItems(_menuVersionJsonDatalist, "/dragster/data/versions.json");
+    _fillMenuInputItems(_menuStatusJsonDatalist, "/dragster/data/status.json");
+    _fillMenuInputItems(_menuDisplayJsonDatalist, "/dragster/data/displays.json");
+    _fillMenuInputItems(_menuUseragentJsonDatalist, "/dragster/data/useragents.json");
+    _fillMenuInputItems(_menuPeriodJsonDatalist, "/dragster/data/periods.json");
+    _fillMenuInputItems(_menuPercentageJsonDatalist, "/dragster/data/percentages.json");
 
 
 
