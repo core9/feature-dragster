@@ -1,4 +1,4 @@
-name: feature-dragster
+name: feature_dragster
 version: 0.0.1-dev
 description: Drag and Drop UI
 homepage: https://github.com/core9/feature-dragster
@@ -6,7 +6,8 @@ environment:
   sdk: '>=0.6.17'
 dependencies:
   browser: any
+  dice: any
   hop: any
   html5lib: any
-  json_object: any
   js: any
+  json_object: any
