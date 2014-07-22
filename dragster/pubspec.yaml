@@ -1,7 +1,7 @@
-name: dart_samples
+name: feature-dragster
 version: 0.0.1-dev
-description: Samples for Dart
-homepage: https://github.com/dart-lang/dart-samples
+description: Drag and Drop UI
+homepage: https://github.com/core9/feature-dragster
 environment:
   sdk: '>=0.6.17'
 dependencies:
