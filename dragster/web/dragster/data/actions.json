@@ -1,0 +1,7 @@
+[
+	"redirect 301 mainpage",
+  "redirect 301 contactpage",
+  "redirect 301 directionpage",
+  "redirect 301 404 page",
+  "redirect 301 productpage"
+]

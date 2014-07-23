@@ -10,10 +10,13 @@ abstract class Menu {
 }
 
 class MenuImpl extends Menu {
-  
+
   Element _showMenuElement = document.querySelector('#show-menu');
   Element _pageSelector = document.querySelector('#page-selector');
   Element _menuSecondary = document.querySelector('#navigation-secondary');
+  
+  Element _menuGeoJsonDatalist = document.getElementById('menu-geo-json-datalist');
+  Element _menuGeo = document.getElementById('menu-geo');
   Element _menuHostnameJsonDatalist = document.getElementById('menu-hostname-json-datalist');
   Element _menuHostname = document.getElementById('menu-hostname');
   Element _menuPageJsonDatalist = document.getElementById('menu-page-json-datalist');
@@ -30,66 +33,52 @@ class MenuImpl extends Menu {
   Element _menuPeriod = document.getElementById('menu-period');
   Element _menuPercentageJsonDatalist = document.getElementById('menu-percentage-json-datalist');
   Element _menuPercentage = document.getElementById('menu-percentage');
-  List<Element> _menuInputItems = new List(8);
-  
+  Element _menuActionJsonDatalist = document.getElementById('menu-action-json-datalist');
+  Element _menuAction = document.getElementById('menu-action');
+    
+  List<Element> _menuInputItems = new List(10);
+
   DragDrop _dragdrop;
-  void start(){
-    
+  void start() {
+
+    _redrawTop('#columns', '#menu');
     _dragdrop = new DragDropImpl();
-     
-    
-    
     _showMenuElement.onClick.listen(_showMenu);
-    _menuInputItems[0] = _menuHostname;
-    _menuInputItems[1] = _menuPageJson;
-    _menuInputItems[2] = _menuVersion;
-    _menuInputItems[3] = _menuStatus;
-    _menuInputItems[4] = _menuDisplay;
-    _menuInputItems[5] = _menuUseragent;
-    _menuInputItems[6] = _menuPeriod;
-    _menuInputItems[7] = _menuPercentage;
+    _putMenuItemsInListAndAddClickEvent();
+    _ulMenuAddClickEvents();
+    _menuAddOptions();
 
-    for (var item in _menuInputItems) {
-      item.onInput.listen(_onInputMenuChange);
-    }
 
-    var menuItems = document.querySelector('#menu').children;
-    for (var item in menuItems) {
-      item.onClick.listen(_onClickMenuItem);
-    }
+  }
+  
+  void _load() {
+    print('load');
+  }
 
-    _fillMenuInputItems(_menuHostnameJsonDatalist, "/dragster/data/hostnames.json");
-    _fillMenuInputItems(_menuPageJsonDatalist, "/dragster/data/pages.json");
-    _fillMenuInputItems(_menuVersionJsonDatalist, "/dragster/data/versions.json");
-    _fillMenuInputItems(_menuStatusJsonDatalist, "/dragster/data/status.json");
-    _fillMenuInputItems(_menuDisplayJsonDatalist, "/dragster/data/displays.json");
-    _fillMenuInputItems(_menuUseragentJsonDatalist, "/dragster/data/useragents.json");
-    _fillMenuInputItems(_menuPeriodJsonDatalist, "/dragster/data/periods.json");
-    _fillMenuInputItems(_menuPercentageJsonDatalist, "/dragster/data/percentages.json");
+  void _save() {
+    
+    _saveLocal();
+    //_saveRemote();
+    
 
-    _redrawTop('#columns', '#menu');
+
+
+
+  }
+  
+  void _saveLocal(){
+    _getState();
+  }
+  
+  void _getState(){
     
   }
   
-  void _showMenu(Event event) {
-    Element menuButton = event.target;
-    _pageSelector.classes.toggle('display-none');
-    _menuSecondary.classes.toggle('display-none');
-    _redrawTop('#columns', '#menu');
-  }
-  
-  void _fillMenuInputItems(Element optionList, String jsonSourceUrl) {
-
+  void _saveRemote(){
     HttpRequest request = new HttpRequest();
     request.onReadyStateChange.listen((_) {
       if (request.readyState == HttpRequest.DONE && (request.status == 200 || request.status == 0)) {
-        List parsedList = JSON.decode(request.responseText);
-        for (var value in parsedList) {
-          Element option = document.createElement('option');
-          option.setAttribute('value', value);
-          optionList.append(option);
-        }
-
+        print(request.responseText); 
       }
     });
 
@@ -110,11 +99,75 @@ class MenuImpl extends Menu {
       "html": null
     };
 
-    request.open("GET", jsonSourceUrl, async: false);
+    var url = "http://localhost:9090/api/dragster";
+    request.open("POST", url, async: false);
     request.send(data.toString());
-
   }
   
+  void _putMenuItemsInListAndAddClickEvent(){
+    _menuInputItems[0] = _menuGeo;
+    _menuInputItems[1] = _menuHostname;
+    _menuInputItems[2] = _menuPageJson;
+    _menuInputItems[3] = _menuVersion;
+    _menuInputItems[4] = _menuStatus;
+    _menuInputItems[5] = _menuDisplay;
+    _menuInputItems[6] = _menuUseragent;
+    _menuInputItems[7] = _menuPeriod;
+    _menuInputItems[8] = _menuPercentage;
+    _menuInputItems[9] = _menuAction;
+
+    for (var item in _menuInputItems) {
+      item.onInput.listen(_onInputMenuChange);
+    }
+
+  }
+
+  void _ulMenuAddClickEvents() {
+    var menuItems = document.querySelector('#menu').children;
+    for (var item in menuItems) {
+      item.onClick.listen(_onClickMenuItem);
+    }
+  }
+
+  void _menuAddOptions() {
+    _fillMenuInputItems(_menuGeoJsonDatalist, "/dragster/data/geo.json");
+    _fillMenuInputItems(_menuHostnameJsonDatalist, "/dragster/data/hostnames.json");
+    _fillMenuInputItems(_menuPageJsonDatalist, "/dragster/data/pages.json");
+    _fillMenuInputItems(_menuVersionJsonDatalist, "/dragster/data/versions.json");
+    _fillMenuInputItems(_menuStatusJsonDatalist, "/dragster/data/status.json");
+    _fillMenuInputItems(_menuDisplayJsonDatalist, "/dragster/data/displays.json");
+    _fillMenuInputItems(_menuUseragentJsonDatalist, "/dragster/data/useragents.json");
+    _fillMenuInputItems(_menuPeriodJsonDatalist, "/dragster/data/periods.json");
+    _fillMenuInputItems(_menuPercentageJsonDatalist, "/dragster/data/percentages.json");
+    _fillMenuInputItems(_menuActionJsonDatalist, "/dragster/data/actions.json");
+  }
+
+  void _showMenu(Event event) {
+    Element menuButton = event.target;
+    _pageSelector.classes.toggle('display-none');
+    _menuSecondary.classes.toggle('display-none');
+    _redrawTop('#columns', '#menu');
+  }
+
+  void _fillMenuInputItems(Element optionList, String jsonSourceUrl) {
+
+    HttpRequest request = new HttpRequest();
+    request.onReadyStateChange.listen((_) {
+      if (request.readyState == HttpRequest.DONE && (request.status == 200 || request.status == 0)) {
+        List parsedList = JSON.decode(request.responseText);
+        for (var value in parsedList) {
+          Element option = document.createElement('option');
+          option.setAttribute('value', value);
+          optionList.append(option);
+        }
+
+      }
+    });
+    request.open("GET", jsonSourceUrl, async: false);
+    request.send();
+
+  }
+
   void _redrawTop(String target, String source) {
     String height = (document.querySelector(source).borderEdge.height + 30).toString() + 'px';
     document.querySelector(target).style.setProperty('top', height);
@@ -171,48 +224,13 @@ class MenuImpl extends Menu {
     }
 
   }
-  
-
-  
-
-  void _load() {
-    print('load');
-  }
-
-  void _save() {
-
-    HttpRequest request = new HttpRequest();
-    request.onReadyStateChange.listen((_) {
-      if (request.readyState == HttpRequest.DONE && (request.status == 200 || request.status == 0)) {
-        print(request.responseText); // output the response from the server
-      }
-    });
-
-    var data = {
-      "id": "QHL2NIOYKGU1",
-      "host": {
-        "id": "2",
-        "name": null
-      },
-      "name": null,
-      "versions": [],
-      "currentVersion": {
-        "id": "2",
-
-        "name": null
-      },
-      "status": "available",
-      "html": null
-    };
-
-    var url = "http://localhost:9090/api/dragster";
-    request.open("POST", url, async: false);
-    request.send(data.toString());
 
 
-  }
 
-  
-  
-  
+
+
+
+
+
+
 }
