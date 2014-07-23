@@ -4,16 +4,16 @@ import "package:dice/dice.dart";
 void main() {
   DragDrop dragdrop = new DragDropImpl();
   dragdrop.start();
-  
-  
+
+
   var injector = new Injector(new Dragster());
-    var billingService = injector.getInstance(BillingService);
-    var creditCard = new CreditCard("VISA");
-    var order = new Order("Dart: Up and Running");
-    Receipt receipt = billingService.chargeOrder(order, creditCard);
-    Order myOrder = receipt.getOrder();
-    print(myOrder.item);
-  
+  var billingService = injector.getInstance(BillingService);
+  var creditCard = new CreditCard("VISA");
+  var order = new Order("Dart: Up and Running");
+  Receipt receipt = billingService.chargeOrder(order, creditCard);
+  Order myOrder = receipt.getOrder();
+  print(myOrder.item);
+
 }
 
 
@@ -30,9 +30,9 @@ class Dragster extends Module {
 class BillingServiceImpl implements BillingService {
   @inject
   CreditProcessor _processor;
-  
+
   Receipt chargeOrder(Order order, CreditCard creditCard) {
-    if(!(_processor.validate(creditCard))) {
+    if (!(_processor.validate(creditCard))) {
       throw new ArgumentError("payment method not accepted");
     }
     // :
@@ -58,18 +58,18 @@ class CreditCard {
   final String type;
 }
 
-class Order { 
+class Order {
   Order(this.item);
   final String item;
 }
 
 class Receipt {
   Order _order;
-  Receipt(Order order){
+  Receipt(Order order) {
     _order = order;
   }
-  
-  Order getOrder(){
+
+  Order getOrder() {
     return _order;
   }
 }
