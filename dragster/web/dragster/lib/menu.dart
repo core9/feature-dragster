@@ -2,6 +2,7 @@ library menu;
 
 import 'dart:html';
 import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 import 'dragdrop.dart';
 
@@ -16,25 +17,25 @@ class MenuImpl extends Menu {
   Element _menuSecondary = document.querySelector('#navigation-secondary');
   
   Element _menuGeoJsonDatalist = document.getElementById('menu-geo-json-datalist');
-  Element _menuGeo = document.getElementById('menu-geo');
+  InputElement _menuGeo = document.getElementById('menu-geo');
   Element _menuHostnameJsonDatalist = document.getElementById('menu-hostname-json-datalist');
-  Element _menuHostname = document.getElementById('menu-hostname');
+  InputElement _menuHostname = document.getElementById('menu-hostname');
   Element _menuPageJsonDatalist = document.getElementById('menu-page-json-datalist');
-  Element _menuPageJson = document.getElementById('menu-page');
+  InputElement _menuPageJson = document.getElementById('menu-page');
   Element _menuVersionJsonDatalist = document.getElementById('menu-version-json-datalist');
-  Element _menuVersion = document.getElementById('menu-version');
+  InputElement _menuVersion = document.getElementById('menu-version');
   Element _menuStatusJsonDatalist = document.getElementById('menu-status-json-datalist');
-  Element _menuStatus = document.getElementById('menu-status');
+  InputElement _menuStatus = document.getElementById('menu-status');
   Element _menuDisplayJsonDatalist = document.getElementById('menu-display-json-datalist');
-  Element _menuDisplay = document.getElementById('menu-display');
+  InputElement _menuDisplay = document.getElementById('menu-display');
   Element _menuUseragentJsonDatalist = document.getElementById('menu-useragent-json-datalist');
-  Element _menuUseragent = document.getElementById('menu-useragent');
+  InputElement _menuUseragent = document.getElementById('menu-useragent');
   Element _menuPeriodJsonDatalist = document.getElementById('menu-period-json-datalist');
-  Element _menuPeriod = document.getElementById('menu-period');
+  InputElement _menuPeriod = document.getElementById('menu-period');
   Element _menuPercentageJsonDatalist = document.getElementById('menu-percentage-json-datalist');
-  Element _menuPercentage = document.getElementById('menu-percentage');
+  InputElement _menuPercentage = document.getElementById('menu-percentage');
   Element _menuActionJsonDatalist = document.getElementById('menu-action-json-datalist');
-  Element _menuAction = document.getElementById('menu-action');
+  InputElement _menuAction = document.getElementById('menu-action');
     
   List<Element> _menuInputItems = new List(10);
 
@@ -72,6 +73,22 @@ class MenuImpl extends Menu {
   
   void _getState(){
     
+    Map map = new Map<String, String>();
+    
+    String hash = "";
+    var re = new RegExp('/\W/g');
+    for (InputElement item in _menuInputItems) {
+        print(item.id + ' : ' + item.value);
+        map[item.id]= item.value; 
+        hash += item.value.trim().toLowerCase().replaceAll(re, '').replaceAll(' ', '');
+    }
+    
+    print(map.toString());
+    print(hash);
+    var sha1 = new SHA1();
+    sha1.add(hash.codeUnits);
+    String encrypted = CryptoUtils.bytesToHex(sha1.close());
+    print(encrypted);
   }
   
   void _saveRemote(){
