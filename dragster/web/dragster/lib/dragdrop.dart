@@ -13,6 +13,7 @@ import 'utils.dart';
 abstract class DragDrop {
   void start();
   void resizeScreen(String strSize);
+  void initDragAndDrop();
 }
 
 class DragDropImpl extends DragDrop {
@@ -27,7 +28,7 @@ class DragDropImpl extends DragDrop {
     _menu = new MenuImpl();
     _menu.start();
     _getWidgetsAndElements();
-    _initDragAndDrop();
+    initDragAndDrop();
     _setupDb();
     
   }
@@ -38,8 +39,8 @@ class DragDropImpl extends DragDrop {
 
   }
 
-  void _initDragAndDrop() {
-    for (var col in _columItems) {
+  void initDragAndDrop() {
+    for (var col in document.querySelectorAll('#columns .column')) {
       col.onDragStart.listen(_onDragStart);
       col.onDragEnd.listen(_onDragEnd);
       col.onDragEnter.listen(_onDragEnter);

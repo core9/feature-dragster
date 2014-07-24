@@ -3,9 +3,10 @@ library menu;
 import 'dart:html';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-
+import 'package:html5lib/parser.dart' show parse;
 //import 'dart:indexed_db';
 import 'package:lawndart/lawndart.dart';
+import 'utils.dart';
 
 
 
@@ -20,7 +21,7 @@ class MenuImpl extends Menu {
   Element _showMenuElement = document.querySelector('#show-menu');
   Element _pageSelector = document.querySelector('#page-selector');
   Element _menuSecondary = document.querySelector('#navigation-secondary');
-  
+
   Element _menuGeoJsonDatalist = document.getElementById('menu-geo-json-datalist');
   InputElement _menuGeo = document.getElementById('menu-geo');
   Element _menuHostnameJsonDatalist = document.getElementById('menu-hostname-json-datalist');
@@ -43,73 +44,69 @@ class MenuImpl extends Menu {
   InputElement _menuAction = document.getElementById('menu-action');
   Element _menuRequestJsonDatalist = document.getElementById('menu-request-json-datalist');
   InputElement _menuRequest = document.getElementById('menu-request');
-  
+
   List<Element> _menuInputItems = new List(11);
   List<String> _excludeFromHash = new List(2);
 
   DragDrop _dragdrop;
-  
+
+  Element _columns = document.querySelector('#columns');
+
   var _db = new Store('dbName', 'storeName');
-  
+
   void start() {
 
-
-    
     _redrawTop('#columns', '#menu');
-    
     _excludeFromHash[0] = 'menu-display';
     _excludeFromHash[1] = 'menu-action';
-    
     _dragdrop = new DragDropImpl();
     _showMenuElement.onClick.listen(_showMenu);
     _putMenuItemsInListAndAddClickEvent();
     _ulMenuAddClickEvents();
     _menuAddOptions();
-    
-    _db.open()
-      .then((_) => _db.nuke())
-      .then((_) => _db.save("world", "hello"))
-      .then((_) => _db.save("is fun", "dart"))
-      .then((_) => _db.getByKey("hello"))
-      .then((value) => print( value ) );
-    
   }
-  
+
   void _load() {
-    print('load');
+    String hash = _getState();
+    _db.open().then((_) => _db.getByKey(hash)).then((value) {
+      var innerHtml = parse(value).querySelector('#columns').innerHtml;
+      _columns.children.clear();
+      _columns.setInnerHtml(innerHtml, treeSanitizer: new NullTreeSanitizer());
+      _dragdrop.initDragAndDrop();
+    });
   }
 
   void _save() {
     _saveLocal();
-    //_saveRemote();
   }
-  
-  void _saveLocal(){
-    _getState();
+
+  void _saveLocal() {
+    String hash = _getState();
+    String html = _columns.outerHtml.toString();
+    _db.open()//.then((_) => _db.nuke())
+    .then((_) => _db.save(html, hash));
   }
-  
-  void _getState(){
-    
+
+  String _getState() {
+
     String hash = "";
     var re = new RegExp('/\W/g');
     for (InputElement item in _menuInputItems) {
-        print(item.id + ' : ' + item.value);
-        if(!_excludeFromHash.contains(item.id)){
-          hash += item.value.trim().toLowerCase().replaceAll(re, '').replaceAll(' ', '');
-        }
+      print(item.id + ' : ' + item.value);
+      if (!_excludeFromHash.contains(item.id)) {
+        hash += item.value.trim().toLowerCase().replaceAll(re, '').replaceAll(' ', '');
+      }
     }
-    print(hash);
     var sha1 = new SHA1();
     sha1.add(hash.codeUnits);
-    String encrypted = CryptoUtils.bytesToHex(sha1.close());
-    print(encrypted);
+    return CryptoUtils.bytesToHex(sha1.close());
   }
-  
-  void _saveRemote(){
+
+  void _saveRemote() {
     HttpRequest request = new HttpRequest();
     request.onReadyStateChange.listen((_) {
       if (request.readyState == HttpRequest.DONE && (request.status == 200 || request.status == 0)) {
-        print(request.responseText); 
+        print(request.responseText);
       }
     });
 
@@ -134,8 +131,8 @@ class MenuImpl extends Menu {
     request.open("POST", url, async: false);
     request.send(data.toString());
   }
-  
-  void _putMenuItemsInListAndAddClickEvent(){
+
+  void _putMenuItemsInListAndAddClickEvent() {
     _menuInputItems[0] = _menuGeo;
     _menuInputItems[1] = _menuHostname;
     _menuInputItems[2] = _menuPageJson;
@@ -257,13 +254,5 @@ class MenuImpl extends Menu {
     }
 
   }
-
-
-
-
-
-
-
-
 
 }
