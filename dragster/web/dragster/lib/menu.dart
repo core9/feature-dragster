@@ -81,6 +81,12 @@ class MenuImpl extends Menu {
     });
   }
 
+  void _clear() {
+    String hash = _getState(true);
+    _db.open()
+    .then((_) => _db.save("", hash));
+  }
+  
   void _save() {
     _saveLocal();
   }
@@ -256,6 +262,9 @@ class MenuImpl extends Menu {
         break;
       case 'load':
         _load(true);
+        break;
+      case 'clear':
+        _clear();
         break;
       case 'save':
         _save();
