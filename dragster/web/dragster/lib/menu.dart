@@ -55,7 +55,7 @@ class MenuImpl extends Menu {
   var _db = new Store('dbName', 'storeName');
 
   void start() {
-
+    _load(false);
     _redrawTop('#columns', '#menu');
     _excludeFromHash[0] = 'menu-display';
     _excludeFromHash[1] = 'menu-action';
@@ -66,13 +66,17 @@ class MenuImpl extends Menu {
     _menuAddOptions();
   }
 
-  void _load() {
-    String hash = _getState();
+  void _load(bool state) {
+    String hash = _getState(state);
     _db.open().then((_) => _db.getByKey(hash)).then((value) {
-      var innerHtml = parse(value).querySelector('#columns').innerHtml;
-      _columns.children.clear();
-      _columns.setInnerHtml(innerHtml, treeSanitizer: new NullTreeSanitizer());
-      _dragdrop.initDragAndDrop();
+      if(value != null){
+        var innerHtml = parse(value).querySelector('#columns').innerHtml;
+        _columns.children.clear();
+        _columns.setInnerHtml(innerHtml, treeSanitizer: new NullTreeSanitizer());
+        _dragdrop.initDragAndDrop();
+      }else{
+        _load(false);
+      }
     });
   }
 
@@ -81,21 +85,25 @@ class MenuImpl extends Menu {
   }
 
   void _saveLocal() {
-    String hash = _getState();
+    String hash = _getState(true);
     String html = _columns.outerHtml.toString();
-    _db.open()//.then((_) => _db.nuke())
+    
+    _db.open()
     .then((_) => _db.save(html, hash));
   }
 
-  String _getState() {
+  String _getState(bool state) {
+    String hash = "";    
+    if(state){
 
-    String hash = "";
     var re = new RegExp('/\W/g');
     for (InputElement item in _menuInputItems) {
       if (!_excludeFromHash.contains(item.id)) {
         hash += item.value.trim().toLowerCase().replaceAll(re, '').replaceAll(' ', '');
       }
     }
+    }
+    
     var sha1 = new SHA1();
     sha1.add(hash.codeUnits);
     return CryptoUtils.bytesToHex(sha1.close());
@@ -245,7 +253,7 @@ class MenuImpl extends Menu {
         _dragdrop.resizeScreen('1280');
         break;
       case 'load':
-        _load();
+        _load(true);
         break;
       case 'save':
         _save();
