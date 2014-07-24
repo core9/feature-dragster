@@ -53,6 +53,10 @@ packages:
     description: json_object
     source: hosted
     version: "1.0.18+2"
+  lawndart:
+    description: lawndart
+    source: hosted
+    version: "0.6.5"
   logging:
     description: logging
     source: hosted

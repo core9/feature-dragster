@@ -11,3 +11,4 @@ dependencies:
   html5lib: any
   js: any
   json_object: any
+  lawndart: any
