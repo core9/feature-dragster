@@ -4,6 +4,9 @@ import 'dart:html';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
+//import 'dart:indexed_db';
+import 'package:lawndart/lawndart.dart';
+
 
 
 import 'dragdrop.dart';
@@ -45,17 +48,31 @@ class MenuImpl extends Menu {
   List<String> _excludeFromHash = new List(2);
 
   DragDrop _dragdrop;
+  
+  var _db = new Store('dbName', 'storeName');
+  
   void start() {
 
+
+    
+    _redrawTop('#columns', '#menu');
+    
     _excludeFromHash[0] = 'menu-display';
     _excludeFromHash[1] = 'menu-action';
     
-    _redrawTop('#columns', '#menu');
     _dragdrop = new DragDropImpl();
     _showMenuElement.onClick.listen(_showMenu);
     _putMenuItemsInListAndAddClickEvent();
     _ulMenuAddClickEvents();
     _menuAddOptions();
+    
+    _db.open()
+      .then((_) => _db.nuke())
+      .then((_) => _db.save("world", "hello"))
+      .then((_) => _db.save("is fun", "dart"))
+      .then((_) => _db.getByKey("hello"))
+      .then((value) => print( value ) );
+    
   }
   
   void _load() {
