@@ -221,6 +221,7 @@ class MenuImpl extends Menu {
         break;
     }
     print(inputBox.value);
+    _load(true);
   }
 
 
