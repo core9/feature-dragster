@@ -36,8 +36,10 @@ class MenuImpl extends Menu {
   InputElement _menuPercentage = document.getElementById('menu-percentage');
   Element _menuActionJsonDatalist = document.getElementById('menu-action-json-datalist');
   InputElement _menuAction = document.getElementById('menu-action');
-    
-  List<Element> _menuInputItems = new List(10);
+  Element _menuRequestJsonDatalist = document.getElementById('menu-request-json-datalist');
+  InputElement _menuRequest = document.getElementById('menu-request');
+  
+  List<Element> _menuInputItems = new List(11);
   List<String> _excludeFromHash = new List(2);
 
   DragDrop _dragdrop;
@@ -52,8 +54,6 @@ class MenuImpl extends Menu {
     _putMenuItemsInListAndAddClickEvent();
     _ulMenuAddClickEvents();
     _menuAddOptions();
-
-
   }
   
   void _load() {
@@ -61,14 +61,8 @@ class MenuImpl extends Menu {
   }
 
   void _save() {
-    
     _saveLocal();
     //_saveRemote();
-    
-
-
-
-
   }
   
   void _saveLocal(){
@@ -77,19 +71,14 @@ class MenuImpl extends Menu {
   
   void _getState(){
     
-    Map map = new Map<String, String>();
-    
     String hash = "";
     var re = new RegExp('/\W/g');
     for (InputElement item in _menuInputItems) {
         print(item.id + ' : ' + item.value);
-        map[item.id]= item.value; 
         if(!_excludeFromHash.contains(item.id)){
           hash += item.value.trim().toLowerCase().replaceAll(re, '').replaceAll(' ', '');
         }
     }
-    
-    print(map.toString());
     print(hash);
     var sha1 = new SHA1();
     sha1.add(hash.codeUnits);
@@ -138,6 +127,7 @@ class MenuImpl extends Menu {
     _menuInputItems[7] = _menuPeriod;
     _menuInputItems[8] = _menuPercentage;
     _menuInputItems[9] = _menuAction;
+    _menuInputItems[10] = _menuRequest;
 
     for (var item in _menuInputItems) {
       item.onInput.listen(_onInputMenuChange);
@@ -163,6 +153,7 @@ class MenuImpl extends Menu {
     _fillMenuInputItems(_menuPeriodJsonDatalist, "/dragster/data/periods.json");
     _fillMenuInputItems(_menuPercentageJsonDatalist, "/dragster/data/percentages.json");
     _fillMenuInputItems(_menuActionJsonDatalist, "/dragster/data/actions.json");
+    _fillMenuInputItems(_menuRequestJsonDatalist, "/dragster/data/requests.json");
   }
 
   void _showMenu(Event event) {
