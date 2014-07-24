@@ -92,7 +92,6 @@ class MenuImpl extends Menu {
     String hash = "";
     var re = new RegExp('/\W/g');
     for (InputElement item in _menuInputItems) {
-      print(item.id + ' : ' + item.value);
       if (!_excludeFromHash.contains(item.id)) {
         hash += item.value.trim().toLowerCase().replaceAll(re, '').replaceAll(' ', '');
       }
