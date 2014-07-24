@@ -4,7 +4,6 @@ import 'dart:html';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:html5lib/parser.dart' show parse;
-//import 'dart:indexed_db';
 import 'package:lawndart/lawndart.dart';
 import 'utils.dart';
 
@@ -70,12 +69,13 @@ class MenuImpl extends Menu {
   void _load(bool state) {
     String hash = _getState(state);
     _db.open().then((_) => _db.getByKey(hash)).then((value) {
-      if(value != null){
+      if (value != null && value != "") {
         var innerHtml = parse(value).querySelector(stage).innerHtml;
         _columns.children.clear();
         _columns.setInnerHtml(innerHtml, treeSanitizer: new NullTreeSanitizer());
         _dragdrop.initDragAndDrop();
-      }else{
+      } else {
+        _saveLocal();
         _load(false);
       }
     });
@@ -83,10 +83,9 @@ class MenuImpl extends Menu {
 
   void _clear() {
     String hash = _getState(true);
-    _db.open()
-    .then((_) => _db.save("", hash));
+    _db.open().then((_) => _db.save("", hash));
   }
-  
+
   void _save() {
     _saveLocal();
   }
@@ -94,23 +93,22 @@ class MenuImpl extends Menu {
   void _saveLocal() {
     String hash = _getState(true);
     String html = _columns.outerHtml.toString();
-    
-    _db.open()
-    .then((_) => _db.save(html, hash));
+
+    _db.open().then((_) => _db.save(html, hash));
   }
 
   String _getState(bool state) {
-    String hash = "";    
-    if(state){
+    String hash = "";
+    if (state) {
 
-    var re = new RegExp('/\W/g');
-    for (InputElement item in _menuInputItems) {
-      if (!_excludeFromHash.contains(item.id)) {
-        hash += item.value.trim().toLowerCase().replaceAll(re, '').replaceAll(' ', '');
+      var re = new RegExp('/\W/g');
+      for (InputElement item in _menuInputItems) {
+        if (!_excludeFromHash.contains(item.id)) {
+          hash += item.value.trim().toLowerCase().replaceAll(re, '').replaceAll(' ', '');
+        }
       }
     }
-    }
-    
+
     var sha1 = new SHA1();
     sha1.add(hash.codeUnits);
     return CryptoUtils.bytesToHex(sha1.close());
@@ -213,8 +211,7 @@ class MenuImpl extends Menu {
   }
 
   void _redrawTop(String target, String source) {
-    String height = (document.querySelector(source).borderEdge.height + 30).toString() + 'px';
-    document.querySelector(target).style.setProperty('top', height);
+    document.querySelector(target).style.setProperty('top', (document.querySelector(source).borderEdge.height + 30).toString() + 'px');
   }
 
   void _onInputMenuChange(Event event) {
@@ -226,7 +223,6 @@ class MenuImpl extends Menu {
       case 'menu-version':
         break;
     }
-    print(inputBox.value);
     _load(true);
   }
 
