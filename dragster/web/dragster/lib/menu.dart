@@ -38,10 +38,14 @@ class MenuImpl extends Menu {
   InputElement _menuAction = document.getElementById('menu-action');
     
   List<Element> _menuInputItems = new List(10);
+  List<String> _excludeFromHash = new List(2);
 
   DragDrop _dragdrop;
   void start() {
 
+    _excludeFromHash[0] = 'menu-display';
+    _excludeFromHash[1] = 'menu-action';
+    
     _redrawTop('#columns', '#menu');
     _dragdrop = new DragDropImpl();
     _showMenuElement.onClick.listen(_showMenu);
@@ -80,7 +84,9 @@ class MenuImpl extends Menu {
     for (InputElement item in _menuInputItems) {
         print(item.id + ' : ' + item.value);
         map[item.id]= item.value; 
-        hash += item.value.trim().toLowerCase().replaceAll(re, '').replaceAll(' ', '');
+        if(!_excludeFromHash.contains(item.id)){
+          hash += item.value.trim().toLowerCase().replaceAll(re, '').replaceAll(' ', '');
+        }
     }
     
     print(map.toString());
