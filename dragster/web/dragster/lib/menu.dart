@@ -18,6 +18,7 @@ abstract class Menu {
 
 class MenuImpl extends Menu {
 
+  String stage = '#columns';
   Element _showMenuElement = document.querySelector('#show-menu');
   Element _pageSelector = document.querySelector('#page-selector');
   Element _menuSecondary = document.querySelector('#navigation-secondary');
@@ -70,7 +71,7 @@ class MenuImpl extends Menu {
     String hash = _getState(state);
     _db.open().then((_) => _db.getByKey(hash)).then((value) {
       if(value != null){
-        var innerHtml = parse(value).querySelector('#columns').innerHtml;
+        var innerHtml = parse(value).querySelector(stage).innerHtml;
         _columns.children.clear();
         _columns.setInnerHtml(innerHtml, treeSanitizer: new NullTreeSanitizer());
         _dragdrop.initDragAndDrop();
