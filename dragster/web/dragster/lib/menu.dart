@@ -297,8 +297,7 @@ class MenuImpl extends Menu {
     print(menuTarget.text);
     Element template = document.querySelector('#' + menuTarget.text);
     Element widgetPlaceHolder = document.querySelector('#widget-placeholder');
-    String innerHtml = widgetPlaceHolder.innerHtml;
-    innerHtml += template.innerHtml;    
+    String innerHtml = template.innerHtml;    
     DivElement newDiv = new DivElement();
     List<Element> listDivs = document.querySelectorAll('#columns .column');
     newDiv.id = 'elem' + listDivs.length.toString();
