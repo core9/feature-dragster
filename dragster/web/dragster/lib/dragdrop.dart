@@ -81,6 +81,9 @@ class DragDropImpl extends DragDrop {
         }
       }
     }
+    
+    Menu menu = new MenuImpl();
+    menu.menuAddAllTemplates();
   }
 
   void _calb(err, count) {

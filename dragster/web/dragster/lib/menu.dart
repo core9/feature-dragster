@@ -13,6 +13,7 @@ import 'dragdrop.dart';
 
 abstract class Menu {
   void start();
+  void menuAddAllTemplates();
 }
 
 class MenuImpl extends Menu {
@@ -44,6 +45,8 @@ class MenuImpl extends Menu {
   InputElement _menuAction = document.getElementById('menu-action');
   Element _menuRequestJsonDatalist = document.getElementById('menu-request-json-datalist');
   InputElement _menuRequest = document.getElementById('menu-request');
+  
+  List<Element> _allTemplates; 
 
   List<Element> _menuInputItems = new List(11);
   List<String> _excludeFromHash = new List(2);
@@ -64,6 +67,16 @@ class MenuImpl extends Menu {
     _putMenuItemsInListAndAddClickEvent();
     _ulMenuAddClickEvents();
     _menuAddOptions();
+    
+  }
+  
+  void menuAddAllTemplates(){
+    _allTemplates = document.querySelectorAll('template');
+    for(Element item in _allTemplates){
+        print(item.id);
+        // ul id = all-templates
+        //<li><a class="menu" href="#edit">Edit</a></li>
+    }
   }
 
   void _load(bool state) {
