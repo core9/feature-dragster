@@ -76,7 +76,9 @@ class DragDropImpl extends DragDrop {
       String widget = div.attributes['data-widget'];
             
       _addWidgetToMenu(ul, widget);
-
+      
+      _addWidgetToStageAsTemplate(widget, div);
+      
       for (Element item in _columItems) {
         try {
           if (item.children.first.attributes['data-widget'] == widget) {
@@ -91,6 +93,16 @@ class DragDropImpl extends DragDrop {
     menu.menuAddAllTemplates();
   }
 
+  void _addWidgetToStageAsTemplate(String widget, var div){
+    print(div);
+    TemplateElement template = new TemplateElement();
+    template.setInnerHtml(div.outerHtml, treeSanitizer: new NullTreeSanitizer());
+    template.setAttribute('id', widget);
+    Element widgetPlaceholder = document.querySelector('#widget-placeholder');
+    widgetPlaceholder.append(template);
+  }
+  
+  
   void _addWidgetToMenu(UListElement ul, String widget){
     print(widget);
     List<String> classes = [];

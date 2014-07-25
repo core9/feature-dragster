@@ -279,21 +279,38 @@ class MenuImpl extends Menu {
     } else {
       UListElement parent = _getParentElement(menuTarget);
 
+      print(parent.id);
       switch (parent.id) {
         case 'all-widgets':
+          _addWidgetToStage(menuTarget);
           break;
         case 'all-elements':
+          _addElementToStage(menuTarget);
           break;
         default:
           break;
       }
     }
-
-
-
-
   }
 
+  void _addWidgetToStage(Element menuTarget){
+    print(menuTarget.text);
+    
+    Element template = document.querySelector('#' + menuTarget.text);
+    
+    Element widgetPlaceHolder = document.querySelector('#widget-placeholder');
+    
+    String innerHtml = widgetPlaceHolder.innerHtml;
+    
+    innerHtml += template.innerHtml;
+  
+    widgetPlaceHolder.setInnerHtml(innerHtml, treeSanitizer: new NullTreeSanitizer());
+  }
+  
+  void _addElementToStage(Element menuTarget){
+    
+  }
+  
   void _nonWidgetAndElements(Element menuTarget) {
     switch (menuTarget.innerHtml.trim().toLowerCase()) {
       case '320':
