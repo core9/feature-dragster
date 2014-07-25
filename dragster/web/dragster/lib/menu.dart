@@ -45,8 +45,8 @@ class MenuImpl extends Menu {
   InputElement _menuAction = document.getElementById('menu-action');
   Element _menuRequestJsonDatalist = document.getElementById('menu-request-json-datalist');
   InputElement _menuRequest = document.getElementById('menu-request');
-  
-  List<Element> _allTemplates; 
+
+  List<Element> _allTemplates;
 
   List<Element> _menuInputItems = new List(11);
   List<String> _excludeFromHash = new List(2);
@@ -67,24 +67,24 @@ class MenuImpl extends Menu {
     _putMenuItemsInListAndAddClickEvent();
     _ulMenuAddClickEvents();
     _menuAddOptions();
-    
+
   }
-  
-  void menuAddAllTemplates(){
+
+  void menuAddAllTemplates() {
     UListElement ul = document.querySelector('#all-templates');
     _allTemplates = document.querySelectorAll('template');
-    for(Element item in _allTemplates){
-        print(item.id);
-        List<String> classes = [];
-        classes.add('menu');
-        classes.add('template-element');
-        LIElement li = new LIElement();
-        AnchorElement link = new AnchorElement();
-        link.classes.addAll(classes);
-        link.setAttribute('href', '#' + item.id);
-        link.text = item.id;
-        li.append(link);
-        ul.append(li);
+    for (Element item in _allTemplates) {
+      print(item.id);
+      List<String> classes = [];
+      classes.add('menu');
+      classes.add('template-element');
+      LIElement li = new LIElement();
+      AnchorElement link = new AnchorElement();
+      link.classes.addAll(classes);
+      link.setAttribute('href', '#' + item.id);
+      link.text = item.id;
+      li.append(link);
+      ul.append(li);
     }
   }
 
@@ -260,8 +260,41 @@ class MenuImpl extends Menu {
     }
   }
 
+  UListElement _getParentElement(Element menuTarget) {
+
+    Element parent = menuTarget.parent;
+
+    if (parent.tagName != 'UL') {
+      parent = _getParentElement(parent);
+    }
+
+    return parent;
+  }
+
   void _onClickMenuItem(MouseEvent event) {
     Element menuTarget = event.target;
+
+    if (menuTarget.tagName == 'INPUT') {
+      _nonWidgetAndElements(menuTarget);
+    } else {
+      UListElement parent = _getParentElement(menuTarget);
+
+      switch (parent.id) {
+        case 'all-widgets':
+          break;
+        case 'all-elements':
+          break;
+        default:
+          break;
+      }
+    }
+
+
+
+
+  }
+
+  void _nonWidgetAndElements(Element menuTarget) {
     switch (menuTarget.innerHtml.trim().toLowerCase()) {
       case '320':
         _dragdrop.resizeScreen('320');
@@ -288,7 +321,6 @@ class MenuImpl extends Menu {
         _save();
         break;
     }
-
   }
 
 }
