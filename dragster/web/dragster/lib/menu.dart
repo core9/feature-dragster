@@ -295,16 +295,25 @@ class MenuImpl extends Menu {
 
   void _addWidgetToStage(Element menuTarget){
     print(menuTarget.text);
-    
     Element template = document.querySelector('#' + menuTarget.text);
-    
     Element widgetPlaceHolder = document.querySelector('#widget-placeholder');
-    
     String innerHtml = widgetPlaceHolder.innerHtml;
+    innerHtml += template.innerHtml;    
+    DivElement newDiv = new DivElement();
+    List<Element> listDivs = document.querySelectorAll('#columns .column');
+    newDiv.id = 'elem' + listDivs.length.toString();
+    newDiv.classes.add('column');
+    newDiv.setAttribute('draggable', 'true');
     
-    innerHtml += template.innerHtml;
-  
-    widgetPlaceHolder.setInnerHtml(innerHtml, treeSanitizer: new NullTreeSanitizer());
+    newDiv.setInnerHtml(innerHtml, treeSanitizer: new NullTreeSanitizer());
+    
+    document.querySelector('#columns').append(newDiv);
+    
+    _clear();
+    _save();
+    _load(true);
+    
+    
   }
   
   void _addElementToStage(Element menuTarget){
