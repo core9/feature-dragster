@@ -23,21 +23,22 @@
 		</ul>
 		<ul id="navigation-secondary"
 			style="position: absolute; top: 45px; padding-left: 20px;">
-			<li><a class="menu" href="#">Add item</a>
-				<ul id="all-templates">
-					<li><a class="menu" href="#edit">Edit</a></li>
-					<li><a class="menu" href="#logout">Logout</a></li>
+			<li><a class="menu" href="#">Add Widget</a>
+				<ul id="all-widgets">
 				</ul></li>
-			<li><a class="menu" href="#save">Remove item</a></li>
+			<li><a class="menu" href="#save">Remove Widget</a></li>
+			<li><a class="menu" href="#">Add Element</a>
+				<ul id="all-templates">
+				</ul></li>
+			<li><a class="menu" href="#save">Remove Element</a></li>
 		</ul>
-		
+
 		<div id="page-selector"
 			style="float: right; width: 990px; text-align: right; margin-right: 30px;">
 
 
 
-			<div id="request"
-				style="float: right; width: 473px;">
+			<div id="request" style="float: right; width: 473px;">
 
 				<input type="text" id="menu-geo" style="margin-right: -1px;"
 					list="menu-geo-json-datalist" placeholder="e.g. Geo">
@@ -48,17 +49,18 @@
 					list="menu-hostname-json-datalist" placeholder="e.g. Hostname">
 				<datalist id="menu-hostname-json-datalist"></datalist>
 
-				<input type="text" id="menu-page" list="menu-page-json-datalist" 
+				<input type="text" id="menu-page" list="menu-page-json-datalist"
 					style="width: 465px; margin-right: 1px;" placeholder="e.g. Page">
 				<datalist id="menu-page-json-datalist"></datalist>
-				
-				<input type="text" id="menu-request" list="menu-request-json-datalist" 
-          style="width: 465px; margin-right: -3px;" placeholder="e.g. Request">
-        <datalist id="menu-request-json-datalist"></datalist>
 
-      <br style="clear:both;">
+				<input type="text" id="menu-request"
+					list="menu-request-json-datalist"
+					style="width: 465px; margin-right: -3px;"
+					placeholder="e.g. Request">
+				<datalist id="menu-request-json-datalist"></datalist>
 
-				<input type="text" id="menu-useragent" style="margin-right: -1px;"
+				<br style="clear: both;"> <input type="text"
+					id="menu-useragent" style="margin-right: -1px;"
 					list="menu-useragent-json-datalist" placeholder="e.g. Useragent">
 				<datalist id="menu-useragent-json-datalist"></datalist>
 
@@ -71,29 +73,28 @@
 				<datalist id="menu-percentage-json-datalist"></datalist>
 
 			</div>
-			
-			
-      <div id="non-request"
-        style=" margin-right: 470px; width: 467px;">
-        <input type="text" id="menu-display" style="margin-right: -1px;"
-          list="menu-display-json-datalist" placeholder="e.g. Display">
-        <datalist id="menu-display-json-datalist"></datalist>
-
-        <input type="text" id="menu-action" style="margin-right: -1px;"
-          list="menu-action-json-datalist" placeholder="e.g. Action">
-        <datalist id="menu-action-json-datalist"></datalist>
 
 
-        <input type="text" id="menu-version" style="margin-right: -1px;"
-          list="menu-version-json-datalist" placeholder="e.g. Version">
-        <datalist id="menu-version-json-datalist"></datalist>
-        
-        
-        <input type="text" id="menu-status" list="menu-status-json-datalist"
-          style="margin-right: -1px;" placeholder="e.g. Status">
-        <datalist id="menu-status-json-datalist"></datalist>
+			<div id="non-request" style="margin-right: 470px; width: 467px;">
+				<input type="text" id="menu-display" style="margin-right: -1px;"
+					list="menu-display-json-datalist" placeholder="e.g. Display">
+				<datalist id="menu-display-json-datalist"></datalist>
 
-      </div>
+				<input type="text" id="menu-action" style="margin-right: -1px;"
+					list="menu-action-json-datalist" placeholder="e.g. Action">
+				<datalist id="menu-action-json-datalist"></datalist>
+
+
+				<input type="text" id="menu-version" style="margin-right: -1px;"
+					list="menu-version-json-datalist" placeholder="e.g. Version">
+				<datalist id="menu-version-json-datalist"></datalist>
+
+
+				<input type="text" id="menu-status" list="menu-status-json-datalist"
+					style="margin-right: -1px;" placeholder="e.g. Status">
+				<datalist id="menu-status-json-datalist"></datalist>
+
+			</div>
 
 		</div>
 		<div id="show-menu"

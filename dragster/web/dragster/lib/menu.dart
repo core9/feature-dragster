@@ -71,11 +71,20 @@ class MenuImpl extends Menu {
   }
   
   void menuAddAllTemplates(){
+    UListElement ul = document.querySelector('#all-templates');
     _allTemplates = document.querySelectorAll('template');
     for(Element item in _allTemplates){
         print(item.id);
-        // ul id = all-templates
-        //<li><a class="menu" href="#edit">Edit</a></li>
+        List<String> classes = [];
+        classes.add('menu');
+        classes.add('template-element');
+        LIElement li = new LIElement();
+        AnchorElement link = new AnchorElement();
+        link.classes.addAll(classes);
+        link.setAttribute('href', '#' + item.id);
+        link.text = item.id;
+        li.append(link);
+        ul.append(li);
     }
   }
 

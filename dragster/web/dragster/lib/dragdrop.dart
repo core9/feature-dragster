@@ -69,9 +69,14 @@ class DragDropImpl extends DragDrop {
 
     var html = parse(responseText).querySelector('body');
     var contentDivs = html.querySelectorAll('.content');
+    
+    UListElement ul = document.querySelector('#all-widgets');
 
     for (var div in contentDivs) {
-      String widget = div.attributes['data-widget']; // add to widget list
+      String widget = div.attributes['data-widget'];
+            
+      _addWidgetToMenu(ul, widget);
+
       for (Element item in _columItems) {
         try {
           if (item.children.first.attributes['data-widget'] == widget) {
@@ -86,6 +91,20 @@ class DragDropImpl extends DragDrop {
     menu.menuAddAllTemplates();
   }
 
+  void _addWidgetToMenu(UListElement ul, String widget){
+    print(widget);
+    List<String> classes = [];
+    classes.add('menu');
+    classes.add('widget-element');
+    LIElement li = new LIElement();
+    AnchorElement link = new AnchorElement();
+    link.classes.addAll(classes);
+    link.setAttribute('href', '#' + widget);
+    link.text = widget;
+    li.append(link);
+    ul.append(li);
+  }
+  
   void _calb(err, count) {
     print("Number of items found : " + count.toString());
   }
