@@ -309,7 +309,7 @@ class MenuImpl extends Menu {
     document.querySelector('#columns').append(newDiv);
     
     _save();
-    _dragdrop.initDragAndDrop(); // watch out for double event binding.. ???
+    _dragdrop.addEventsToColumn(newDiv);
     
     
   }

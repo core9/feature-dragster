@@ -14,10 +14,11 @@ abstract class DragDrop {
   void start();
   void resizeScreen(String strSize);
   void initDragAndDrop();
+  void addEventsToColumn(Element col);
 }
 
 class DragDropImpl extends DragDrop {
-  
+
   Element _dragSourceEl;
   Element _columns = document.querySelector('#columns');
   List<Element> _columItems = document.querySelectorAll('#columns .column');
@@ -30,7 +31,7 @@ class DragDropImpl extends DragDrop {
     _getWidgetsAndElements();
     initDragAndDrop();
     _setupDb();
-    
+
   }
 
   void _getWidgetsAndElements() {
@@ -40,17 +41,19 @@ class DragDropImpl extends DragDrop {
   }
 
   void initDragAndDrop() {
-    for (var col in document.querySelectorAll('#columns .column')) {
-      col.onDragStart.listen(_onDragStart);
-      col.onDragEnd.listen(_onDragEnd);
-      col.onDragEnter.listen(_onDragEnter);
-      col.onDragOver.listen(_onDragOver);
-      col.onDragLeave.listen(_onDragLeave);
-      col.onDrop.listen(_onDrop);
-      col.onDoubleClick.listen(_onClickResize);
+    for (Element col in document.querySelectorAll('#columns .column')) {
+      addEventsToColumn(col);
     }
   }
-
+  void addEventsToColumn(Element col) {
+    col.onDragStart.listen(_onDragStart);
+    col.onDragEnd.listen(_onDragEnd);
+    col.onDragEnter.listen(_onDragEnter);
+    col.onDragOver.listen(_onDragOver);
+    col.onDragLeave.listen(_onDragLeave);
+    col.onDrop.listen(_onDrop);
+    col.onDoubleClick.listen(_onClickResize);
+  }
 
   void _setupDb() {
     Nedb nedb = new Nedb();
@@ -69,16 +72,16 @@ class DragDropImpl extends DragDrop {
 
     var html = parse(responseText).querySelector('body');
     var contentDivs = html.querySelectorAll('.content');
-    
+
     UListElement ul = document.querySelector('#all-widgets');
 
     for (var div in contentDivs) {
       String widget = div.attributes['data-widget'];
-            
+
       _addWidgetToMenu(ul, widget);
-      
+
       _addWidgetToStageAsTemplate(widget, div);
-      
+
       for (Element item in _columItems) {
         try {
           if (item.children.first.attributes['data-widget'] == widget) {
@@ -88,12 +91,12 @@ class DragDropImpl extends DragDrop {
         }
       }
     }
-    
+
     Menu menu = new MenuImpl();
     menu.menuAddAllTemplates();
   }
 
-  void _addWidgetToStageAsTemplate(String widget, var div){
+  void _addWidgetToStageAsTemplate(String widget, var div) {
     print(div);
     TemplateElement template = new TemplateElement();
     template.setInnerHtml(div.outerHtml, treeSanitizer: new NullTreeSanitizer());
@@ -101,9 +104,9 @@ class DragDropImpl extends DragDrop {
     Element widgetPlaceholder = document.querySelector('#widget-placeholder');
     widgetPlaceholder.append(template);
   }
-  
-  
-  void _addWidgetToMenu(UListElement ul, String widget){
+
+
+  void _addWidgetToMenu(UListElement ul, String widget) {
     print(widget);
     List<String> classes = [];
     classes.add('menu');
@@ -116,7 +119,7 @@ class DragDropImpl extends DragDrop {
     li.append(link);
     ul.append(li);
   }
-  
+
   void _calb(err, count) {
     print("Number of items found : " + count.toString());
   }
@@ -196,5 +199,5 @@ class DragDropImpl extends DragDrop {
 
     }
   }
-  
+
 }
