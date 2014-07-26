@@ -274,9 +274,7 @@ class MenuImpl extends Menu {
   void _onClickMenuItem(MouseEvent event) {
     Element menuTarget = event.target;
 
-    if (menuTarget.tagName == 'INPUT') {
-      _nonWidgetAndElements(menuTarget);
-    } else {
+
       UListElement parent = _getParentElement(menuTarget);
 
       print(parent.id);
@@ -288,8 +286,9 @@ class MenuImpl extends Menu {
           _addElementToStage(menuTarget);
           break;
         default:
+          _nonWidgetAndElements(menuTarget);
           break;
-      }
+     
     }
   }
 

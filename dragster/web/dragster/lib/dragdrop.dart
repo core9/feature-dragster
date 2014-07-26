@@ -166,7 +166,7 @@ class DragDropImpl extends DragDrop {
     if(event.target is Element && (event.target as Element).draggable){
       target = event.target;
     }else{
-     return null;
+     return null; // go get first draggable parent
     }
     
     return target;
