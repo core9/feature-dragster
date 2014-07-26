@@ -150,17 +150,36 @@ class DragDropImpl extends DragDrop {
     for (var content in contentItems) {
       content.classes.add('hide');
     }
-    Element dragTarget = event.target;
+    Element dragTarget = _getDragTarget(event); 
+    if(dragTarget == null){
+      return;
+    }
     dragTarget.style.setProperty('overflow', 'visible');
     dragTarget.classes.add('moving');
     _dragSourceEl = dragTarget;
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/html', dragTarget.innerHtml);
   }
+  
+  Element _getDragTarget(MouseEvent event){
+    Element target;
+    if(event.target is Element && (event.target as Element).draggable){
+      target = event.target;
+    }else{
+     return null;
+    }
+    
+    return target;
+  }
+  
+
 
   void _onDragEnd(MouseEvent event) {
-    Element dragTarget = event.target;
-    dragTarget.classes.remove('moving');
+    Element dragTarget = _getDragTarget(event); 
+    if(dragTarget != null){
+      dragTarget.classes.remove('moving');
+    }
+
     var cols = document.querySelectorAll('#columns .column');
     for (var col in cols) {
       col.classes.remove('over');
