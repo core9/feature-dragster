@@ -1,0 +1,41 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta name="author" content="Kilian Valkhof" />
+<title>gridBuilder.js!</title>
+<link href="sen.css" rel="stylesheet" type="text/css" />
+<style type="text/css">
+#wrap {
+	/*this bit is for show only*/
+	width:760px;
+	margin:auto;
+	padding:1.5em 10px;
+	overflow:hidden;
+}
+</style>
+<script type="text/javascript" src="jquery-1.3.2.min.js"></script>
+<script type="text/javascript" src="gridBuilder.js"></script>
+<script type="text/javascript">
+ $(document).ready(function(){
+  $("body").gridBuilder();
+ });
+
+</script>
+
+</head>
+<body>
+    <pre><code>$(document).ready(function(){
+  $("body").gridBuilder({
+    color:          '#eee',    // color of the primary gridlines
+    secondaryColor: '#f9f9f9', // color of the secondary gridlines
+    vertical:       18,        // height of the vertical rhythm
+    horizontal:     140,       // width of horizontal strokes
+    gutter:         40,        // width of the gutter between strokes
+  });
+});</code></pre>
+
+</div>
+</body>
+</html>
+

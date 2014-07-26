@@ -8,6 +8,7 @@ import "package:json_object/json_object.dart";
 
 import 'menu.dart';
 import 'nedb.dart';
+import 'grid.dart';
 import 'utils.dart';
 
 abstract class DragDrop {
@@ -26,6 +27,8 @@ class DragDropImpl extends DragDrop {
 
   void start() {
 
+    Grid grid = new GridImpl();
+    grid.start();
     _menu = new MenuImpl();
     _menu.start();
     _getWidgetsAndElements();
