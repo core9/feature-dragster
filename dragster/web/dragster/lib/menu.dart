@@ -293,31 +293,28 @@ class MenuImpl extends Menu {
     }
   }
 
-  void _addWidgetToStage(Element menuTarget){
+  void _addWidgetToStage(Element menuTarget) {
     print(menuTarget.text);
     Element template = document.querySelector('#' + menuTarget.text);
     Element widgetPlaceHolder = document.querySelector('#widget-placeholder');
-    String innerHtml = template.innerHtml;    
+    String innerHtml = template.innerHtml;
     DivElement newDiv = new DivElement();
     List<Element> listDivs = document.querySelectorAll('#columns .column');
     newDiv.id = 'elem' + listDivs.length.toString();
     newDiv.classes.add('column');
     newDiv.setAttribute('draggable', 'true');
-    
     newDiv.setInnerHtml(innerHtml, treeSanitizer: new NullTreeSanitizer());
-    
     document.querySelector('#columns').append(newDiv);
-    
     _save();
     _dragdrop.addEventsToColumn(newDiv);
-    
-    
+
+
   }
-  
-  void _addElementToStage(Element menuTarget){
-    
+
+  void _addElementToStage(Element menuTarget) {
+
   }
-  
+
   void _nonWidgetAndElements(Element menuTarget) {
     switch (menuTarget.innerHtml.trim().toLowerCase()) {
       case '320':
