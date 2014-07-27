@@ -16,6 +16,9 @@ abstract class DragDrop {
   void resizeScreen(String strSize);
   void initDragAndDrop();
   void addEventsToColumn(Element col);
+  void initHighlight();
+  void activateHighLight(Element e);
+  void deActivateHighLight(Element e);
 }
 
 class DragDropImpl extends DragDrop {
@@ -24,6 +27,8 @@ class DragDropImpl extends DragDrop {
   Element _columns = document.querySelector('#columns');
   List<Element> _columItems = document.querySelectorAll('#columns .column');
   Menu _menu;
+  
+
 
   void start() {
 
@@ -34,7 +39,43 @@ class DragDropImpl extends DragDrop {
     _getWidgetsAndElements();
     initDragAndDrop();
     _setupDb();
+    initHighlight();
 
+  }
+  
+  void initHighlight(){
+      document.querySelectorAll('#columns').forEach((e) => activateHighLight(e));
+  }
+  
+  void activateHighLight(Element e){
+    e.onMouseOver.listen(_highLightOnMouseOver);
+    e.onMouseOut.listen(_highLightOnMouseOut);
+  }
+  
+  void deActivateHighLight(Element e){
+    e.onMouseOver.listen(_highLightOnMouseOver).cancel();
+    e.onMouseOut.listen(_highLightOnMouseOut).cancel();
+  }
+  
+  void _highLightOnMouseOver(MouseEvent event){
+    Element element = event.target;
+    if(element.id == 'columns') return;
+    print('mouse enter');
+    String border = element.style.border;
+    document.querySelector('#hover-placeholder').text = border;
+    element.style.setProperty('border', '2px solid lightblue');
+  }
+  
+  void _highLightOnMouseOut(MouseEvent event){
+    Element element = event.target;
+    _resetOnMouseOver(element);
+  }
+  
+  void _resetOnMouseOver(Element element){
+    if(element.id == 'columns') return;
+    print('mouse leave');
+    String border = document.querySelector('#hover-placeholder').text;
+    element.style.setProperty('border', border);
   }
 
   void _getWidgetsAndElements() {
@@ -44,9 +85,7 @@ class DragDropImpl extends DragDrop {
   }
 
   void initDragAndDrop() {
-    for (Element col in document.querySelectorAll('#columns .column')) {
-      addEventsToColumn(col);
-    }
+    document.querySelectorAll('#columns .column').forEach((e) => addEventsToColumn(e));
   }
   void addEventsToColumn(Element col) {
     col.onDragStart.listen(_onDragStart);
@@ -182,7 +221,6 @@ class DragDropImpl extends DragDrop {
     if(dragTarget != null){
       dragTarget.classes.remove('moving');
     }
-
     var cols = document.querySelectorAll('#columns .column');
     for (var col in cols) {
       col.classes.remove('over');
@@ -217,9 +255,16 @@ class DragDropImpl extends DragDrop {
       if (container.tagName == 'DIV' && container.className.startsWith('content')) {
         _dragSourceEl.setInnerHtml(dropTarget.innerHtml, treeSanitizer: new NullTreeSanitizer());
         dropTarget.setInnerHtml(event.dataTransfer.getData('text/html'), treeSanitizer: new NullTreeSanitizer());
+        
+        String border = document.querySelector('#hover-placeholder').text;
+        var elem = dropTarget.querySelector('.content');//.style.setProperty('border', border);
+        if(elem != null) elem.style.setProperty('border', border);
       }
-
+     
     }
+
+
+    
   }
 
 }
