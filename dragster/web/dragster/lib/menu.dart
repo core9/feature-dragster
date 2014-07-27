@@ -264,7 +264,7 @@ class MenuImpl extends Menu {
 
     Element parent = menuTarget.parent;
 
-    if (parent.tagName != 'UL') {
+    if (parent != null && parent.tagName != 'UL') {
       parent = _getParentElement(parent);
     }
 
@@ -276,6 +276,7 @@ class MenuImpl extends Menu {
 
     if (menuTarget.tagName != 'INPUT') {
       UListElement parent = _getParentElement(menuTarget);
+      if(parent == null) return;
 
       print(parent.id);
       switch (parent.id) {
