@@ -60,8 +60,13 @@ class DragDropImpl extends DragDrop {
   }
 
   void _highLightOnMouseOver(MouseEvent event) {
+    
     Element element = event.target;
+    if(element == null)return;
     if (element.id == 'columns') return;
+    
+    if(element.classes.contains('resize'))return;
+    
     print('mouse enter');
     String border = element.style.border;
     int width = element.clientWidth;
@@ -89,10 +94,12 @@ class DragDropImpl extends DragDrop {
 
   void _highLightOnMouseOut(MouseEvent event) {
     Element element = event.target;
-    _resetOnMouseOver(element);
+    if(element == null)return;
+    if(!element.classes.contains('resize')) _resetOnMouseOver(element);
   }
 
   void _resetOnMouseOver(Element element) {
+    if(element.classes.contains('resize'))return;
     if (element.id == 'columns') return;
     print('mouse leave');
     String properties = document.querySelector('#hover-placeholder').text;
@@ -207,6 +214,7 @@ class DragDropImpl extends DragDrop {
   }
 
   void _setResizeOnColumn(Element currentElement) {
+    if(currentElement == null)return;
     if (currentElement.className == "column") {
       currentElement.style.setProperty('overflow', 'auto');
     } else {
