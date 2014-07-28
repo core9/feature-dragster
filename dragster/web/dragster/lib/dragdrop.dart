@@ -208,9 +208,11 @@ class DragDropImpl extends DragDrop {
     if (currentElement == null) return;
     if (currentElement.classes.contains('column')) {
       if (currentElement.classes.contains('resize')) {
+       
         currentElement.classes.remove('resize');
         currentElement.style.setProperty('overflow', 'visible');
         Element content = currentElement.querySelector('.content');
+        _resetOnMouseOver(content);
         content.style.setProperty('width', '100%');
         content.style.setProperty('height', '100%');
         document.querySelector('#hover-placeholder').text = "";
@@ -260,6 +262,8 @@ class DragDropImpl extends DragDrop {
     Element dragTarget = _getDragTarget(event);
     if (dragTarget != null) {
       dragTarget.classes.remove('moving');
+      Element targetContent = dragTarget.querySelector('.content');
+      _resetOnMouseOver(targetContent);
     }
     var cols = document.querySelectorAll('#columns .column');
     for (var col in cols) {
