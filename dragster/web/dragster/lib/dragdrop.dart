@@ -295,7 +295,14 @@ class DragDropImpl extends DragDrop {
     Element dropTarget = event.target;
     if (_dragSourceEl != dropTarget) {
       _dragSourceEl.style.setProperty('overflow', 'visible');
-      Element container = dropTarget.children.first;
+      
+      Element container;
+      try{
+        container = dropTarget.children.first;
+      }catch(e){
+        return;
+      }
+      
       if (container.tagName == 'DIV' && container.className.startsWith('content')) {
         _dragSourceEl.setInnerHtml(dropTarget.innerHtml, treeSanitizer: new NullTreeSanitizer());
         dropTarget.setInnerHtml(event.dataTransfer.getData('text/html'), treeSanitizer: new NullTreeSanitizer());
