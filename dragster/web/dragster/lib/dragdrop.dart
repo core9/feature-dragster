@@ -64,6 +64,7 @@ class DragDropImpl extends DragDrop {
     String border = element.style.border;
     document.querySelector('#hover-placeholder').text = border;
     element.style.setProperty('border', '2px solid lightblue');
+    element.classes.add('highlight');
   }
   
   void _highLightOnMouseOut(MouseEvent event){
@@ -76,6 +77,7 @@ class DragDropImpl extends DragDrop {
     print('mouse leave');
     String border = document.querySelector('#hover-placeholder').text;
     element.style.setProperty('border', border);
+    element.classes.remove('highlight');
   }
 
   void _getWidgetsAndElements() {
@@ -255,10 +257,11 @@ class DragDropImpl extends DragDrop {
       if (container.tagName == 'DIV' && container.className.startsWith('content')) {
         _dragSourceEl.setInnerHtml(dropTarget.innerHtml, treeSanitizer: new NullTreeSanitizer());
         dropTarget.setInnerHtml(event.dataTransfer.getData('text/html'), treeSanitizer: new NullTreeSanitizer());
+
+        List<Element> highlighted = document.querySelectorAll('.highlight');
         
-        String border = document.querySelector('#hover-placeholder').text;
-        var elem = dropTarget.querySelector('.content');//.style.setProperty('border', border);
-        if(elem != null) elem.style.setProperty('border', border);
+        highlighted.forEach((e) => _resetOnMouseOver(e));
+        
       }
      
     }
