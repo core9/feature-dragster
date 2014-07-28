@@ -5,6 +5,7 @@ import 'package:html5lib/parser.dart' show parse;
 
 import 'dart:js';
 import "package:json_object/json_object.dart";
+import 'dart:convert';
 
 import 'menu.dart';
 import 'nedb.dart';
@@ -62,7 +63,19 @@ class DragDropImpl extends DragDrop {
     if(element.id == 'columns') return;
     print('mouse enter');
     String border = element.style.border;
-    document.querySelector('#hover-placeholder').text = border;
+    
+    var mapData = new Map();
+    
+    var cssData = new Map();
+    cssData["border"] = border;
+    
+    mapData["properties"] = new List();
+    mapData["properties"].add(cssData);
+
+
+    String jsonData = JSON.encode(mapData);
+    
+    document.querySelector('#hover-placeholder').text = jsonData;
     element.style.setProperty('border', '2px solid lightblue');
     element.classes.add('highlight');
   }
@@ -75,11 +88,33 @@ class DragDropImpl extends DragDrop {
   void _resetOnMouseOver(Element element){
     if(element.id == 'columns') return;
     print('mouse leave');
-    String border = document.querySelector('#hover-placeholder').text;
-    element.style.setProperty('border', border);
+    String properties = document.querySelector('#hover-placeholder').text;
+    
+    var json = JSON.decode(properties);
+    
+    List<Map> cssProperties = json['properties'];
+    
+    cssProperties.forEach((e) => _setProperties(element, e));
+
     element.classes.remove('highlight');
   }
 
+  void _setProperties(Element element, Map e){
+    print(e);
+    print(e.keys);
+    print(e.values);
+    
+    e.keys.forEach((key) => _setProperty(element, key, e));
+    
+  }
+  
+  void _setProperty(Element element, String key, Map e){
+    print(e);
+    print(key);
+    print(e[key]);
+    element.style.setProperty(key, e[key]);
+  }
+  
   void _getWidgetsAndElements() {
     var dataSource = _columns.dataset['source'];
     var request = HttpRequest.getString(dataSource).then(_onDataLoaded);
