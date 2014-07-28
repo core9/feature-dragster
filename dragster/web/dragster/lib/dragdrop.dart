@@ -54,6 +54,7 @@ class DragDropImpl extends DragDrop {
   }
 
   void deActivateHighLight(Element e) {
+    //FIXME not used
     e.onMouseOver.listen(_highLightOnMouseOver).cancel();
     e.onMouseOut.listen(_highLightOnMouseOut).cancel();
   }
@@ -63,14 +64,25 @@ class DragDropImpl extends DragDrop {
     if (element.id == 'columns') return;
     print('mouse enter');
     String border = element.style.border;
-
+    int width = element.clientWidth;
+    int height = element.clientHeight;
+    
+    
     var mapData = new Map();
     var cssData = new Map();
     cssData["border"] = border;
+    cssData["width"] = width.toString() + 'px';
+    cssData["height"] = height.toString() + 'px';
     mapData["properties"] = new List();
     mapData["properties"].add(cssData);
     String jsonData = JSON.encode(mapData);
     document.querySelector('#hover-placeholder').text = jsonData;
+    
+
+    element.style.setProperty('width', (width - 4).toString() + 'px');
+    
+    element.style.setProperty('height', (height - 4).toString() + 'px');
+    
     element.style.setProperty('border', '2px solid lightblue');
     element.classes.add('highlight');
   }
@@ -91,14 +103,7 @@ class DragDropImpl extends DragDrop {
   }
 
   void _setProperties(Element element, Map e) {
-    e.keys.forEach((key) => _setProperty(element, key, e));
-  }
-
-  void _setProperty(Element element, String key, Map e) {
-    print(e);
-    print(key);
-    print(e[key]);
-    element.style.setProperty(key, e[key]);
+    e.keys.forEach((key) => element.style.setProperty(key, e[key]));
   }
 
   void _getWidgetsAndElements() {

@@ -171,7 +171,7 @@ body {
 	background-color: #ccc;
 	cursor: move;
 	float: left;
-	border: 1px solid black;
+	_border: 1px solid black;
 	resize: both;
 	height: 100px;
 	width: 100px;
