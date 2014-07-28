@@ -200,8 +200,10 @@ class DragDropImpl extends DragDrop {
   }
 
   void _onClickResize(MouseEvent event) {
+    document.querySelectorAll('.highlight').forEach((e) => _resetOnMouseOver(e));
     _setResizeOnColumn(event.target);
     document.querySelector('#selection-placeholder').text = event.offset.toString();
+    
   }
 
   void _setResizeOnColumn(Element currentElement) {
@@ -306,8 +308,7 @@ class DragDropImpl extends DragDrop {
       if (container.tagName == 'DIV' && container.className.startsWith('content')) {
         _dragSourceEl.setInnerHtml(dropTarget.innerHtml, treeSanitizer: new NullTreeSanitizer());
         dropTarget.setInnerHtml(event.dataTransfer.getData('text/html'), treeSanitizer: new NullTreeSanitizer());
-        List<Element> highlighted = document.querySelectorAll('.highlight');
-        highlighted.forEach((e) => _resetOnMouseOver(e));
+        document.querySelectorAll('.highlight').forEach((e) => _resetOnMouseOver(e));
 
       }
 
