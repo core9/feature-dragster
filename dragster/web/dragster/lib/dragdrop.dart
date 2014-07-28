@@ -28,7 +28,7 @@ class DragDropImpl extends DragDrop {
   Element _columns = document.querySelector('#columns');
   List<Element> _columItems = document.querySelectorAll('#columns .column');
   Menu _menu;
-
+  
 
 
   void start() {
@@ -43,36 +43,29 @@ class DragDropImpl extends DragDrop {
     initHighlight();
 
   }
-
-  void initHighlight() {
-    document.querySelectorAll('#columns').forEach((e) => activateHighLight(e));
+  
+  void initHighlight(){
+      document.querySelectorAll('#columns').forEach((e) => activateHighLight(e));
   }
-
-  void activateHighLight(Element e) {
+  
+  void activateHighLight(Element e){
     e.onMouseOver.listen(_highLightOnMouseOver);
     e.onMouseOut.listen(_highLightOnMouseOut);
   }
-
-  void deActivateHighLight(Element e) {
-    //FIXME not used
+  
+  void deActivateHighLight(Element e){
     e.onMouseOver.listen(_highLightOnMouseOver).cancel();
     e.onMouseOut.listen(_highLightOnMouseOut).cancel();
   }
-
-  void _highLightOnMouseOver(MouseEvent event) {
-    
+  
+  void _highLightOnMouseOver(MouseEvent event){
     Element element = event.target;
     if(element == null)return;
-    if (element.id == 'columns') return;
-    
-    if(element.classes.contains('resize'))return;
-    
-    print('mouse enter');
+    if(element.id == 'columns') return;
+    if(element.classes.contains('resize')) return;
     String border = element.style.border;
     int width = element.clientWidth;
     int height = element.clientHeight;
-    
-    
     var mapData = new Map();
     var cssData = new Map();
     cssData["border"] = border;
@@ -82,27 +75,24 @@ class DragDropImpl extends DragDrop {
     mapData["properties"].add(cssData);
     String jsonData = JSON.encode(mapData);
     document.querySelector('#hover-placeholder').text = jsonData;
-    
-
     element.style.setProperty('width', (width - 4).toString() + 'px');
-    
     element.style.setProperty('height', (height - 4).toString() + 'px');
-    
     element.style.setProperty('border', '2px solid lightblue');
     element.classes.add('highlight');
   }
-
-  void _highLightOnMouseOut(MouseEvent event) {
+  
+  void _highLightOnMouseOut(MouseEvent event){
     Element element = event.target;
-    if(element == null)return;
-    if(!element.classes.contains('resize')) _resetOnMouseOver(element);
+    _resetOnMouseOver(element);
   }
-
+  
   void _resetOnMouseOver(Element element) {
-    if(element.classes.contains('resize'))return;
-    if (element.id == 'columns') return;
+    if(element == null)return;
+    if(element.id == 'columns') return;
+    if(element.classes.contains('resize')) return;
     print('mouse leave');
     String properties = document.querySelector('#hover-placeholder').text;
+    if(properties == '')return;
     var json = JSON.decode(properties);
     List<Map> cssProperties = json['properties'];
     cssProperties.forEach((e) => _setProperties(element, e));
@@ -211,12 +201,26 @@ class DragDropImpl extends DragDrop {
 
   void _onClickResize(MouseEvent event) {
     _setResizeOnColumn(event.target);
+    document.querySelector('#selection-placeholder').text = event.offset.toString();
   }
 
   void _setResizeOnColumn(Element currentElement) {
-    if(currentElement == null)return;
-    if (currentElement.className == "column") {
+    if(currentElement == null) return;
+    if (currentElement.classes.contains('column')) {
+      if(currentElement.classes.contains('resize')){
+        currentElement.classes.remove('resize');
+        currentElement.style.setProperty('overflow', 'visible');
+        Element content = currentElement.querySelector('.content');
+        content.style.setProperty('width', '100%');
+        content.style.setProperty('height', '100%');
+        document.querySelector('#hover-placeholder').text = "";
+      }else{
       currentElement.style.setProperty('overflow', 'auto');
+      currentElement.classes.add('resize');
+      Element content = currentElement.querySelector('.content');
+      content.style.setProperty('width', '50%');
+      content.style.setProperty('height', '50%');
+      }
     } else {
       _setResizeOnColumn(currentElement.parent);
     }
@@ -228,8 +232,8 @@ class DragDropImpl extends DragDrop {
     for (var content in contentItems) {
       content.classes.add('hide');
     }
-    Element dragTarget = _getDragTarget(event);
-    if (dragTarget == null) {
+    Element dragTarget = _getDragTarget(event); 
+    if(dragTarget == null){
       return;
     }
     dragTarget.style.setProperty('overflow', 'visible');
@@ -238,23 +242,23 @@ class DragDropImpl extends DragDrop {
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/html', dragTarget.innerHtml);
   }
-
-  Element _getDragTarget(MouseEvent event) {
+  
+  Element _getDragTarget(MouseEvent event){
     Element target;
-    if (event.target is Element && (event.target as Element).draggable) {
+    if(event.target is Element && (event.target as Element).draggable){
       target = event.target;
-    } else {
-      return null; // go get first draggable parent
+    }else{
+     return null; // go get first draggable parent
     }
-
+    
     return target;
   }
-
+  
 
 
   void _onDragEnd(MouseEvent event) {
-    Element dragTarget = _getDragTarget(event);
-    if (dragTarget != null) {
+    Element dragTarget = _getDragTarget(event); 
+    if(dragTarget != null){
       dragTarget.classes.remove('moving');
     }
     var cols = document.querySelectorAll('#columns .column');
@@ -293,15 +297,15 @@ class DragDropImpl extends DragDrop {
         dropTarget.setInnerHtml(event.dataTransfer.getData('text/html'), treeSanitizer: new NullTreeSanitizer());
 
         List<Element> highlighted = document.querySelectorAll('.highlight');
-
+        
         highlighted.forEach((e) => _resetOnMouseOver(e));
-
+        
       }
-
+     
     }
 
 
-
+    
   }
 
 }
