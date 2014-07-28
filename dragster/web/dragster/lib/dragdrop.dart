@@ -271,9 +271,11 @@ class DragDropImpl extends DragDrop {
     for (var col in cols) {
       col.classes.remove('over');
     }
-    var contentItems = document.querySelectorAll('.content');
-    for (var content in contentItems) {
+    List<Element> contentItems = document.querySelectorAll('.content');
+    for (Element content in contentItems) {
       content.classes.remove('hide');
+      content.style.setProperty('width', '100%');
+      content.style.setProperty('height', '100%');
     }
   }
 
