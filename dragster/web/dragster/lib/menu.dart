@@ -49,7 +49,7 @@ class MenuImpl extends Menu {
   List<Element> _allTemplates;
 
   List<Element> _menuInputItems = new List(11);
-  List<String> _excludeFromHash = new List(2);
+  List<String> _excludeFromHash = new List(1);
 
   DragDrop _dragdrop;
 
@@ -60,8 +60,7 @@ class MenuImpl extends Menu {
   void start() {
     _load(false);
     _redrawTop('#columns', '#menu');
-    _excludeFromHash[0] = 'menu-display';
-    _excludeFromHash[1] = 'menu-action';
+    _excludeFromHash[0] = 'menu-action';
     _dragdrop = new DragDropImpl();
     _showMenuElement.onClick.listen(_showMenu);
     _putMenuItemsInListAndAddClickEvent();
