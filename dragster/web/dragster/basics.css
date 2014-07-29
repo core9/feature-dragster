@@ -150,7 +150,7 @@ body {
 #columns {
 	margin: auto;
 	height: 1020px;
-	background: #cca;
+	background: rgba(186, 203, 228, 0.26);
 	resize: both;
 	overflow: auto;
 	position: relative;

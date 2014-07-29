@@ -21,34 +21,46 @@
 <script type="text/javascript">
 	$(document).ready(function() {
 		$("body").gridBuilder();
+
+		(function($) {
+			"use strict";
+			var gridster = {
+				config : {
+					useCaching : true,
+					language : "en"
+				},
+				load : function() {
+				},
+				save : function() {
+				},
+				clear : function() {
+					$("body").destroyGrid();
+				},
+				start : function() {
+
+				}
+			}
+			gridster.start();
+		})(jQuery);
+
 	});
 </script>
 
 </head>
 <body>
-	<a class="menu" href="../">Editor</a>
-	<pre>
-		<code>$(document).ready(function(){
-  $("body").gridBuilder({
-    color:          '#eee',    // color of the primary gridlines
-    secondaryColor: '#f9f9f9', // color of the secondary gridlines
-    vertical:       18,        // height of the vertical rhythm
-    horizontal:     140,       // width of horizontal strokes
-    gutter:         40,        // width of the gutter between strokes
-  });
-});</code>
-	</pre>
 
-	<div style="margin: 0 auto; top: 200px; width: 200px; height: 100px;">
 
+
+	<div style="margin: 0 auto; margin-top: 200px; width: 200px; height: 100px;">
+		<a class="menu" href="../">Editor</a>
 		<form>
-		  <input type="text"  name="name"></input>
-      <input type="color" name="color">
-		  <input type="color" name="secondaryColor">
-			<input type="number" name="vertical" value="50">
-			<input type="number" name="horizontal" value="50">
-			<input type="number" name="gutter" value="50">
-			<button type="submit" name="save" value="true">save</button>
+			<input type="text" name="name"></input>
+			<input type="color" name="color">
+			<input type="color" name="secondaryColor"> <input
+				type="number" name="vertical" value="50">
+			<input type="number" name="horizontal" value="50"> <input
+				type="number" name="gutter" value="50">
+					<button type="submit" name="save" value="true">save</button>
 		</form>
 
 	</div>
