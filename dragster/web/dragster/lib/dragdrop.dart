@@ -160,7 +160,7 @@ class DragDropImpl extends DragDrop {
     }
 
     Menu menu = new MenuImpl();
-    menu.menuAddAllTemplates();
+    menu.menuAddAllElementTemplates();
   }
 
   void _addWidgetToStageAsTemplate(String widget, var div) {

@@ -13,7 +13,7 @@ import 'dragdrop.dart';
 
 abstract class Menu {
   void start();
-  void menuAddAllTemplates();
+  void menuAddAllElementTemplates();
 }
 
 class MenuImpl extends Menu {
@@ -69,21 +69,26 @@ class MenuImpl extends Menu {
 
   }
 
-  void menuAddAllTemplates() {
+  void menuAddAllElementTemplates() {
     UListElement ul = document.querySelector('#all-templates');
     _allTemplates = document.querySelectorAll('template');
     for (Element item in _allTemplates) {
-      print(item.id);
-      List<String> classes = [];
-      classes.add('menu');
-      classes.add('template-element');
-      LIElement li = new LIElement();
-      AnchorElement link = new AnchorElement();
-      link.classes.addAll(classes);
-      link.setAttribute('href', '#' + item.id);
-      link.text = item.id;
-      li.append(link);
-      ul.append(li);
+      
+      if(item.classes.contains('element')){
+        print(item.id);
+        List<String> classes = [];
+        classes.add('menu');
+        classes.add('template-element');
+        LIElement li = new LIElement();
+        AnchorElement link = new AnchorElement();
+        link.classes.addAll(classes);
+        link.setAttribute('href', '#' + item.id);
+        link.text = item.id;
+        li.append(link);
+        ul.append(li);
+        
+      }
+      
     }
   }
 
@@ -283,7 +288,7 @@ class MenuImpl extends Menu {
           _addWidgetToStage(menuTarget);
           break;
         case 'all-elements':
-          _addElementToStage(menuTarget);
+          //_addElementToStage(menuTarget);
           break;
         default:
           _nonWidgetAndElements(menuTarget);
@@ -306,8 +311,6 @@ class MenuImpl extends Menu {
     document.querySelector('#columns').append(newDiv);
     _save();
     _dragdrop.addEventsToColumn(newDiv);
-
-
   }
 
   void _addElementToStage(Element menuTarget) {

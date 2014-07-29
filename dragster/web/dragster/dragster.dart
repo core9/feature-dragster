@@ -5,6 +5,7 @@ void main() {
   DragDrop dragdrop = new DragDropImpl();
   dragdrop.start();
 
+  /*
 
   var injector = new Injector(new Dragster());
   var billingService = injector.getInstance(BillingService);
@@ -13,6 +14,8 @@ void main() {
   Receipt receipt = billingService.chargeOrder(order, creditCard);
   Order myOrder = receipt.getOrder();
   print(myOrder.item);
+  * 
+  */
 
 }
 

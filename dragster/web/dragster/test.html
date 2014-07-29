@@ -12,11 +12,11 @@
 	<div class="content" contenteditable="true" data-widget="content"
 		style="display: block; height: 100%; width: 100%; background: red; position: static;">
   
-    <template id="css">
+    <template class="element" id="css">
       <link rel="stylesheet" href="test.css">
     </template>
 
-		<template id="li">
+		<template class="element" id="li">
 		<li>{placeholder}</li>
 		</template>
 
@@ -39,6 +39,16 @@
 			sheets - or is that inline styles?</p>
 
 	</div>
+	
+	 <div class="content" data-widget="gblok"
+    style="display: block; height: 100%; width: 100%; background: blue; position: static;">
+    <header>D</header>
+
+    <p contenteditable="false" id="test"
+      style="font-size: x-large; color: #ff9900">Using inline style
+      sheets - or is that inline styles?</p>
+
+  </div>
 
 
 
