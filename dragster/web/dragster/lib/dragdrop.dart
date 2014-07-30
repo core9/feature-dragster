@@ -57,6 +57,20 @@ class DragDropImpl extends DragDrop {
     e.onMouseOver.listen(_highLightOnMouseOver).cancel();
     e.onMouseOut.listen(_highLightOnMouseOut).cancel();
   }
+  
+  Element _getFirstParentWithClass(Element element, String className){
+    Element parent;
+    try{
+      parent = element.parent;
+    }catch(e){
+      return null;
+    }
+
+    if(parent != null){
+      if(parent.classes.contains(className)) return parent;
+    }
+    return _getFirstParentWithClass(parent, className);
+  }
 
   void _highLightOnMouseOver(MouseEvent event) {
     Element element = event.target;
@@ -65,7 +79,14 @@ class DragDropImpl extends DragDrop {
     if (element.classes.contains('resize')) return;
     
     InputElement inputName = document.querySelector('#name');
-    inputName.value = element.id;
+    String parentId = "";
+    Element parentElement = _getFirstParentWithClass(element.parent, 'column');
+    
+    if(parentElement != null){
+      parentId = parentElement.id.toString() + ' > ';
+    }
+    
+    inputName.value = ' > ' + parentId  + element.id.toString();
     
     String border = element.style.border;
     int width = element.clientWidth;
@@ -259,7 +280,7 @@ class DragDropImpl extends DragDrop {
     if (event.target is Element && (event.target as Element).draggable) {
       target = event.target;
     } else {
-      return null; // go get first draggable parent
+      return null;//_getDragTarget(event); // go get first draggable parent
     }
 
     return target;
