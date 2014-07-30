@@ -16,34 +16,70 @@
 </style>
 
 <script type="text/javascript" src="jquery-2.1.1.min.js"></script>
-<script type="text/javascript" src="jquery.indexeddb.js"></script>
+<script type="text/javascript" src="db.js"></script>
 <script type="text/javascript" src="gridBuilder.js"></script>
 <script type="text/javascript">
-	$(document).ready(function() {
-		$("body").gridBuilder();
+	$(document).ready(
+			function() {
 
-		(function($) {
-			"use strict";
-			var gridster = {
-				config : {
-					useCaching : true,
-					language : "en"
-				},
-				load : function() {
-				},
-				save : function() {
-				},
-				clear : function() {
-					$("body").destroyGrid();
-				},
-				start : function() {
+				
+				  var server;
+				  db.open( {
+				      server: 'my-app',
+				      version: 1,
+				      schema: {
+				          people: {
+				              key: { keyPath: 'id' , autoIncrement: true },
+				              // Optionally add indexes
+				              indexes: {
+				                  firstName: { },
+				                  answer: { unique: true }
+				              }
+				          }
+				      }
+				  } ).done( function ( s ) {
+				      server = s;
+			        server.people.add( {
+			              firstName: 'Aaron',
+			              lastName: 'Powell',
+			              answer: 42
+			          } ).done( function ( item ) {
+			              // item stored
+			          } );
+				  } );
+				  
 
-				}
-			}
-			gridster.start();
-		})(jQuery);
+				
+				
+				
+				(function($) {
+					"use strict";
+					var gridster = {
+						body : $("body"),
+						gutter : $("[name='gutter']"),
+						button : $("button"),
+						config : {
+							useCaching : true,
+							language : "en"
+						},
+						load : function() {
+						},
+						save : function(event) {
+							event.preventDefault();
+						},
+						clear : function() {
+							this.body.destroyGrid();
+						},
+						start : function() {
+							this.body.gridBuilder();
+							this.button.click(this.save);
+							console.log(this.gutter.val());
+						}
+					}
+					gridster.start();
+				})(jQuery);
 
-	});
+			});
 </script>
 
 </head>
@@ -51,16 +87,16 @@
 
 
 
-	<div style="margin: 0 auto; margin-top: 200px; width: 200px; height: 100px;">
+	<div
+		style="margin: 0 auto; margin-top: 200px; width: 200px; height: 100px;">
 		<a class="menu" href="../">Editor</a>
 		<form>
 			<input type="text" name="name"></input>
-			<input type="color" name="color">
-			<input type="color" name="secondaryColor"> <input
-				type="number" name="vertical" value="50">
-			<input type="number" name="horizontal" value="50"> <input
-				type="number" name="gutter" value="50">
-					<button type="submit" name="save" value="true">save</button>
+			<input type="color" name="color"> <input type="color"
+				name="secondaryColor"> <input type="number" name="vertical"
+					value="50"> <input type="number" name="horizontal"
+						value="50"> <input type="number" name="gutter" value="50">
+								<button type="submit" name="save" value="true">save</button>
 		</form>
 
 	</div>
