@@ -29,6 +29,7 @@ class DragDropImpl extends DragDrop {
   List<Element> _columItems = document.querySelectorAll('#columns .column');
   Menu _menu;
 
+  var _onMouseMoveStream;
 
 
   void start() {
@@ -202,15 +203,15 @@ class DragDropImpl extends DragDrop {
   void _onClickResize(MouseEvent event) {
     document.querySelectorAll('.highlight').forEach((e) => _resetOnMouseOver(e));
     _setResizeOnColumn(event.target);
-    document.querySelector('#selection-placeholder').text = event.offset.toString();
-    
-  }
+ }
 
   void _setResizeOnColumn(Element currentElement) {
     if (currentElement == null) return;
     if (currentElement.classes.contains('column')) {
       if (currentElement.classes.contains('resize')) {
        
+        _onMouseMoveStream.cancel();
+        
         currentElement.classes.remove('resize');
         currentElement.style.setProperty('overflow', 'visible');
         Element content = currentElement.querySelector('.content');
@@ -220,6 +221,9 @@ class DragDropImpl extends DragDrop {
         document.querySelector('#hover-placeholder').text = "";
       } else {
         currentElement.style.setProperty('overflow', 'auto');
+        
+        _onMouseMoveStream = currentElement.onMouseMove.listen(_onMouseMove);
+        
         currentElement.classes.add('resize');
         Element content = currentElement.querySelector('.content');
         content.style.setProperty('width', '50%');
@@ -228,6 +232,14 @@ class DragDropImpl extends DragDrop {
     } else {
       _setResizeOnColumn(currentElement.parent);
     }
+  }
+  
+  void _onMouseMove(MouseEvent event){
+    
+    Element mouseMove = event.target;
+    
+    //print(mouseMove.offset);
+    
   }
 
   void _onDragStart(MouseEvent event) {

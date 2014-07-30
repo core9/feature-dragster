@@ -23,32 +23,30 @@
 			function() {
 
 				
-				  var server;
-				  db.open( {
-				      server: 'my-app',
-				      version: 1,
-				      schema: {
-				          people: {
-				              key: { keyPath: 'id' , autoIncrement: true },
-				              // Optionally add indexes
-				              indexes: {
-				                  firstName: { },
-				                  answer: { unique: true }
-				              }
-				          }
-				      }
-				  } ).done( function ( s ) {
-				      server = s;
-			        server.people.add( {
-			              firstName: 'Aaron',
-			              lastName: 'Powell',
-			              answer: 42
-			          } ).done( function ( item ) {
-			              // item stored
-			          } );
-				  } );
-				  
 
+			         var server;
+			          db.open( {
+			              server: 'dbName',
+			              version: 3,
+			              schema: {
+			                  grid: {
+			                      key: { keyPath: 'id', autoIncrement: true }
+			                  }
+			              }
+			          } ).done( function ( s ) {
+			              server = s;
+			              server.grid.add( {
+			                    firstName: 'Aaron',
+			                    lastName: 'Powell',
+			                    answer: 452
+			                } ).done( function ( item ) {
+			                    // item stored
+			                } );
+			          } );
+				
+
+
+			          
 				
 				
 				

@@ -66,6 +66,7 @@ class MenuImpl extends Menu {
     _putMenuItemsInListAndAddClickEvent();
     _ulMenuAddClickEvents();
     _menuAddOptions();
+    //document.querySelector('#selection-placeholder').style.setProperty('right', '0px');
 
   }
 

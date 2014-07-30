@@ -109,14 +109,22 @@
 </div>
 
 
-<div id="selection-placeholder" style="position:absolute; top:230px; width:140px; height:100px; border:2px solid #ccc;">
+<div id="selection-placeholder" style="position:fixed; right:0px; top:230px; width:140px; height:100px; border:2px solid #ccc;">
+    <form>
+      <input type="text" name="name"></input>
+      <input type="color" name="color"> <input type="color"
+        name="secondaryColor"> <input type="number" name="vertical"
+          value="50"> <input type="number" name="horizontal"
+            value="50"> <input type="number" name="gutter" value="50">
+                <button type="submit" name="save" value="true">save</button>
+    </form>
 </div>
 
 
 	<div id="columns" class="columns-wrapper" data-source="test.html">
 		<div id="elem1" class="column" draggable="true">
 			<div class="content"
-				style="display: block; height: 100%; width: 100%; background: red; position: static;">
+				style="display: block; height: inherit; width: inherit; background: red; position: static;">
 				<header>A</header>
 			</div>
 		</div>
