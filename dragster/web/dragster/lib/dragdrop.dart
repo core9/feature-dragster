@@ -19,7 +19,6 @@ abstract class DragDrop {
   void addEventsToColumn(Element col);
   void initHighlight();
   void activateHighLight(Element e);
-  void deActivateHighLight(Element e);
 }
 
 class DragDropImpl extends DragDrop {
@@ -79,19 +78,10 @@ class DragDropImpl extends DragDrop {
     e.onMouseOut.listen(_highLightOnMouseOut);
   }
 
-  void deActivateHighLight(Element e) {
-    e.onMouseOver.listen(_highLightOnMouseOver).cancel();
-    e.onMouseOut.listen(_highLightOnMouseOut).cancel();
-  }
-  
-  Element _getFirstParentWithClass(Element element, String className){
-    Element parent;
-    try{
-      parent = element.parent;
-    }catch(e){
-      return null;
-    }
 
+  Element _getFirstParentWithClass(Element element, String className){
+    if(element == null) return null;
+    Element parent = element.parent;
     if(parent != null){
       if(parent.classes.contains(className)) return parent;
     }
@@ -103,21 +93,23 @@ class DragDropImpl extends DragDrop {
     if (element == null) return;
     if (element.id == 'columns') return;
     if (element.classes.contains('resize')) return;
-   
     
     String border = element.style.border;
-    int width = element.clientWidth;
-    int height = element.clientHeight;
-    var mapData = new Map();
-    var cssData = new Map();
-    cssData["border"] = border;
-    cssData["width"] = width.toString() + 'px';
-    cssData["height"] = height.toString() + 'px';
-    mapData["properties"] = new List();
-    mapData["properties"].add(cssData);
-    String jsonData = JSON.encode(mapData);
-    document.querySelector('#hover-placeholder').text = jsonData;
-    element.classes.add('highlight');
+     int width = element.clientWidth;
+     int height = element.clientHeight;
+     var mapData = new Map();
+     var cssData = new Map();
+     cssData["border"] = border;
+     cssData["width"] = width.toString() + 'px';
+     cssData["height"] = height.toString() + 'px';
+     mapData["properties"] = new List();
+     mapData["properties"].add(cssData);
+     String jsonData = JSON.encode(mapData);
+     document.querySelector('#hover-placeholder').text = jsonData;
+     element.style.setProperty('width', (width - 4).toString() + 'px');
+     element.style.setProperty('height', (height - 4).toString() + 'px');
+     element.style.setProperty('border', '2px solid lightblue');
+     element.classes.add('highlight');
   }
 
   void _highLightOnMouseOut(MouseEvent event) {
