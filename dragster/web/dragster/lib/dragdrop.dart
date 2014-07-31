@@ -53,6 +53,21 @@ class DragDropImpl extends DragDrop {
 
   void _selected(MouseEvent event){
     Element element = event.target;
+
+    if(element.classes.contains('selected')){
+      print('removing selected');
+      element.classes.remove('selected');
+      int width = element.clientWidth;
+      int height = element.clientHeight;
+      element.style.setProperty('width', (width + 4).toString() + 'px');
+      element.style.setProperty('height', (height + 4).toString() + 'px');
+    }else{
+      element.classes.add('selected');
+      print('adding selected');
+    }
+    
+
+
     print('selected : ');
     print(element.toString());
   }

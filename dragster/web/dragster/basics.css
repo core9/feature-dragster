@@ -179,6 +179,11 @@ body {
 	margin: 0px;
 }
 
+.selected {
+	border: 2px solid rgb(173, 216, 230) !important;
+	width: calc(100% - 4px) !important;
+	height: calc(100% - 4px) !important;
+}
 
 .column.over {
 	border: 2px dashed #000;
