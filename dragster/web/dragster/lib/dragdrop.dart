@@ -26,6 +26,7 @@ class DragDropImpl extends DragDrop {
 
   Element _dragSourceEl;
   Element _columns = document.querySelector('#columns');
+  List<Element> _columnsElements = document.querySelectorAll('#columns');
   List<Element> _columItems = document.querySelectorAll('#columns .column');
   Menu _menu;
 
@@ -41,11 +42,24 @@ class DragDropImpl extends DragDrop {
     initDragAndDrop();
     _setupDb();
     initHighlight();
+    
+    _isSelected();
 
   }
+  
+  void _isSelected(){
+    _columnsElements.forEach((e) => e.onClick.listen(_selected));
+  }
 
+  void _selected(MouseEvent event){
+    Element element = event.target;
+    print('selected : ');
+    print(element.toString());
+  }
+  
+  
   void initHighlight() {
-    document.querySelectorAll('#columns').forEach((e) => activateHighLight(e));
+    _columnsElements.forEach((e) => activateHighLight(e));
   }
 
   void activateHighLight(Element e) {
