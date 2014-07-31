@@ -48,7 +48,7 @@ class DragDropImpl extends DragDrop {
   }
   
   void _isSelected(){
-    _columnsElements.forEach((e) => e.onClick.listen(_selected));
+    //_columnsElements.forEach((e) => e.onClick.listen(_selected));
   }
 
   void _selected(MouseEvent event){
@@ -65,9 +65,6 @@ class DragDropImpl extends DragDrop {
       element.classes.add('selected');
       print('adding selected');
     }
-    
-
-
     print('selected : ');
     print(element.toString());
   }
@@ -106,16 +103,7 @@ class DragDropImpl extends DragDrop {
     if (element == null) return;
     if (element.id == 'columns') return;
     if (element.classes.contains('resize')) return;
-    
-    InputElement inputName = document.querySelector('#name');
-    String parentId = "";
-    Element parentElement = _getFirstParentWithClass(element.parent, 'column');
-    
-    if(parentElement != null){
-      parentId = parentElement.id.toString() + ' > ';
-    }
-    
-    inputName.value = ' > ' + parentId  + element.id.toString();
+   
     
     String border = element.style.border;
     int width = element.clientWidth;
@@ -129,9 +117,6 @@ class DragDropImpl extends DragDrop {
     mapData["properties"].add(cssData);
     String jsonData = JSON.encode(mapData);
     document.querySelector('#hover-placeholder').text = jsonData;
-    element.style.setProperty('width', (width - 4).toString() + 'px');
-    element.style.setProperty('height', (height - 4).toString() + 'px');
-    element.style.setProperty('border', '2px solid lightblue');
     element.classes.add('highlight');
   }
 
