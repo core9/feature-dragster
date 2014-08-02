@@ -1,4 +1,8 @@
-part of highlight;
+library highlight_impl;
+
+import 'dart:html';
+import 'dart:convert';
+import '../highlight_api.dart';
 
 
 class HighLightImpl extends HighLight {

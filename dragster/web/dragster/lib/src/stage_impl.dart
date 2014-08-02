@@ -1,5 +1,6 @@
-part of stage;
+library stage_impl;
 
+import '../stage_api.dart';
 
 
 class StageImpl extends Stage {

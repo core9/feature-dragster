@@ -1,6 +1,22 @@
-part of dragdrop;
+library dragdrop_impl;
+
+import 'dart:html';
+import 'package:html5lib/parser.dart' show parse;
+import "package:dice/dice.dart";
+
+import 'dart:js';
+import "package:json_object/json_object.dart";
 
 
+import '../dragdrop_api.dart';
+import '../menu_api.dart';
+import '../grid_api.dart';
+import '../highlight_api.dart';
+
+
+
+import '../nedb.dart';
+import '../utils.dart';
 
 class DragDropImpl extends DragDrop {
 
@@ -126,8 +142,8 @@ class DragDropImpl extends DragDrop {
       }
     }
 
-    Menu menu = new MenuImpl();
-    menu.menuAddAllElementTemplates();
+    //Menu menu = new MenuImpl();
+    _menu.menuAddAllElementTemplates();
   }
 
   void _addWidgetToStageAsTemplate(String widget, var div) {

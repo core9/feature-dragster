@@ -1,4 +1,17 @@
-part of menu;
+library menu_impl;
+
+import 'package:crypto/crypto.dart';
+import 'package:html5lib/parser.dart' show parse;
+import 'package:lawndart/lawndart.dart';
+import "package:dice/dice.dart";
+import 'dart:convert';
+import 'dart:html';
+
+import '../menu_api.dart';
+import '../highlight_api.dart';
+import '../dragdrop_api.dart';
+import '../utils.dart';
+
 
 
 class MenuImpl extends Menu {
@@ -38,12 +51,13 @@ class MenuImpl extends Menu {
   List<Element> _menuInputItems = new List(11);
   List<String> _excludeFromHash = new List(1);
 
-  //@inject
+  @inject
   DragDrop _dragdrop;
 
   Element _columns = document.querySelector('#columns');
 
   var _db = new Store('dbName', 'storeName');
+  
   @inject
   HighLight _highLight;
   
@@ -52,7 +66,7 @@ class MenuImpl extends Menu {
     _load(false);
     _redrawTop('#columns', '#menu');
     _excludeFromHash[0] = 'menu-action';
-    _dragdrop = new DragDropImpl();
+    //_dragdrop = new DragDropImpl();
     _showMenuElement.onClick.listen(_showMenu);
     _putMenuItemsInListAndAddClickEvent();
     _ulMenuAddClickEvents();
