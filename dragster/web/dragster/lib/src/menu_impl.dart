@@ -12,6 +12,8 @@ import '../highlight_api.dart';
 import '../dragdrop_api.dart';
 import '../utils.dart';
 
+import 'dragdrop_impl.dart';
+
 
 
 class MenuImpl extends Menu {
@@ -51,7 +53,7 @@ class MenuImpl extends Menu {
   List<Element> _menuInputItems = new List(11);
   List<String> _excludeFromHash = new List(1);
 
-  @inject
+  //@inject
   DragDrop _dragdrop;
 
   Element _columns = document.querySelector('#columns');
@@ -66,7 +68,7 @@ class MenuImpl extends Menu {
     _load(false);
     _redrawTop('#columns', '#menu');
     _excludeFromHash[0] = 'menu-action';
-    //_dragdrop = new DragDropImpl();
+    _dragdrop = new DragDropImpl();
     _showMenuElement.onClick.listen(_showMenu);
     _putMenuItemsInListAndAddClickEvent();
     _ulMenuAddClickEvents();

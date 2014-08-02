@@ -18,6 +18,9 @@ void main() {
 
   var injector = new Injector(new Dragster());  
   DragDrop dragdrop = injector.getInstance(DragDrop);
+  
+  print('pause');
+  
   dragdrop.start();
 
 }
@@ -25,11 +28,11 @@ void main() {
 
 class Dragster extends Module {
   configure() {
-    register(HighLight).toType(HighLightImpl);
-    register(DragDrop).toType(DragDropImpl);
-    register(Grid).toType(GridImpl);
-    register(Menu).toType(MenuImpl);
-    register(Stage).toType(StageImpl);
+    register(HighLight).toInstance(new HighLightImpl());
+    register(DragDrop).toInstance(new DragDropImpl());
+    register(Grid).toInstance(new GridImpl());
+    register(Menu).toInstance(new MenuImpl());
+    register(Stage).toInstance(new StageImpl());
   }
 }
 
