@@ -150,7 +150,7 @@ body {
 #columns {
 	margin: auto;
 	height: 1020px;
-	background: #cca;
+	background: rgba(186, 203, 228, 0.26);
 	resize: both;
 	overflow: auto;
 	position: relative;
@@ -171,7 +171,7 @@ body {
 	background-color: #ccc;
 	cursor: move;
 	float: left;
-	border: 1px solid black;
+	_border: 1px solid black;
 	resize: both;
 	height: 100px;
 	width: 100px;
@@ -179,6 +179,17 @@ body {
 	margin: 0px;
 }
 
+.selected {
+	border: 2px solid rgb(173, 216, 230) !important;
+	width: calc(100% - 4px) !important;
+	height: calc(100% - 4px) !important;
+}
+
+.highlight_off {
+  border: 2px solid #00ff00 !important;
+  width: calc(100% - 4px) !important;
+  height: calc(100% - 4px) !important;
+}
 
 .column.over {
 	border: 2px dashed #000;
