@@ -10,11 +10,13 @@ class DragDropImpl extends DragDrop {
   List<Element> _columnsElements = document.querySelectorAll('#columns');
   List<Element> _columItems = document.querySelectorAll('#columns .column');
   Menu _menu;
-
+  HighLight highLight;
+  
 
 
   void start() {
-
+    highLight = new HighLightImpl();
+    highLight.initHighlight();
     Grid grid = new GridImpl();
     grid.start();
     _menu = new MenuImpl();
@@ -22,8 +24,6 @@ class DragDropImpl extends DragDrop {
     _getWidgetsAndElements();
     initDragAndDrop();
     _setupDb();
-    initHighlight();
-    
     _isSelected();
 
   }
@@ -51,14 +51,7 @@ class DragDropImpl extends DragDrop {
   }
   
   
-  void initHighlight() {
-    _columnsElements.forEach((e) => activateHighLight(e));
-  }
 
-  void activateHighLight(Element e) {
-    e.onMouseOver.listen(_highLightOnMouseOver);
-    e.onMouseOut.listen(_highLightOnMouseOut);
-  }
 
 
   Element _getFirstParentWithClass(Element element, String className){
@@ -70,51 +63,7 @@ class DragDropImpl extends DragDrop {
     return _getFirstParentWithClass(parent, className);
   }
 
-  void _highLightOnMouseOver(MouseEvent event) {
-    Element element = event.target;
-    if (element == null) return;
-    if (element.id == 'columns') return;
-    if (element.classes.contains('resize')) return;
-    
-    String border = element.style.border;
-     int width = element.clientWidth;
-     int height = element.clientHeight;
-     var mapData = new Map();
-     var cssData = new Map();
-     cssData["border"] = border;
-     cssData["width"] = width.toString() + 'px';
-     cssData["height"] = height.toString() + 'px';
-     mapData["properties"] = new List();
-     mapData["properties"].add(cssData);
-     String jsonData = JSON.encode(mapData);
-     document.querySelector('#hover-placeholder').text = jsonData;
-     element.style.setProperty('width', (width - 4).toString() + 'px');
-     element.style.setProperty('height', (height - 4).toString() + 'px');
-     element.style.setProperty('border', '2px solid lightblue');
-     element.classes.add('highlight');
-  }
 
-  void _highLightOnMouseOut(MouseEvent event) {
-    Element element = event.target;
-    _resetOnMouseOver(element);
-  }
-
-  void _resetOnMouseOver(Element element) {
-    if (element == null) return;
-    if (element.id == 'columns') return;
-    if (element.classes.contains('resize')) return;
-    print('mouse leave');
-    String properties = document.querySelector('#hover-placeholder').text;
-    if (properties == '') return;
-    var json = JSON.decode(properties);
-    List<Map> cssProperties = json['properties'];
-    cssProperties.forEach((e) => _setProperties(element, e));
-    element.classes.remove('highlight');
-  }
-
-  void _setProperties(Element element, Map e) {
-    e.keys.forEach((key) => element.style.setProperty(key, e[key]));
-  }
 
   void _getWidgetsAndElements() {
     var dataSource = _columns.dataset['source'];
@@ -214,7 +163,7 @@ class DragDropImpl extends DragDrop {
 
   void _onDoubleClickResize(MouseEvent event) {
     Element element = event.target;
-    document.querySelectorAll('.highlight').forEach((e) => _resetOnMouseOver(e));
+    document.querySelectorAll('.highlight').forEach((e) => highLight.resetOnMouseOver(e));
     _setResizeOnColumn(element);
  }
 
@@ -227,7 +176,7 @@ class DragDropImpl extends DragDrop {
         currentElement.classes.remove('resize');
         currentElement.style.setProperty('overflow', 'visible');
         Element content = currentElement.querySelector('.content');
-        _resetOnMouseOver(content);
+        highLight.resetOnMouseOver(content);
         content.style.setProperty('width', '100%');
         content.style.setProperty('height', '100%');
         document.querySelector('#hover-placeholder').text = "";
@@ -281,7 +230,7 @@ class DragDropImpl extends DragDrop {
     if (dragTarget != null) {
       dragTarget.classes.remove('moving');
       Element targetContent = dragTarget.querySelector('.content');
-      _resetOnMouseOver(targetContent);
+      highLight.resetOnMouseOver(targetContent);
     }
     var cols = document.querySelectorAll('#columns .column');
     for (var col in cols) {
@@ -326,7 +275,7 @@ class DragDropImpl extends DragDrop {
       if (container.tagName == 'DIV' && container.className.startsWith('content')) {
         _dragSourceEl.setInnerHtml(dropTarget.innerHtml, treeSanitizer: new NullTreeSanitizer());
         dropTarget.setInnerHtml(event.dataTransfer.getData('text/html'), treeSanitizer: new NullTreeSanitizer());
-        document.querySelectorAll('.highlight').forEach((e) => _resetOnMouseOver(e));
+        document.querySelectorAll('.highlight').forEach((e) => highLight.resetOnMouseOver(e));
 
       }
 
