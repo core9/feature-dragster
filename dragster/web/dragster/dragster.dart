@@ -1,6 +1,10 @@
 import 'lib/dragdrop.dart';
 import "package:dice/dice.dart";
 
+import 'dart:html';
+
+List<Element> _columnsElements = document.querySelectorAll('#columns');
+
 void main() {
   DragDrop dragdrop = new DragDropImpl();
   dragdrop.start();
