@@ -18,9 +18,6 @@ void main() {
 
   var injector = new Injector(new Dragster());  
   DragDrop dragdrop = injector.getInstance(DragDrop);
-  
-  print('pause');
-  
   dragdrop.start();
 
 }

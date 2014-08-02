@@ -53,8 +53,7 @@ class MenuImpl extends Menu {
   List<Element> _menuInputItems = new List(11);
   List<String> _excludeFromHash = new List(1);
 
-  //@inject
-  DragDrop _dragdrop;
+
 
   Element _columns = document.querySelector('#columns');
 
@@ -62,7 +61,8 @@ class MenuImpl extends Menu {
   
   @inject
   HighLight _highLight;
-  
+  //@inject
+  DragDrop _dragdrop;
   
   void start() {
     _load(false);
