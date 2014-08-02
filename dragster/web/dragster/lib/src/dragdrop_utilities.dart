@@ -10,13 +10,14 @@ class DragDropImpl extends DragDrop {
   List<Element> _columnsElements = document.querySelectorAll('#columns');
   List<Element> _columItems = document.querySelectorAll('#columns .column');
   Menu _menu;
-  HighLight highLight;
+  @inject
+  HighLight _highLight;
+
   
 
 
   void start() {
-    highLight = new HighLightImpl();
-    highLight.initHighlight();
+    _highLight.initHighlight();
     Grid grid = new GridImpl();
     grid.start();
     _menu = new MenuImpl();
@@ -163,7 +164,7 @@ class DragDropImpl extends DragDrop {
 
   void _onDoubleClickResize(MouseEvent event) {
     Element element = event.target;
-    document.querySelectorAll('.highlight').forEach((e) => highLight.resetOnMouseOver(e));
+    document.querySelectorAll('.highlight').forEach((e) => _highLight.resetOnMouseOver(e));
     _setResizeOnColumn(element);
  }
 
@@ -176,7 +177,7 @@ class DragDropImpl extends DragDrop {
         currentElement.classes.remove('resize');
         currentElement.style.setProperty('overflow', 'visible');
         Element content = currentElement.querySelector('.content');
-        highLight.resetOnMouseOver(content);
+        _highLight.resetOnMouseOver(content);
         content.style.setProperty('width', '100%');
         content.style.setProperty('height', '100%');
         document.querySelector('#hover-placeholder').text = "";
@@ -230,7 +231,7 @@ class DragDropImpl extends DragDrop {
     if (dragTarget != null) {
       dragTarget.classes.remove('moving');
       Element targetContent = dragTarget.querySelector('.content');
-      highLight.resetOnMouseOver(targetContent);
+      _highLight.resetOnMouseOver(targetContent);
     }
     var cols = document.querySelectorAll('#columns .column');
     for (var col in cols) {
@@ -275,7 +276,7 @@ class DragDropImpl extends DragDrop {
       if (container.tagName == 'DIV' && container.className.startsWith('content')) {
         _dragSourceEl.setInnerHtml(dropTarget.innerHtml, treeSanitizer: new NullTreeSanitizer());
         dropTarget.setInnerHtml(event.dataTransfer.getData('text/html'), treeSanitizer: new NullTreeSanitizer());
-        document.querySelectorAll('.highlight').forEach((e) => highLight.resetOnMouseOver(e));
+        document.querySelectorAll('.highlight').forEach((e) => _highLight.resetOnMouseOver(e));
 
       }
 

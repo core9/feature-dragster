@@ -1,14 +1,23 @@
-import 'lib/dragdrop.dart';
-import "package:dice/dice.dart";
 
+import "package:dice/dice.dart";
 import 'dart:html';
+
+import 'lib/dragdrop.dart';
+import 'lib/highlight.dart';
 
 List<Element> _columnsElements = document.querySelectorAll('#columns');
 
 void main() {
-  DragDrop dragdrop = new DragDropImpl();
-  dragdrop.start();
 
+  //DragDrop dragdrop = new DragDropImpl();
+  //dragdrop.start();
+
+  var injector = new Injector(new Dragster());
+  
+  DragDrop dragdrop = injector.getInstance(DragDrop);
+  dragdrop.start();
+  
+  
   /*
 
   var injector = new Injector(new Dragster());
@@ -25,6 +34,13 @@ void main() {
 
 
 class Dragster extends Module {
+  configure() {
+    register(HighLight).toInstance(new HighLightImpl());
+    register(DragDrop).toType(DragDropImpl);
+  }
+}
+
+class Dragster2 extends Module {
   configure() {
     // bind CreditCardProcessor to a singleton
     register(CreditProcessor).toInstance(new CreditProcessorImpl());

@@ -2,6 +2,7 @@ library dragdrop;
 
 import 'dart:html';
 import 'package:html5lib/parser.dart' show parse;
+import "package:dice/dice.dart";
 
 import 'dart:js';
 import "package:json_object/json_object.dart";
