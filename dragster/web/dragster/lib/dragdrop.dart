@@ -18,7 +18,8 @@ part 'src/dragdrop_utilities.dart';
 abstract class DragDrop {
   void start();
   void resizeScreen(String strSize);
-  void initDragAndDrop();
-  void addEventsToColumn(Element col);
+  void initDragAndDrop(HighLight _highLight);
+  void addEventsToColumn(Element col , HighLight _highLight);
+
 }
 

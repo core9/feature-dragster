@@ -9,7 +9,10 @@ class DragDropImpl extends DragDrop {
   Element _columns = document.querySelector('#columns');
   List<Element> _columnsElements = document.querySelectorAll('#columns');
   List<Element> _columItems = document.querySelectorAll('#columns .column');
+  @inject
   Menu _menu;
+  @inject
+  Grid _grid;
   @inject
   HighLight _highLight;
 
@@ -18,12 +21,10 @@ class DragDropImpl extends DragDrop {
 
   void start() {
     _highLight.initHighlight();
-    Grid grid = new GridImpl();
-    grid.start();
-    _menu = new MenuImpl();
+    _grid.start();
     _menu.start();
     _getWidgetsAndElements();
-    initDragAndDrop();
+    initDragAndDrop(_highLight);
     _setupDb();
     _isSelected();
 
@@ -72,16 +73,16 @@ class DragDropImpl extends DragDrop {
 
   }
 
-  void initDragAndDrop() {
-    document.querySelectorAll('#columns .column').forEach((e) => addEventsToColumn(e));
+  void initDragAndDrop(HighLight _highLight) {
+    document.querySelectorAll('#columns .column').forEach((e) => addEventsToColumn(e, _highLight));
   }
-  void addEventsToColumn(Element col) {
+  void addEventsToColumn(Element col , HighLight _highLight) {
     col.onDragStart.listen(_onDragStart);
-    col.onDragEnd.listen(_onDragEnd);
+    col.onDragEnd.listen((e) => _onDragEnd(e, _highLight));
     col.onDragEnter.listen(_onDragEnter);
     col.onDragOver.listen(_onDragOver);
     col.onDragLeave.listen(_onDragLeave);
-    col.onDrop.listen(_onDrop);
+    col.onDrop.listen((e) => _onDrop(e, _highLight));
     col.onDoubleClick.listen(_onDoubleClickResize);
   }
 
@@ -226,7 +227,7 @@ class DragDropImpl extends DragDrop {
 
 
 
-  void _onDragEnd(MouseEvent event) {
+  void _onDragEnd(MouseEvent event, HighLight _highLight) {
     Element dragTarget = _getDragTarget(event);
     if (dragTarget != null) {
       dragTarget.classes.remove('moving');
@@ -260,7 +261,7 @@ class DragDropImpl extends DragDrop {
     dropTarget.classes.remove('over');
   }
 
-  void _onDrop(MouseEvent event) {
+  void _onDrop(MouseEvent event, HighLight _highLight) {
     event.stopPropagation();
     Element dropTarget = event.target;
     if (_dragSourceEl != dropTarget) {

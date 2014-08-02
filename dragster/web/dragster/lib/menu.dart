@@ -6,7 +6,8 @@ import 'package:crypto/crypto.dart';
 import 'package:html5lib/parser.dart' show parse;
 import 'package:lawndart/lawndart.dart';
 import 'utils.dart';
-
+import "package:dice/dice.dart";
+import 'highlight.dart';
 
 
 import 'dragdrop.dart';
@@ -56,7 +57,10 @@ class MenuImpl extends Menu {
   Element _columns = document.querySelector('#columns');
 
   var _db = new Store('dbName', 'storeName');
-
+  @inject
+  HighLight _highLight;
+  
+  
   void start() {
     _load(false);
     _redrawTop('#columns', '#menu');
@@ -100,7 +104,7 @@ class MenuImpl extends Menu {
         var innerHtml = parse(value).querySelector(stage).innerHtml;
         _columns.children.clear();
         _columns.setInnerHtml(innerHtml, treeSanitizer: new NullTreeSanitizer());
-        _dragdrop.initDragAndDrop();
+        _dragdrop.initDragAndDrop(_highLight);
       } else {
         _saveLocal();
         _load(false);
@@ -311,7 +315,7 @@ class MenuImpl extends Menu {
     newDiv.setInnerHtml(innerHtml, treeSanitizer: new NullTreeSanitizer());
     document.querySelector('#columns').append(newDiv);
     _save();
-    _dragdrop.addEventsToColumn(newDiv);
+    _dragdrop.addEventsToColumn(newDiv, _highLight);
   }
 
   void _addElementToStage(Element menuTarget) {

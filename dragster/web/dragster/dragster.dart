@@ -4,6 +4,8 @@ import 'dart:html';
 
 import 'lib/dragdrop.dart';
 import 'lib/highlight.dart';
+import 'lib/menu.dart';
+import 'lib/grid.dart';
 
 List<Element> _columnsElements = document.querySelectorAll('#columns');
 
@@ -35,8 +37,10 @@ void main() {
 
 class Dragster extends Module {
   configure() {
-    register(HighLight).toInstance(new HighLightImpl());
+    register(HighLight).toType(HighLightImpl);
     register(DragDrop).toType(DragDropImpl);
+    register(Grid).toType(GridImpl);
+    register(Menu).toType(MenuImpl);
   }
 }
 
