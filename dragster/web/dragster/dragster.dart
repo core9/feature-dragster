@@ -1,6 +1,7 @@
 
 import "package:dice/dice.dart";
 import 'dart:html';
+import 'dart:mirrors';
 
 import 'lib/dragdrop_api.dart';
 import 'lib/src/dragdrop_impl.dart';
@@ -29,33 +30,44 @@ void main() {
   
   dragdrop.start();
 
+  module.getRegistry().forEach((e) => printInterfacesOfType(e));
+  
+}
+
+void printInterfacesOfType(Type type){
+  print(type);
+  
+  TypeMirror tp = reflectType(type);
+  
+  TypeMirror subType = reflectType(Executer);
+    
+    
+  
+  
+  if(tp.isSubtypeOf(subType)){
+    print('is sub type of : ' + subType.toString());
+  }
+
+  print(tp);
+  
 }
 
 
 
-
 class Dragster extends Module {
+  // add by mixin
+  List<Type> _registry = new List();
   
-  List<Type> registry = new List();
-  
+  List<Type> getRegistry(){
+    return _registry;
+  }
   
   void registerToInstance(Type type, dynamic obj){
-    registry.add(type);
+    _registry.add(type);
     register(type).toInstance(obj);
-    print('added : ' + type.toString());
   }
   
   configure() {
-    
-    for(Type type in registry){
-      print('added : ' + type.toString());
-    }
-    
-    //register(HighLight).toInstance(new HighLightImpl());
-    //register(DragDrop).toInstance(new DragDropImpl());
-    //register(Grid).toInstance(new GridImpl());
-    //register(Menu).toInstance(new MenuImpl());
-    //register(Stage).toInstance(new StageImpl());
   }
 }
 

@@ -9,4 +9,6 @@ class StageImpl extends Stage {
     
   }
   
+  void run(){}
+  
 }
