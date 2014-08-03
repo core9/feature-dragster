@@ -16,20 +16,46 @@ List<Element> _columnsElements = document.querySelectorAll('#columns');
 
 void main() {
 
-  var injector = new Injector(new Dragster());  
+  var module = new Dragster();
+  module.registerToInstance(HighLight, new HighLightImpl());
+  module.registerToInstance(DragDrop, new DragDropImpl());
+  module.registerToInstance(Grid, new GridImpl());
+  module.registerToInstance(Menu, new MenuImpl());
+  module.registerToInstance(Stage, new StageImpl());
+  
+  var injector = new Injector(module);  
   DragDrop dragdrop = injector.getInstance(DragDrop);
+  
+  
   dragdrop.start();
 
 }
 
 
+
+
 class Dragster extends Module {
+  
+  List<Type> registry = new List();
+  
+  
+  void registerToInstance(Type type, dynamic obj){
+    registry.add(type);
+    register(type).toInstance(obj);
+    print('added : ' + type.toString());
+  }
+  
   configure() {
-    register(HighLight).toInstance(new HighLightImpl());
-    register(DragDrop).toInstance(new DragDropImpl());
-    register(Grid).toInstance(new GridImpl());
-    register(Menu).toInstance(new MenuImpl());
-    register(Stage).toInstance(new StageImpl());
+    
+    for(Type type in registry){
+      print('added : ' + type.toString());
+    }
+    
+    //register(HighLight).toInstance(new HighLightImpl());
+    //register(DragDrop).toInstance(new DragDropImpl());
+    //register(Grid).toInstance(new GridImpl());
+    //register(Menu).toInstance(new MenuImpl());
+    //register(Stage).toInstance(new StageImpl());
   }
 }
 
