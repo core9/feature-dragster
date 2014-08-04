@@ -37,6 +37,10 @@ packages:
     description: dice
     source: hosted
     version: "1.5.1"
+  dynamic_object:
+    description: dynamic_object
+    source: hosted
+    version: "1.0.4"
   hop:
     description: hop
     source: hosted
@@ -69,6 +73,10 @@ packages:
     description: path
     source: hosted
     version: "1.2.1"
+  pubsub:
+    description: pubsub
+    source: hosted
+    version: "1.1.9"
   source_maps:
     description: source_maps
     source: hosted

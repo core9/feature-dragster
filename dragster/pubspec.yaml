@@ -12,3 +12,4 @@ dependencies:
   js: any
   json_object: any
   lawndart: any
+  pubsub: ">=1.1.9 <2.0.0"
