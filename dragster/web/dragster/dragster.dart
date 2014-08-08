@@ -14,6 +14,9 @@ import 'lib/grid_api.dart';
 import 'lib/stage_api.dart';
 import 'lib/src/stage_impl.dart';
 
+
+import 'lib/temp_main.dart';
+
 List<Element> _columnsElements = document.querySelectorAll('#columns');
 
 void main() {
@@ -33,18 +36,3 @@ void main() {
   bootstrap.run();
   
 }
-
-class MainStrategy implements BootStrategy {
-  InjectorWrap _injectorWrap;
-  void processPlugins(){
-    DragDrop dragdrop = _injectorWrap.getInjector().getInstance(DragDrop);
-    dragdrop.start();
-    
-  }
-  void setRegistry(InjectorWrap injectorWrap){
-    _injectorWrap = injectorWrap;
-  }
-  int getPriority(){ return 0;}
-  
-}
-
