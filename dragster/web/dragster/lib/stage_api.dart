@@ -16,6 +16,7 @@ abstract class PreExecuter extends Executer {
 abstract class Stage extends PreExecuter {
   
   Element getStage();
+  List<Element> getStageElements();
   
   void start();
 }

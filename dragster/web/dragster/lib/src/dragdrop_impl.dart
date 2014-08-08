@@ -12,6 +12,7 @@ import '../dragdrop_api.dart';
 import '../menu_api.dart';
 import '../grid_api.dart';
 import '../highlight_api.dart';
+import '../stage_api.dart';
 
 
 
@@ -21,13 +22,12 @@ import '../utils.dart';
 class DragDropImpl extends DragDrop {
 
   Element _dragSourceEl;
-  Element _columns = document.querySelector('#columns');
-  List<Element> _columnsElements = document.querySelectorAll('#columns');
+
   List<Element> _columItems = document.querySelectorAll('#columns .column');
 
   
-  //@inject
-  //Stage _stage;
+  @inject
+  Stage _stage;
   @inject
   Menu _menu;
   @inject
@@ -87,7 +87,7 @@ class DragDropImpl extends DragDrop {
 
 
   void _getWidgetsAndElements() {
-    var dataSource = _columns.dataset['source'];
+    var dataSource = _stage.getStage().dataset['source'];
     var request = HttpRequest.getString(dataSource).then(_onDataLoaded);
 
   }
@@ -176,10 +176,10 @@ class DragDropImpl extends DragDrop {
 
   void resizeScreen(String strSize) {
     int intSize = int.parse(strSize);
-    _columns.style.setProperty('position', 'relative');
-    _columns.style.setProperty('left', '50%');
-    _columns.style.setProperty('width', '${strSize}px');
-    _columns.style.setProperty('margin-left', '-${intSize / 2}px');
+    _stage.getStage().style.setProperty('position', 'relative');
+    _stage.getStage().style.setProperty('left', '50%');
+    _stage.getStage().style.setProperty('width', '${strSize}px');
+    _stage.getStage().style.setProperty('margin-left', '-${intSize / 2}px');
   }
 
   void _onDoubleClickResize(MouseEvent event) {
