@@ -3,6 +3,9 @@ import "package:dice/dice.dart";
 import 'dart:html';
 import 'dart:mirrors';
 
+import 'lib/bootstrategy_api.dart';
+import 'lib/src/bootstrategy_impl.dart';
+
 import 'lib/dragdrop_api.dart';
 import 'lib/src/dragdrop_impl.dart';
 import 'lib/highlight_api.dart';
@@ -24,25 +27,20 @@ void main() {
   module.registerToInstance(Menu, new MenuImpl());
   module.registerToInstance(Stage, new StageImpl());
   
-  var injector = new Injector(module);  
-  DragDrop dragdrop = injector.getInstance(DragDrop);
-  
-  
-  dragdrop.start();
+
 
   module.getRegistry().forEach((e) => printInterfacesOfType(e));
+  
+  BootstrapFramework bootstrap = new BootstrapFrameworkImpl();
+  bootstrap.addModule(module);
+  bootstrap.run();
   
 }
 
 void printInterfacesOfType(Type type){
   print(type);
-  
   TypeMirror tp = reflectType(type);
-  
   TypeMirror subType = reflectType(Executer);
-    
-    
-  
   
   if(tp.isSubtypeOf(subType)){
     print('is sub type of : ' + subType.toString());
