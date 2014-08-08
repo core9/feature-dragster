@@ -10,6 +10,7 @@ import 'dart:html';
 import '../menu_api.dart';
 import '../highlight_api.dart';
 import '../dragdrop_api.dart';
+import '../stage_api.dart';
 import '../utils.dart';
 
 import 'dragdrop_impl.dart';
@@ -55,12 +56,14 @@ class MenuImpl extends Menu {
 
 
 
-  Element _columns = document.querySelector('#columns');
+  //Element _columns = document.querySelector('#columns');
 
   var _db = new Store('dbName', 'storeName');
   
   @inject
   HighLight _highLight;
+  @inject
+  Stage _stage;
   //@inject
   DragDrop _dragdrop;
   
@@ -105,8 +108,8 @@ class MenuImpl extends Menu {
     _db.open().then((_) => _db.getByKey(hash)).then((value) {
       if (value != null && value != "") {
         var innerHtml = parse(value).querySelector(stage).innerHtml;
-        _columns.children.clear();
-        _columns.setInnerHtml(innerHtml, treeSanitizer: new NullTreeSanitizer());
+        _stage.getStage().children.clear();
+        _stage.getStage().setInnerHtml(innerHtml, treeSanitizer: new NullTreeSanitizer());
         _dragdrop.initDragAndDrop(_highLight);
       } else {
         _saveLocal();
@@ -126,7 +129,7 @@ class MenuImpl extends Menu {
 
   void _saveLocal() {
     String hash = _getState(true);
-    String html = _columns.outerHtml.toString();
+    String html = _stage.getStage().outerHtml.toString();
 
     _db.open().then((_) => _db.save(html, hash));
   }
