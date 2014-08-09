@@ -6,7 +6,7 @@ import '../stage_api.dart';
 import '../menu_api.dart';
 //import '../highlight_api.dart';
 import '../utils.dart';
-
+import 'package:html5lib/parser.dart' show parse;
 
 class StageImpl extends Stage {
   
@@ -38,6 +38,44 @@ class StageImpl extends Stage {
     _highLight = highLight;
   }
   */
+  
+  List<Element> getContentElements(){
+    return document.querySelectorAll('.content');
+  }
+  
+  void getWidgetsAndElements() {
+    var dataSource = getStage().dataset['source'];
+    var request = HttpRequest.getString(dataSource).then(_onDataLoaded);
+
+  }
+
+  void _onDataLoaded(String responseText) {
+
+    var html = parse(responseText).querySelector('body');
+    var contentDivs = html.querySelectorAll('.content');
+
+    UListElement ul = document.querySelector('#all-widgets');
+
+    for (var div in contentDivs) {
+      String widget = div.attributes['data-widget'];
+
+      getMenu().addWidgetToMenu(ul, widget);
+
+      addWidgetToStageAsTemplate(widget, div);
+
+      for (Element item in getGridElements()) {
+        try {
+          if (item.children.first.attributes['data-widget'] == widget) {
+            item.setInnerHtml(div.outerHtml, treeSanitizer: new NullTreeSanitizer());
+          }
+        } catch (exception, stackTrace) {
+        }
+      }
+    }
+
+    getMenu().menuAddAllElementTemplates();
+  }
+  
   void addWidgetToStageAsTemplate(String widget, var div) {
     print(div);
     TemplateElement template = new TemplateElement();

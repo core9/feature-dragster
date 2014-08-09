@@ -17,6 +17,10 @@ class HighLightImpl extends HighLight {
   
   void start(){}
   
+  List<Element> getHighLightedElements(){
+    return document.querySelectorAll('.highlight');
+  }
+  
   void initHighlight() {
     _stage.getAllElements().forEach((e) => activateHighLight(e));
   }

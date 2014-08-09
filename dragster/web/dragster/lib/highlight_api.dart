@@ -8,4 +8,5 @@ abstract class HighLight {
   void initHighlight();
   void activateHighLight(Element e);
   void resetOnMouseOver(Element element);
+  List<Element> getHighLightedElements();
 }

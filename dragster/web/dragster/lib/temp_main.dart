@@ -3,6 +3,7 @@ library main;
 import 'dragdrop_api.dart';
 import 'menu_api.dart';
 import 'stage_api.dart';
+import 'grid_api.dart';
 
 import 'bootstrategy_api.dart';
 
@@ -10,23 +11,24 @@ class MainStrategy implements BootStrategy {
   InjectorWrap _injectorWrap;
   void processPlugins(){
     
-    Stage stage = _injectorWrap.getInjector().getInstance(Stage);
+    Stage _stage = _injectorWrap.getInjector().getInstance(Stage);
        
     
-    Menu menu = _injectorWrap.getInjector().getInstance(Menu);
+    Menu _menu = _injectorWrap.getInjector().getInstance(Menu);
 
     
     DragDrop dragdrop = _injectorWrap.getInjector().getInstance(DragDrop);
     
-    
+    Grid _grid = _injectorWrap.getInjector().getInstance(Grid);
+    _grid.start();
 
     
-    dragdrop.setStage(stage);
+    dragdrop.setStage(_stage);
     
-    menu.setDragDrop(dragdrop);
-    menu.setStage(stage);
+    _menu.setDragDrop(dragdrop);
+    _menu.setStage(_stage);
     
-    menu.start();
+    _menu.start();
     dragdrop.start();
     
   }
