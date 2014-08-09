@@ -64,10 +64,12 @@ class MenuImpl extends Menu {
   HighLight _highLight;
   @inject
   Stage _stage;
-  //@inject
   DragDrop _dragdrop;
   
   void start() {
+    
+    _stage.setMenu(this);
+    
     _load(false);
     _redrawTop('#columns', '#menu');
     _excludeFromHash[0] = 'menu-action';
@@ -76,7 +78,6 @@ class MenuImpl extends Menu {
     _putMenuItemsInListAndAddClickEvent();
     _ulMenuAddClickEvents();
     _menuAddOptions();
-    //document.querySelector('#selection-placeholder').style.setProperty('right', '0px');
 
   }
 

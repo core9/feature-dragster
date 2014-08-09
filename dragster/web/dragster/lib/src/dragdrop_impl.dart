@@ -9,7 +9,6 @@ import "package:json_object/json_object.dart";
 
 
 import '../dragdrop_api.dart';
-import '../menu_api.dart';
 import '../grid_api.dart';
 import '../highlight_api.dart';
 import '../stage_api.dart';
@@ -29,8 +28,6 @@ class DragDropImpl extends DragDrop {
   @inject
   Stage _stage;
   @inject
-  Menu _menu;
-  @inject
   Grid _grid;
   @inject
   HighLight _highLight;
@@ -41,7 +38,7 @@ class DragDropImpl extends DragDrop {
   void start() {
     _highLight.initHighlight();
     _grid.start();
-    _menu.start();
+    //_stage.getMenu().start();
     _getWidgetsAndElements();
     initDragAndDrop(_highLight);
     _setupDb();
@@ -143,7 +140,7 @@ class DragDropImpl extends DragDrop {
     }
 
     //Menu menu = new MenuImpl();
-    _menu.menuAddAllElementTemplates();
+    _stage.getMenu().menuAddAllElementTemplates();
   }
 
   void _addWidgetToStageAsTemplate(String widget, var div) {

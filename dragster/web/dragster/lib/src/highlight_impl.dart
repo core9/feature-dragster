@@ -1,18 +1,24 @@
 library highlight_impl;
 
+import "package:dice/dice.dart";
+
 import 'dart:html';
 import 'dart:convert';
 import '../highlight_api.dart';
+import '../stage_api.dart';
 
 
 class HighLightImpl extends HighLight {
   
-  List<Element> _columnsElements = document.querySelectorAll('#columns');
+
+  
+  @inject
+  Stage _stage;
   
   void start(){}
   
   void initHighlight() {
-    _columnsElements.forEach((e) => activateHighLight(e));
+    _stage.getStageElements().forEach((e) => activateHighLight(e));
   }
 
   void activateHighLight(Element e) {

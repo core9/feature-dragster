@@ -1,11 +1,15 @@
 library stage_impl;
 
 import 'dart:html';
-import '../stage_api.dart';
 
+import '../stage_api.dart';
+import '../menu_api.dart';
 
 
 class StageImpl extends Stage {
+  
+  
+  Menu _menu;
   
   Element _stage = document.querySelector('#columns');
   List<Element> _stageElements = document.querySelectorAll('#columns');
@@ -16,6 +20,14 @@ class StageImpl extends Stage {
   
   List<Element> getStageElements(){
     return _stageElements;
+  }
+ 
+  void setMenu(Menu menu){
+    _menu = menu;
+  }
+  
+  Menu getMenu(){
+    return _menu;
   }
   
   void start(){
