@@ -74,6 +74,7 @@ class MenuImpl extends Menu {
     _redrawTop('#columns', '#menu');
     _excludeFromHash[0] = 'menu-action';
     _dragdrop = new DragDropImpl();
+    _dragdrop.setStage(_stage);
     _showMenuElement.onClick.listen(_showMenu);
     _putMenuItemsInListAndAddClickEvent();
     _ulMenuAddClickEvents();

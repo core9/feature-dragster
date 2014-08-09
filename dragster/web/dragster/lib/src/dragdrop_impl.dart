@@ -25,20 +25,21 @@ class DragDropImpl extends DragDrop {
   List<Element> _columItems = document.querySelectorAll('#columns .column');
 
   
-  @inject
+  //@inject
   Stage _stage;
   @inject
   Grid _grid;
   @inject
   HighLight _highLight;
 
-  
+  void setStage(Stage stage){
+    _stage = stage;
+  }
 
 
   void start() {
     _highLight.initHighlight();
     _grid.start();
-    //_stage.getMenu().start();
     _getWidgetsAndElements();
     initDragAndDrop(_highLight);
     _setupDb();
@@ -139,7 +140,6 @@ class DragDropImpl extends DragDrop {
       }
     }
 
-    //Menu menu = new MenuImpl();
     _stage.getMenu().menuAddAllElementTemplates();
   }
 
