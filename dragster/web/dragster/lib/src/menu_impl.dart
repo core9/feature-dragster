@@ -13,7 +13,6 @@ import '../dragdrop_api.dart';
 import '../stage_api.dart';
 import '../utils.dart';
 
-import 'dragdrop_impl.dart';
 
 
 
@@ -227,6 +226,20 @@ class MenuImpl extends Menu {
     _fillMenuInputItems(_menuPercentageJsonDatalist, "/dragster/data/percentages.json");
     _fillMenuInputItems(_menuActionJsonDatalist, "/dragster/data/actions.json");
     _fillMenuInputItems(_menuRequestJsonDatalist, "/dragster/data/requests.json");
+  }
+  
+  void addWidgetToMenu(UListElement ul, String widget) {
+    print(widget);
+    List<String> classes = [];
+    classes.add('menu');
+    classes.add('widget-element');
+    LIElement li = new LIElement();
+    AnchorElement link = new AnchorElement();
+    link.classes.addAll(classes);
+    link.setAttribute('href', '#' + widget);
+    link.text = widget;
+    li.append(link);
+    ul.append(li);
   }
 
   void _showMenu(Event event) {

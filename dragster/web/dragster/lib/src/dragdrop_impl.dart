@@ -4,8 +4,7 @@ import 'dart:html';
 import 'package:html5lib/parser.dart' show parse;
 import "package:dice/dice.dart";
 
-import 'dart:js';
-import "package:json_object/json_object.dart";
+
 
 
 import '../dragdrop_api.dart';
@@ -15,17 +14,12 @@ import '../stage_api.dart';
 
 
 
-import '../nedb.dart';
+
 import '../utils.dart';
 
 class DragDropImpl extends DragDrop {
 
   Element _dragSourceEl;
-
-  List<Element> _columItems = document.querySelectorAll('#columns .column');
-
-  
-
   Stage _stage;
   @inject
   Grid _grid;
@@ -42,14 +36,8 @@ class DragDropImpl extends DragDrop {
     _grid.start();
     _getWidgetsAndElements();
     initDragAndDrop(_highLight);
-    _setupDb();
-    _isSelected();
+  }
 
-  }
-  
-  void _isSelected(){
-    //_columnsElements.forEach((e) => e.onClick.listen(_selected));
-  }
 
   void _selected(MouseEvent event){
     Element element = event.target;
@@ -91,7 +79,7 @@ class DragDropImpl extends DragDrop {
   }
 
   void initDragAndDrop(HighLight _highLight) {
-    document.querySelectorAll('#columns .column').forEach((e) => addEventsToColumn(e, _highLight));
+    _stage.getGridElements().forEach((e) => addEventsToColumn(e, _highLight));
   }
   void addEventsToColumn(Element col , HighLight _highLight) {
     col.onDragStart.listen(_onDragStart);
@@ -103,18 +91,7 @@ class DragDropImpl extends DragDrop {
     col.onDoubleClick.listen(_onDoubleClickResize);
   }
 
-  void _setupDb() {
-    Nedb nedb = new Nedb();
-    JsObject db = nedb.getDb();
-    var data = new JsonObject();
-    data.language = "Dart";
-    data.targets = new List();
-    data.targets.add("Dartium");
-    db.callMethod('insert', [data]);
-    var crit = new JsonObject();
-    crit.language = "Dart";
-    db.callMethod('count', [crit, _calb]);
-  }
+
 
   void _onDataLoaded(String responseText) {
 
@@ -126,11 +103,11 @@ class DragDropImpl extends DragDrop {
     for (var div in contentDivs) {
       String widget = div.attributes['data-widget'];
 
-      _addWidgetToMenu(ul, widget);
+      _stage.getMenu().addWidgetToMenu(ul, widget);
 
-      _addWidgetToStageAsTemplate(widget, div);
+      _stage.addWidgetToStageAsTemplate(widget, div);
 
-      for (Element item in _columItems) {
+      for (Element item in _stage.getGridElements()) {
         try {
           if (item.children.first.attributes['data-widget'] == widget) {
             item.setInnerHtml(div.outerHtml, treeSanitizer: new NullTreeSanitizer());
@@ -143,33 +120,6 @@ class DragDropImpl extends DragDrop {
     _stage.getMenu().menuAddAllElementTemplates();
   }
 
-  void _addWidgetToStageAsTemplate(String widget, var div) {
-    print(div);
-    TemplateElement template = new TemplateElement();
-    template.setInnerHtml(div.outerHtml, treeSanitizer: new NullTreeSanitizer());
-    template.setAttribute('id', widget);
-    Element widgetPlaceholder = document.querySelector('#widget-placeholder');
-    widgetPlaceholder.append(template);
-  }
-
-
-  void _addWidgetToMenu(UListElement ul, String widget) {
-    print(widget);
-    List<String> classes = [];
-    classes.add('menu');
-    classes.add('widget-element');
-    LIElement li = new LIElement();
-    AnchorElement link = new AnchorElement();
-    link.classes.addAll(classes);
-    link.setAttribute('href', '#' + widget);
-    link.text = widget;
-    li.append(link);
-    ul.append(li);
-  }
-
-  void _calb(err, count) {
-    print("Number of items found : " + count.toString());
-  }
 
   void resizeScreen(String strSize) {
     int intSize = int.parse(strSize);
@@ -250,8 +200,8 @@ class DragDropImpl extends DragDrop {
       Element targetContent = dragTarget.querySelector('.content');
       _highLight.resetOnMouseOver(targetContent);
     }
-    var cols = document.querySelectorAll('#columns .column');
-    for (var col in cols) {
+
+    for (var col in _stage.getGridElements()) {
       col.classes.remove('over');
     }
     List<Element> contentItems = document.querySelectorAll('.content');

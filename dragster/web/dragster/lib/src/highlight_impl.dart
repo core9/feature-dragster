@@ -18,7 +18,7 @@ class HighLightImpl extends HighLight {
   void start(){}
   
   void initHighlight() {
-    _stage.getStageElements().forEach((e) => activateHighLight(e));
+    _stage.getAllElements().forEach((e) => activateHighLight(e));
   }
 
   void activateHighLight(Element e) {

@@ -4,6 +4,7 @@ import 'dart:html';
 
 import '../stage_api.dart';
 import '../menu_api.dart';
+import '../utils.dart';
 
 
 class StageImpl extends Stage {
@@ -11,15 +12,16 @@ class StageImpl extends Stage {
   
   Menu _menu;
   
-  Element _stage = document.querySelector('#columns');
-  List<Element> _stageElements = document.querySelectorAll('#columns');
-  
   Element getStage(){
-    return _stage;
+    return document.querySelector('#columns');;
   }
   
-  List<Element> getStageElements(){
-    return _stageElements;
+  List<Element> getAllElements(){
+    return document.querySelectorAll('#columns');
+  }
+  
+  List<Element> getGridElements(){
+    return document.querySelectorAll('#columns .column');
   }
  
   void setMenu(Menu menu){
@@ -30,10 +32,13 @@ class StageImpl extends Stage {
     return _menu;
   }
   
-  void start(){
-    
+  void addWidgetToStageAsTemplate(String widget, var div) {
+    print(div);
+    TemplateElement template = new TemplateElement();
+    template.setInnerHtml(div.outerHtml, treeSanitizer: new NullTreeSanitizer());
+    template.setAttribute('id', widget);
+    Element widgetPlaceholder = document.querySelector('#widget-placeholder');
+    widgetPlaceholder.append(template);
   }
-  
-  void run(){}
   
 }
