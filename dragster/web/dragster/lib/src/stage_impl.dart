@@ -7,8 +7,11 @@ import '../menu_api.dart';
 import '../utils.dart';
 import 'package:html5lib/parser.dart' show parse;
 
+
+
 class StageImpl extends Stage {
-  
+
+  String classContent = '.content'; 
   
   Menu _menu;
 

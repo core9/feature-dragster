@@ -4,9 +4,6 @@ import 'dart:html';
 import 'menu_api.dart';
 
 
-
-
-
 abstract class Stage {
   
   void setMenu(Menu menu);
@@ -19,4 +16,5 @@ abstract class Stage {
   void setResizeOnColumn(Element currentElement);
   void getWidgetsAndElements();
   List<Element> getContentElements();
+  
 }
