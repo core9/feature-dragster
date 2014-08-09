@@ -15,5 +15,6 @@ abstract class Stage {
   List<Element> getAllElements();
   List<Element> getGridElements();
   void addWidgetToStageAsTemplate(String widget, var div);
-  
+  void resizeStage(String size);
+  void setResizeOnColumn(Element currentElement);
 }

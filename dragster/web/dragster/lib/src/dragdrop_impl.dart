@@ -121,46 +121,15 @@ class DragDropImpl extends DragDrop {
   }
 
 
-  void resizeScreen(String strSize) {
-    int intSize = int.parse(strSize);
-    _stage.getStage().style.setProperty('position', 'relative');
-    _stage.getStage().style.setProperty('left', '50%');
-    _stage.getStage().style.setProperty('width', '${strSize}px');
-    _stage.getStage().style.setProperty('margin-left', '-${intSize / 2}px');
-  }
+
 
   void _onDoubleClickResize(MouseEvent event) {
     Element element = event.target;
     document.querySelectorAll('.highlight').forEach((e) => _highLight.resetOnMouseOver(e));
-    _setResizeOnColumn(element);
+    _stage.setResizeOnColumn(element);
  }
 
-  void _setResizeOnColumn(Element currentElement) {
-    if (currentElement == null) return;
-    if (currentElement.classes.contains('column')) {
-      if (currentElement.classes.contains('resize')) {
-       
-        
-        currentElement.classes.remove('resize');
-        currentElement.style.setProperty('overflow', 'visible');
-        Element content = currentElement.querySelector('.content');
-        _highLight.resetOnMouseOver(content);
-        content.style.setProperty('width', '100%');
-        content.style.setProperty('height', '100%');
-        document.querySelector('#hover-placeholder').text = "";
-      } else {
-        currentElement.style.setProperty('overflow', 'auto');
 
-        
-        currentElement.classes.add('resize');
-        Element content = currentElement.querySelector('.content');
-        content.style.setProperty('width', '50%');
-        content.style.setProperty('height', '50%');
-      }
-    } else {
-      _setResizeOnColumn(currentElement.parent);
-    }
-  }
 
 
   void _onDragStart(MouseEvent event) {

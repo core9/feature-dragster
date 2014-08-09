@@ -276,7 +276,7 @@ class MenuImpl extends Menu {
     InputElement inputBox = event.target;
     switch (inputBox.id) {
       case 'menu-display':
-        _dragdrop.resizeScreen(inputBox.value);
+        _stage.resizeStage(inputBox.value);
         break;
       case 'menu-version':
         break;
@@ -352,19 +352,19 @@ class MenuImpl extends Menu {
   void _nonWidgetAndElements(Element menuTarget) {
     switch (menuTarget.innerHtml.trim().toLowerCase()) {
       case '320':
-        _dragdrop.resizeScreen('320');
+        _stage.resizeStage('320');
         break;
       case '640':
-        _dragdrop.resizeScreen('640');
+        _stage.resizeStage('640');
         break;
       case '768':
-        _dragdrop.resizeScreen('768');
+        _stage.resizeStage('768');
         break;
       case '960':
-        _dragdrop.resizeScreen('960');
+        _stage.resizeStage('960');
         break;
       case '1280':
-        _dragdrop.resizeScreen('1280');
+        _stage.resizeStage('1280');
         break;
       case 'load':
         _load(true);
