@@ -12,20 +12,21 @@ import 'package:html5lib/parser.dart' show parse;
 class StageImpl extends Stage {
 
   String classContent = '.content'; 
+  String idStage = '#columns';
   
   Menu _menu;
 
   
   Element getStage(){
-    return document.querySelector('#columns');
+    return document.querySelector(idStage);
   }
   
   List<Element> getAllElements(){
-    return document.querySelectorAll('#columns');
+    return document.querySelectorAll(idStage);
   }
   
   List<Element> getGridElements(){
-    return document.querySelectorAll('#columns .column');
+    return document.querySelectorAll(idStage + ' .column');
   }
  
   void setMenu(Menu menu){
