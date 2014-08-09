@@ -21,7 +21,6 @@ class DragDropImpl extends DragDrop {
   }
 
   void start() {
-    _highLight.initHighlight();
     _stage.getWidgetsAndElements();
     initDragAndDrop(_highLight);
   }

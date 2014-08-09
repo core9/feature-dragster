@@ -4,6 +4,7 @@ import 'dragdrop_api.dart';
 import 'menu_api.dart';
 import 'stage_api.dart';
 import 'grid_api.dart';
+import 'highlight_api.dart';
 
 import 'bootstrategy_api.dart';
 
@@ -22,6 +23,8 @@ class MainStrategy implements BootStrategy {
     Grid _grid = _injectorWrap.getInjector().getInstance(Grid);
     _grid.start();
 
+    HighLight _highLight = _injectorWrap.getInjector().getInstance(HighLight);
+    _highLight.initHighlight();
     
     dragdrop.setStage(_stage);
     
