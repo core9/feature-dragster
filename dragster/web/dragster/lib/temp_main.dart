@@ -14,10 +14,19 @@ class MainStrategy implements BootStrategy {
        
     
     Menu menu = _injectorWrap.getInjector().getInstance(Menu);
-    menu.start();
+
     
     DragDrop dragdrop = _injectorWrap.getInjector().getInstance(DragDrop);
+    
+    
+
+    
     dragdrop.setStage(stage);
+    
+    menu.setDragDrop(dragdrop);
+    menu.setStage(stage);
+    
+    menu.start();
     dragdrop.start();
     
   }

@@ -56,15 +56,22 @@ class MenuImpl extends Menu {
 
 
 
-  //Element _columns = document.querySelector('#columns');
 
   var _db = new Store('dbName', 'storeName');
   
   @inject
   HighLight _highLight;
-  @inject
+  
   Stage _stage;
   DragDrop _dragdrop;
+  
+  void setStage(Stage stage){
+    _stage = stage;
+  }
+  
+  void setDragDrop(DragDrop dragdrop){
+    _dragdrop = dragdrop;  
+  }
   
   void start() {
     
@@ -73,7 +80,6 @@ class MenuImpl extends Menu {
     _load(false);
     _redrawTop('#columns', '#menu');
     _excludeFromHash[0] = 'menu-action';
-    _dragdrop = new DragDropImpl();
     _dragdrop.setStage(_stage);
     _showMenuElement.onClick.listen(_showMenu);
     _putMenuItemsInListAndAddClickEvent();

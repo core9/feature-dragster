@@ -25,7 +25,7 @@ class DragDropImpl extends DragDrop {
   List<Element> _columItems = document.querySelectorAll('#columns .column');
 
   
-  //@inject
+
   Stage _stage;
   @inject
   Grid _grid;
