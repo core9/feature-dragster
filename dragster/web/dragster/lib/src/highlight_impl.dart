@@ -11,6 +11,7 @@ import '../stage_api.dart';
 class HighLightImpl extends HighLight {
 
   Stage _stage;
+  String _highLightClass = 'highlight';
 
   void setStage(Stage stage) {
     _stage = stage;
@@ -23,7 +24,7 @@ class HighLightImpl extends HighLight {
   void start() {}
 
   List<Element> getHighLightedElements() {
-    return document.querySelectorAll('.highlight');
+    return document.querySelectorAll('.' + _highLightClass);
   }
 
   void initHighlight() {
@@ -57,7 +58,7 @@ class HighLightImpl extends HighLight {
 
   bool _ifHighLightElement(Element element) {
     if (element == null) return true;
-    if (element.id == 'columns') return true;
+    if (element.id == _stage.getStageId().trim().split('#')[1]) return true;
     if (element.classes.contains('resize')) return true;
     return false;
   }
@@ -77,14 +78,14 @@ class HighLightImpl extends HighLight {
     element.style.setProperty('width', (width - 4).toString() + 'px');
     element.style.setProperty('height', (height - 4).toString() + 'px');
     element.style.setProperty('border', '2px solid lightblue');
-    element.classes.add('highlight');
+    element.classes.add(_highLightClass);
   }
   
   void _highLightElementOff(Element element){
     String properties = _getHoverPlaceHolder().text;
     if (properties == '') return;
     JSON.decode(properties)['properties'].forEach((e) => _setProperties(element, e));
-    element.classes.remove('highlight');
+    element.classes.remove(_highLightClass);
   }
   
   

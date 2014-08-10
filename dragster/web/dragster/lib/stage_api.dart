@@ -18,5 +18,6 @@ abstract class Stage {
   List<Element> getContentElements();
   String getContentClass();
   String getHideClass();
+  String getStageId();
   
 }

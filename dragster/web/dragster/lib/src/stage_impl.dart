@@ -26,6 +26,10 @@ class StageImpl extends Stage {
     return hideClass;
   }
   
+  String getStageId(){
+    return stageId;
+  }
+  
   Element getStage(){
     return document.querySelector(stageId);
   }
