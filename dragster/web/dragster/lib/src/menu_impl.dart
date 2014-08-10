@@ -60,7 +60,6 @@ class MenuImpl extends Menu {
   
 
   HighLight _highLight;
-  
   Stage _stage;
   DragDrop _dragdrop;
   

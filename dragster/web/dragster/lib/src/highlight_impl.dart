@@ -10,9 +10,6 @@ import '../stage_api.dart';
 
 class HighLightImpl extends HighLight {
   
-
-  
-  //@inject
   Stage _stage;
   
   void setStage(Stage stage){
