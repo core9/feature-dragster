@@ -3,7 +3,7 @@ library menu_impl;
 import 'package:crypto/crypto.dart';
 import 'package:html5lib/parser.dart' show parse;
 import 'package:lawndart/lawndart.dart';
-import "package:dice/dice.dart";
+
 import 'dart:convert';
 import 'dart:html';
 
@@ -58,11 +58,15 @@ class MenuImpl extends Menu {
 
   var _db = new Store('dbName', 'storeName');
   
-  @inject
+
   HighLight _highLight;
   
   Stage _stage;
   DragDrop _dragdrop;
+  
+  void setHighLight(HighLight highLight){
+    _highLight = highLight;
+  }
   
   void setStage(Stage stage){
     _stage = stage;
@@ -80,6 +84,7 @@ class MenuImpl extends Menu {
     _redrawTop('#columns', '#menu');
     _excludeFromHash[0] = 'menu-action';
     _dragdrop.setStage(_stage);
+    _dragdrop.setHighLight(_highLight);
     _showMenuElement.onClick.listen(_showMenu);
     _putMenuItemsInListAndAddClickEvent();
     _ulMenuAddClickEvents();

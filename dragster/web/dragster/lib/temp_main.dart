@@ -24,11 +24,14 @@ class MainStrategy implements BootStrategy {
     _grid.start();
 
     HighLight _highLight = _injectorWrap.getInjector().getInstance(HighLight);
+    _highLight.setStage(_stage);
     _highLight.initHighlight();
     
     dragdrop.setStage(_stage);
+    dragdrop.setHighLight(_highLight);
     
     _menu.setDragDrop(dragdrop);
+    _menu.setHighLight(_highLight);
     _menu.setStage(_stage);
     
     _menu.start();

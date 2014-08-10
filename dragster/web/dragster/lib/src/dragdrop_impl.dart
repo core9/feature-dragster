@@ -1,7 +1,7 @@
 library dragdrop_impl;
 
 import 'dart:html';
-import "package:dice/dice.dart";
+//import "package:dice/dice.dart";
 
 import '../dragdrop_api.dart';
 import '../highlight_api.dart';
@@ -13,11 +13,14 @@ class DragDropImpl extends DragDrop {
 
   Element _dragSourceEl;
   Stage _stage;
-  @inject
   HighLight _highLight;
 
   void setStage(Stage stage) {
     _stage = stage;
+  }
+  
+  void setHighLight(HighLight highLight) {
+    _highLight = highLight;
   }
 
   void start() {

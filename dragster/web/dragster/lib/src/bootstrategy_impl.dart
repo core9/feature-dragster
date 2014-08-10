@@ -35,8 +35,14 @@ class BootstrapFrameworkImpl implements BootstrapFramework {
   }
 
   void _collectAllBootStrategies(Type type){
-      
-    if(_isSubTypeOff(type, BootStrategy)){
+    
+    BootStrategy obj = new InstBootStrategy();
+    
+    print(obj.runtimeType.toString());
+    print(type);
+    
+    //if(_isSubTypeOff(type, BootStrategy)){
+     if(type.toString().endsWith('Strategy')){
       BootStrategy bootStrategy = _injector.getInstance(type);
       bootStrategy.setRegistry(_injectorWrap);
       bootStrategy.processPlugins();

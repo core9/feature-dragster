@@ -59,6 +59,14 @@ abstract class BootStrategy {
 
 }
 
+class InstBootStrategy extends BootStrategy {
+  void processPlugins(){}
+  void setRegistry(InjectorWrap injectorWrap){}
+  int getPriority(){
+    return 0;
+  }
+}
+
 
 abstract class BootstrapStrategies {
   void bootstrap();

@@ -1,6 +1,6 @@
 library highlight_impl;
 
-import "package:dice/dice.dart";
+
 
 import 'dart:html';
 import 'dart:convert';
@@ -12,8 +12,12 @@ class HighLightImpl extends HighLight {
   
 
   
-  @inject
+  //@inject
   Stage _stage;
+  
+  void setStage(Stage stage){
+    _stage = stage;
+  }
   
   void start(){}
   

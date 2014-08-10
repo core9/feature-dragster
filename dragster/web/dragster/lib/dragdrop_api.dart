@@ -11,5 +11,6 @@ abstract class DragDrop {
   void initDragAndDrop(HighLight _highLight);
   void addEventsToColumn(Element col , HighLight _highLight);
   void setStage(Stage stage);
+  void setHighLight(HighLight highLight);
 }
 
