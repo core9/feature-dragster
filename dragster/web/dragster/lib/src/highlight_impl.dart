@@ -16,6 +16,10 @@ class HighLightImpl extends HighLight {
     _stage = stage;
   }
 
+  Element _getHoverPlaceHolder(){
+    return document.querySelector('#hover-placeholder');
+  }
+  
   void start() {}
 
   List<Element> getHighLightedElements() {
@@ -60,18 +64,16 @@ class HighLightImpl extends HighLight {
 
   
   void _highLightElement(Element element){
-    String border = element.style.border;
-    int width = element.clientWidth;
-    int height = element.clientHeight;
     var mapData = new Map();
     var cssData = new Map();
-    cssData["border"] = border;
+    int width = element.clientWidth;
+    int height = element.clientHeight;
+    cssData["border"] = element.style.border;
     cssData["width"] = width.toString() + 'px';
     cssData["height"] = height.toString() + 'px';
     mapData["properties"] = new List();
     mapData["properties"].add(cssData);
-    String jsonData = JSON.encode(mapData);
-    document.querySelector('#hover-placeholder').text = jsonData;
+    _getHoverPlaceHolder().text = JSON.encode(mapData);
     element.style.setProperty('width', (width - 4).toString() + 'px');
     element.style.setProperty('height', (height - 4).toString() + 'px');
     element.style.setProperty('border', '2px solid lightblue');
@@ -79,11 +81,9 @@ class HighLightImpl extends HighLight {
   }
   
   void _highLightElementOff(Element element){
-    String properties = document.querySelector('#hover-placeholder').text;
+    String properties = _getHoverPlaceHolder().text;
     if (properties == '') return;
-    var json = JSON.decode(properties);
-    List<Map> cssProperties = json['properties'];
-    cssProperties.forEach((e) => _setProperties(element, e));
+    JSON.decode(properties)['properties'].forEach((e) => _setProperties(element, e));
     element.classes.remove('highlight');
   }
   
