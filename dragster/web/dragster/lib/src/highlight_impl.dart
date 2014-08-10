@@ -9,19 +9,19 @@ import '../stage_api.dart';
 
 
 class HighLightImpl extends HighLight {
-  
+
   Stage _stage;
-  
-  void setStage(Stage stage){
+
+  void setStage(Stage stage) {
     _stage = stage;
   }
-  
-  void start(){}
-  
-  List<Element> getHighLightedElements(){
+
+  void start() {}
+
+  List<Element> getHighLightedElements() {
     return document.querySelectorAll('.highlight');
   }
-  
+
   void initHighlight() {
     _stage.getAllElements().forEach((e) => activateHighLight(e));
   }
@@ -30,41 +30,55 @@ class HighLightImpl extends HighLight {
     e.onMouseOver.listen(_highLightOnMouseOver);
     e.onMouseOut.listen(_highLightOnMouseOut);
   }
-  
+
   void _highLightOnMouseOver(MouseEvent event) {
     Element element = event.target;
-    if (element == null) return;
-    if (element.id == 'columns') return;
-    if (element.classes.contains('resize')) return;
-    
-    String border = element.style.border;
-     int width = element.clientWidth;
-     int height = element.clientHeight;
-     var mapData = new Map();
-     var cssData = new Map();
-     cssData["border"] = border;
-     cssData["width"] = width.toString() + 'px';
-     cssData["height"] = height.toString() + 'px';
-     mapData["properties"] = new List();
-     mapData["properties"].add(cssData);
-     String jsonData = JSON.encode(mapData);
-     document.querySelector('#hover-placeholder').text = jsonData;
-     element.style.setProperty('width', (width - 4).toString() + 'px');
-     element.style.setProperty('height', (height - 4).toString() + 'px');
-     element.style.setProperty('border', '2px solid lightblue');
-     element.classes.add('highlight');
+    if (_ifHighLightElement(element)) return;
+    _highLightElement(element);
   }
-
+  
   void _highLightOnMouseOut(MouseEvent event) {
     Element element = event.target;
     resetOnMouseOver(element);
   }
 
   void resetOnMouseOver(Element element) {
-    if (element == null) return;
-    if (element.id == 'columns') return;
-    if (element.classes.contains('resize')) return;
-    print('mouse leave');
+    if (_ifHighLightElement(element)) return;
+    _highLightElementOff(element);
+  }
+
+  /*
+   * real code 
+   */
+
+  bool _ifHighLightElement(Element element) {
+    if (element == null) return true;
+    if (element.id == 'columns') return true;
+    if (element.classes.contains('resize')) return true;
+    return false;
+  }
+
+  
+  void _highLightElement(Element element){
+    String border = element.style.border;
+    int width = element.clientWidth;
+    int height = element.clientHeight;
+    var mapData = new Map();
+    var cssData = new Map();
+    cssData["border"] = border;
+    cssData["width"] = width.toString() + 'px';
+    cssData["height"] = height.toString() + 'px';
+    mapData["properties"] = new List();
+    mapData["properties"].add(cssData);
+    String jsonData = JSON.encode(mapData);
+    document.querySelector('#hover-placeholder').text = jsonData;
+    element.style.setProperty('width', (width - 4).toString() + 'px');
+    element.style.setProperty('height', (height - 4).toString() + 'px');
+    element.style.setProperty('border', '2px solid lightblue');
+    element.classes.add('highlight');
+  }
+  
+  void _highLightElementOff(Element element){
     String properties = document.querySelector('#hover-placeholder').text;
     if (properties == '') return;
     var json = JSON.decode(properties);
@@ -72,9 +86,10 @@ class HighLightImpl extends HighLight {
     cssProperties.forEach((e) => _setProperties(element, e));
     element.classes.remove('highlight');
   }
-
+  
+  
   void _setProperties(Element element, Map e) {
     e.keys.forEach((key) => element.style.setProperty(key, e[key]));
   }
-  
+
 }
