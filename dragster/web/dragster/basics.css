@@ -104,19 +104,23 @@ body {
 	display:none;
 }
 
+.sidemenu-position {
+	top:30px !important;
+}
+
 #menu {
-	background-color: #000;
+	background-color: rgba(0, 0, 0, 0.25);
 	width: 100%;
 	min-height: 30px;
-  box-shadow: 1px 3px 2px #888888;
-  margin-bottom: 24px;
+  _box-shadow: 1px 3px 2px #888888;
+  _margin-bottom: 24px;
 }
 
 
 #menu>ul>li {
 	position: relative;
 	display: inline-block;
-	background: #000;
+	background: rgba(0, 0, 0, 0.25);
 }
 
 #menu > a a:VISITED {
@@ -136,7 +140,7 @@ body {
 
 #menu>ul>li li {
 	display: block;
-	background: #000;
+	background: rgba(0, 0, 0, 0.25);
 	padding:5px;
 }
 

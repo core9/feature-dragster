@@ -250,6 +250,7 @@ class MenuImpl extends Menu {
     Element menuButton = event.target;
     _pageSelector.classes.toggle('display-none');
     _menuSecondary.classes.toggle('display-none');
+    document.querySelector('#selection-placeholder').classes.toggle('sidemenu-position');
     _redrawTop('#columns', '#menu');
   }
 
