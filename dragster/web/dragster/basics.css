@@ -193,7 +193,7 @@ body {
 	transform: scale(0.8);
 }
 
-.hide {
+.shrink {
 	height: 50% !important;
 	width: 50% !important;
 	margin-left: 25% !important;

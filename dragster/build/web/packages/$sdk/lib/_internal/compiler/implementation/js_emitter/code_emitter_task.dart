@@ -18,6 +18,11 @@ class CodeEmitterTask extends CompilerTask {
   final InterceptorEmitter interceptorEmitter = new InterceptorEmitter();
   final MetadataEmitter metadataEmitter = new MetadataEmitter();
 
+  final Set<Constant> cachedEmittedConstants;
+  final CodeBuffer cachedEmittedConstantsBuffer = new CodeBuffer();
+  final Map<Element, ClassBuilder> cachedClassBuilders;
+  final Set<Element> cachedElements;
+
   bool needsDefineClass = false;
   bool needsMixinSupport = false;
   bool needsLazyInitializer = false;
@@ -98,6 +103,9 @@ class CodeEmitterTask extends CompilerTask {
   CodeEmitterTask(Compiler compiler, Namer namer, this.generateSourceMap)
       : this.namer = namer,
         constantEmitter = new ConstantEmitter(compiler, namer),
+        cachedEmittedConstants = compiler.cacheStrategy.newSet(),
+        cachedClassBuilders = compiler.cacheStrategy.newMap(),
+        cachedElements = compiler.cacheStrategy.newSet(),
         super(compiler) {
     nativeEmitter = new NativeEmitter(this);
     containerBuilder.task = this;
@@ -653,7 +661,8 @@ class CodeEmitterTask extends CompilerTask {
         elementOrSelector is Element &&
         // Make sure to retain names of unnamed constructors, and
         // for common native types.
-        (name == '' && backend.isNeededForReflection(elementOrSelector) ||
+        ((name == '' &&
+          backend.isAccessibleByReflection(elementOrSelector)) ||
          _isNativeTypeNeedingReflectionName(elementOrSelector))) {
 
       // TODO(ahe): Enable the next line when I can tell the difference between
@@ -666,13 +675,15 @@ class CodeEmitterTask extends CompilerTask {
   }
 
   String getReflectionNameInternal(elementOrSelector, String mangledName) {
-    String name = elementOrSelector.name;
+    String name =
+        namer.privateName(elementOrSelector.library, elementOrSelector.name);
     if (elementOrSelector.isGetter) return name;
     if (elementOrSelector.isSetter) {
       if (!mangledName.startsWith(namer.setterPrefix)) return '$name=';
       String base = mangledName.substring(namer.setterPrefix.length);
       String getter = '${namer.getterPrefix}$base';
-      mangledFieldNames[getter] = name;
+      mangledFieldNames.putIfAbsent(getter, () => name);
+      assert(mangledFieldNames[getter] == name);
       recordedMangledNames.add(getter);
       // TODO(karlklose,ahe): we do not actually need to store information
       // about the name of this setter in the output, but it is needed for
@@ -766,8 +777,23 @@ class CodeEmitterTask extends CompilerTask {
 
   void generateClass(ClassElement classElement, ClassBuilder properties) {
     compiler.withCurrentElement(classElement, () {
-      classEmitter.generateClass(
-          classElement, properties, additionalProperties[classElement]);
+      if (compiler.hasIncrementalSupport) {
+        ClassBuilder builder =
+            cachedClassBuilders.putIfAbsent(classElement, () {
+              ClassBuilder builder = new ClassBuilder(classElement, namer);
+              classEmitter.generateClass(
+                  classElement, builder, additionalProperties[classElement]);
+              return builder;
+            });
+        invariant(classElement, builder.fields.isEmpty);
+        invariant(classElement, builder.superName == null);
+        invariant(classElement, builder.functionType == null);
+        invariant(classElement, builder.fieldMetadata == null);
+        properties.properties.addAll(builder.properties);
+      } else {
+        classEmitter.generateClass(
+            classElement, properties, additionalProperties[classElement]);
+      }
     });
   }
 
@@ -833,7 +859,7 @@ class CodeEmitterTask extends CompilerTask {
         backend.generatedCode.keys.where(isStaticFunction);
 
     for (Element element in Elements.sortedByPosition(elements)) {
-      ClassBuilder builder = new ClassBuilder(namer);
+      ClassBuilder builder = new ClassBuilder(element, namer);
       containerBuilder.addMember(element, builder);
       getElementDecriptor(element).properties.addAll(builder.properties);
     }
@@ -854,9 +880,9 @@ class CodeEmitterTask extends CompilerTask {
           js('$isolateProperties.# = #',
               [namer.getNameOfGlobalField(element),
                constantEmitter.referenceInInitializationContext(initialValue)]);
-        buffer.write(jsAst.prettyPrint(init, compiler));
+        buffer.write(jsAst.prettyPrint(init, compiler,
+                                       monitor: compiler.dumpInfoTask));
         buffer.write('$N');
-        compiler.dumpInfoTask.registerGeneratedCode(element, init);
       });
     }
   }
@@ -887,7 +913,8 @@ class CodeEmitterTask extends CompilerTask {
                 js.string(namer.getLazyInitializerName(element)),
                 code,
                 getter == null ? [] : [getter]]);
-        buffer.write(jsAst.prettyPrint(init, compiler));
+        buffer.write(jsAst.prettyPrint(init, compiler,
+                                       monitor: compiler.dumpInfoTask));
         buffer.write("$N");
       }
     }
@@ -901,14 +928,25 @@ class CodeEmitterTask extends CompilerTask {
   void emitCompileTimeConstants(CodeBuffer buffer, OutputUnit outputUnit) {
     List<Constant> constants = outputConstantLists[outputUnit];
     if (constants == null) return;
+    bool isMainBuffer = buffer == mainBuffer;
+    if (compiler.hasIncrementalSupport && isMainBuffer) {
+      buffer = cachedEmittedConstantsBuffer;
+    }
     for (Constant constant in constants) {
+      if (compiler.hasIncrementalSupport && isMainBuffer) {
+        if (cachedEmittedConstants.contains(constant)) continue;
+        cachedEmittedConstants.add(constant);
+      }
       String name = namer.constantName(constant);
       if (constant.isList) emitMakeConstantListIfNotEmitted(buffer);
       jsAst.Expression init = js('#.# = #',
           [namer.globalObjectForConstant(constant), name,
            constantInitializerExpression(constant)]);
-      buffer.write(jsAst.prettyPrint(init, compiler));
+      buffer.write(jsAst.prettyPrint(init, compiler, monitor: compiler.dumpInfoTask));
       buffer.write('$N');
+    }
+    if (compiler.hasIncrementalSupport && isMainBuffer) {
+      mainBuffer.add(cachedEmittedConstantsBuffer);
     }
   }
 
@@ -957,7 +995,7 @@ class CodeEmitterTask extends CompilerTask {
                                    }''',
                          [namer.isolateName, makeConstListProperty, initName,
                           initName]),
-            compiler));
+            compiler, monitor: compiler.dumpInfoTask));
     buffer.write(N);
   }
 
@@ -1024,9 +1062,9 @@ class CodeEmitterTask extends CompilerTask {
     if (compiler.isMockCompilation) return;
     Element main = compiler.mainFunction;
     jsAst.Expression mainCallClosure = null;
-    if (compiler.hasIsolateSupport()) {
+    if (compiler.hasIsolateSupport) {
       Element isolateMain =
-        compiler.isolateHelperLibrary.find(Compiler.START_ROOT_ISOLATE);
+        backend.isolateHelperLibrary.find(JavaScriptBackend.START_ROOT_ISOLATE);
       mainCallClosure = buildIsolateSetupClosure(main, isolateMain);
     } else {
       mainCallClosure = namer.elementAccess(main);
@@ -1035,14 +1073,14 @@ class CodeEmitterTask extends CompilerTask {
     if (backend.needToInitializeIsolateAffinityTag) {
       buffer.write(
           jsAst.prettyPrint(generateIsolateAffinityTagInitialization(),
-                            compiler));
+                            compiler, monitor: compiler.dumpInfoTask));
       buffer.write(N);
     }
     if (backend.needToInitializeDispatchProperty) {
       assert(backend.needToInitializeIsolateAffinityTag);
       buffer.write(
           jsAst.prettyPrint(generateDispatchPropertyNameInitialization(),
-              compiler));
+              compiler, monitor: compiler.dumpInfoTask));
       buffer.write(N);
     }
 
@@ -1083,7 +1121,8 @@ class CodeEmitterTask extends CompilerTask {
 })$N''', [mainCallClosure, mainCallClosure]);
 
     buffer.write(';');
-    buffer.write(jsAst.prettyPrint(invokeMain, compiler));
+    buffer.write(jsAst.prettyPrint(invokeMain,
+                 compiler, monitor: compiler.dumpInfoTask));
     buffer.write(N);
     addComment('END invoke [main].', buffer);
   }
@@ -1094,7 +1133,7 @@ class CodeEmitterTask extends CompilerTask {
   void computeNeededConstants() {
     JavaScriptConstantCompiler handler = backend.constants;
     List<Constant> constants = handler.getConstantsForEmission(
-        compareConstants);
+        compiler.hasIncrementalSupport ? null : compareConstants);
     for (Constant constant in constants) {
       if (isConstantInlinedOrAlreadyEmitted(constant)) continue;
       OutputUnit constantUnit =
@@ -1228,7 +1267,8 @@ class CodeEmitterTask extends CompilerTask {
           buildLazyInitializerFunctionIfNecessary(),
           buildFinishIsolateConstructor()]);
 
-    buffer.write(jsAst.prettyPrint(decl, compiler).getText());
+    buffer.write(jsAst.prettyPrint(decl,
+                 compiler, monitor: compiler.dumpInfoTask).getText());
     if (compiler.enableMinification) buffer.write('\n');
   }
 
@@ -1264,16 +1304,24 @@ class CodeEmitterTask extends CompilerTask {
   }
 
   void writeLibraryDescriptors(LibraryElement library) {
-    var uri = library.canonicalUri;
-    if (uri.scheme == 'file' && compiler.outputUri != null) {
-      uri = relativize(compiler.outputUri, library.canonicalUri, false);
+    var uri = "";
+    if (!compiler.enableMinification || backend.mustRetainUris) {
+      uri = library.canonicalUri;
+      if (uri.scheme == 'file' && compiler.outputUri != null) {
+        uri = relativize(compiler.outputUri, library.canonicalUri, false);
+      }
     }
+    String libraryName =
+        (!compiler.enableMinification || backend.mustRetainLibraryNames) ?
+        library.getLibraryName() :
+        "";
     Map<OutputUnit, ClassBuilder> descriptors =
         elementDescriptors[library];
 
     for (OutputUnit outputUnit in compiler.deferredLoadTask.allOutputUnits) {
       ClassBuilder descriptor =
-          descriptors.putIfAbsent(outputUnit, () => new ClassBuilder(namer));
+          descriptors.putIfAbsent(outputUnit,
+                                  () => new ClassBuilder(library, namer));
       if (descriptor.properties.isEmpty) continue;
       bool isDeferred =
           outputUnit != compiler.deferredLoadTask.mainOutputUnit;
@@ -1284,24 +1332,30 @@ class CodeEmitterTask extends CompilerTask {
       CodeBuffer outputBuffer =
           outputBuffers.putIfAbsent(outputUnit, () => new CodeBuffer());
       int sizeBefore = outputBuffer.length;
+      compiler.dumpInfoTask.registerElementAst(library, metadata);
+      compiler.dumpInfoTask.registerElementAst(library, initializers);
       outputBuffers[outputUnit]
-          ..write('["${library.getLibraryName()}",$_')
+          ..write('["$libraryName",$_')
           ..write('"${uri}",$_')
-          ..write(metadata == null ? "" : jsAst.prettyPrint(metadata, compiler))
+          ..write(metadata == null ? "" : jsAst.prettyPrint(metadata,
+                                                compiler,
+                                                monitor: compiler.dumpInfoTask))
           ..write(',$_')
           ..write(namer.globalObjectFor(library))
           ..write(',$_')
-          ..write(jsAst.prettyPrint(initializers, compiler))
+          ..write(jsAst.prettyPrint(initializers,
+                                    compiler,
+                                    monitor: compiler.dumpInfoTask))
           ..write(library == compiler.mainApp ? ',${n}1' : "")
           ..write('],$n');
       int sizeAfter = outputBuffer.length;
-      compiler.dumpInfoTask.codeSizeCounter
-          .countCode(library, sizeAfter - sizeBefore);
     }
   }
 
   String assembleProgram() {
     measure(() {
+      invalidateCaches();
+
       // Compute the required type checks to know which classes need a
       // 'is$' method.
       typeTestEmitter.computeRequiredTypeChecks();
@@ -1390,12 +1444,16 @@ class CodeEmitterTask extends CompilerTask {
           // not see libraries that only have fields.
           if (element.isLibrary) {
             LibraryElement library = element;
-            ClassBuilder builder = new ClassBuilder(namer);
+            ClassBuilder builder = new ClassBuilder(library, namer);
             if (classEmitter.emitFields(
                     library, builder, null, emitStatics: true)) {
               OutputUnit mainUnit = compiler.deferredLoadTask.mainOutputUnit;
+              jsAst.ObjectInitializer initializer =
+                builder.toObjectInitializer();
+              compiler.dumpInfoTask.registerElementAst(builder.element,
+                                                       initializer);
               getElementDescriptorForOutputUnit(library, mainUnit)
-                  .properties.addAll(builder.toObjectInitializer().properties);
+                  .properties.addAll(initializer.properties);
             }
           }
         }
@@ -1411,7 +1469,9 @@ class CodeEmitterTask extends CompilerTask {
           var map = new jsAst.ObjectInitializer(properties);
           mainBuffer.write(
               jsAst.prettyPrint(
-                  js.statement('init.mangledNames = #', map), compiler));
+                  js.statement('init.mangledNames = #', map),
+                  compiler,
+                  monitor: compiler.dumpInfoTask));
           if (compiler.enableMinification) {
             mainBuffer.write(';');
           }
@@ -1428,7 +1488,8 @@ class CodeEmitterTask extends CompilerTask {
           mainBuffer.write(
               jsAst.prettyPrint(
                   js.statement('init.mangledGlobalNames = #', map),
-                  compiler));
+                  compiler,
+                  monitor: compiler.dumpInfoTask));
           if (compiler.enableMinification) {
             mainBuffer.write(';');
           }
@@ -1445,22 +1506,24 @@ class CodeEmitterTask extends CompilerTask {
         List<Element> sortedElements =
             Elements.sortedByPosition(elementDescriptors.keys);
 
-        Iterable<Element> pendingStatics = sortedElements.where((element) {
-            return !element.isLibrary &&
-                elementDescriptors[element].values.any((descriptor) =>
-                    descriptor != null);
-        });
+        Iterable<Element> pendingStatics;
+        if (!compiler.hasIncrementalSupport) {
+          pendingStatics = sortedElements.where((element) {
+              return !element.isLibrary &&
+                  elementDescriptors[element].values.any((descriptor) =>
+                      descriptor != null);
+          });
 
-        pendingStatics.forEach((element) =>
-            compiler.reportInfo(
-                element, MessageKind.GENERIC, {'text': 'Pending statics.'}));
-
+          pendingStatics.forEach((element) =>
+              compiler.reportInfo(
+                  element, MessageKind.GENERIC, {'text': 'Pending statics.'}));
+        }
         for (LibraryElement library in sortedElements.where((element) =>
             element.isLibrary)) {
           writeLibraryDescriptors(library);
           elementDescriptors[library] = const {};
         }
-        if (!pendingStatics.isEmpty) {
+        if (pendingStatics != null && !pendingStatics.isEmpty) {
           compiler.internalError(pendingStatics.first,
               'Pending statics (see above).');
         }
@@ -1564,10 +1627,10 @@ class CodeEmitterTask extends CompilerTask {
         }
       }
 
-      emitMain(mainBuffer);
       jsAst.FunctionDeclaration precompiledFunctionAst =
           buildPrecompiledFunction();
       emitInitFunction(mainBuffer);
+      emitMain(mainBuffer);
       if (!compiler.deferredLoadTask.splitProgram) {
         mainBuffer.add('})()\n');
       } else {
@@ -1578,6 +1641,7 @@ class CodeEmitterTask extends CompilerTask {
         mainBuffer.write(
             jsAst.prettyPrint(
                 precompiledFunctionAst, compiler,
+                monitor: compiler.dumpInfoTask,
                 allowVariableMinification: false).getText());
       }
 
@@ -1622,24 +1686,20 @@ class CodeEmitterTask extends CompilerTask {
       }
       emitDeferredCode();
 
+      if (backend.requiresPreamble &&
+          !backend.htmlLibraryIsLoaded) {
+        compiler.reportHint(NO_LOCATION_SPANNABLE, MessageKind.PREAMBLE);
+      }
     });
     return compiler.assembledCode;
   }
 
   String generateSourceMapTag(Uri sourceMapUri, Uri fileUri) {
     if (sourceMapUri != null && fileUri != null) {
-      // Using # is the new proposed standard. @ caused problems in Internet
-      // Explorer due to "Conditional Compilation Statements" in JScript,
-      // see:
-      // http://msdn.microsoft.com/en-us/library/7kx09ct1(v=vs.80).aspx
-      // About source maps, see:
-      // https://docs.google.com/a/google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit
-      // TODO(http://dartbug.com/11914): Remove @ line.
       String sourceMapFileName = relativize(fileUri, sourceMapUri, false);
       return '''
 
 //# sourceMappingURL=$sourceMapFileName
-//@ sourceMappingURL=$sourceMapFileName
 ''';
     }
     return '';
@@ -1651,7 +1711,7 @@ class CodeEmitterTask extends CompilerTask {
         elementDescriptors.putIfAbsent(
             element, () => new Map<OutputUnit, ClassBuilder>());
     return descriptors.putIfAbsent(outputUnit,
-        () => new ClassBuilder(namer));
+        () => new ClassBuilder(element, namer));
   }
 
   ClassBuilder getElementDecriptor(Element element) {
@@ -1699,7 +1759,7 @@ class CodeEmitterTask extends CompilerTask {
         ..write(
             jsAst.prettyPrint(
                 getReflectionDataParser(classesCollector, backend),
-                compiler))
+                compiler, monitor: compiler.dumpInfoTask))
         ..write(')')
         ..write('([$n')
         ..addBuffer(outputBuffer)
@@ -1754,5 +1814,18 @@ class CodeEmitterTask extends CompilerTask {
 
   void registerReadTypeVariable(TypeVariableElement element) {
     readTypeVariables.add(element);
+  }
+
+  void invalidateCaches() {
+    if (!compiler.hasIncrementalSupport) return;
+    if (cachedElements.isEmpty) return;
+    for (Element element in compiler.enqueuer.codegen.newlyEnqueuedElements) {
+      if (element.isInstanceMember) {
+        cachedClassBuilders.remove(element.enclosingClass);
+
+        nativeEmitter.cachedBuilders.remove(element.enclosingClass);
+
+      }
+    }
   }
 }

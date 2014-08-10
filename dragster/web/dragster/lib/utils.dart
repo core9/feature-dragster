@@ -1,4 +1,4 @@
-library utils;
+library coreutils;
 
 import 'dart:html';
 

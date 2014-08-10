@@ -45,7 +45,7 @@ class DragDropImpl extends DragDrop {
 
   void _onDragStart(MouseEvent event) {
     for (var content in _stage.getContentElements()) {
-      content.classes.add(_stage.getHideClass().split('.')[1]);
+      content.classes.add(_stage.getHideClass().trim().split('.')[1]);
     }
     Element dragTarget = _getDragTarget(event);
     if (dragTarget == null) {
@@ -81,7 +81,7 @@ class DragDropImpl extends DragDrop {
     }
 
     for (Element content in _stage.getContentElements()) {
-      content.classes.remove(_stage.getHideClass().split('.')[1]);
+      content.classes.remove(_stage.getHideClass().trim().split('.')[1]);
       content.style.setProperty('width', '100%');
       content.style.setProperty('height', '100%');
     }

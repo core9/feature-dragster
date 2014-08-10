@@ -1,6 +1,8 @@
 
-import "package:dice/dice.dart";
 import 'dart:html';
+
+import 'lib/bootstrategy_api.dart';
+import 'lib/src/bootstrategy_impl.dart';
 
 import 'lib/dragdrop_api.dart';
 import 'lib/src/dragdrop_impl.dart';
@@ -12,25 +14,25 @@ import 'lib/grid_api.dart';
 import 'lib/stage_api.dart';
 import 'lib/src/stage_impl.dart';
 
+
+import 'lib/temp_main.dart';
+
 List<Element> _columnsElements = document.querySelectorAll('#columns');
 
 void main() {
 
-  var injector = new Injector(new Dragster());  
-  DragDrop dragdrop = injector.getInstance(DragDrop);
-  dragdrop.start();
+  Registry module = new Registry();
+  module.registerToInstance(HighLight, new HighLightImpl());
+  module.registerToInstance(DragDrop, new DragDropImpl());
+  module.registerToInstance(Grid, new GridImpl());
+  module.registerToInstance(Menu, new MenuImpl());
+  module.registerToInstance(Stage, new StageImpl());
+  module.registerToInstance(MainStrategy, new MainStrategy());
 
+
+  
+  BootstrapFramework bootstrap = new BootstrapFrameworkImpl();
+  bootstrap.addModule(module);
+  bootstrap.run();
+  
 }
-
-
-class Dragster extends Module {
-  configure() {
-    register(HighLight).toType(HighLightImpl);
-    register(DragDrop).toType(DragDropImpl);
-    register(Grid).toType(GridImpl);
-    register(Menu).toType(MenuImpl);
-    register(Stage).toType(StageImpl);
-  }
-}
-
-

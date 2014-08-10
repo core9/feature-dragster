@@ -1,11 +1,15 @@
 
+
 import "package:dice/dice.dart";
+
+
+
+
+
+@MirrorsUsed(override: '*')
 import 'dart:mirrors';
 
 import '../bootstrategy_api.dart';
-
-
-
 
 class BootstrapFrameworkImpl implements BootstrapFramework {
   
@@ -32,15 +36,16 @@ class BootstrapFrameworkImpl implements BootstrapFramework {
 
   void _collectAllBootStrategies(Type type){
       
-    if(_isSubTypeOf(type, BootStrategy)){
+    if(_isSubTypeOff(type, BootStrategy)){
       BootStrategy bootStrategy = _injector.getInstance(type);
       bootStrategy.setRegistry(_injectorWrap);
       bootStrategy.processPlugins();
     }
   }
   
-  bool _isSubTypeOf(Type subType, Type type){
+  bool _isSubTypeOff(Type subType, Type type){
     if(reflectType(subType).isSubtypeOf(reflectType(type)))return true;
     return false;
   }
 }
+

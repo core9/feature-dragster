@@ -1,6 +1,7 @@
 library bootstrategy;
 
 
+
 import "package:dice/dice.dart";
 
 class InjectorWrap {

@@ -11,9 +11,10 @@ import 'package:html5lib/parser.dart' show parse;
 
 class StageImpl extends Stage {
 
-  String contentClass = '.content'; 
-  String hideClass = '.hide';
-  String stageId = '#columns';
+  String contentClass = ' .content '; 
+  String hideClass = ' .shrink ';
+  String stageId = ' #columns ';
+  String columnClass = ' .column ';
   
   Menu _menu;
 
@@ -34,7 +35,7 @@ class StageImpl extends Stage {
   }
   
   List<Element> getGridElements(){
-    return document.querySelectorAll(stageId + ' .column');
+    return document.querySelectorAll(stageId + columnClass);
   }
  
   void setMenu(Menu menu){
@@ -58,7 +59,7 @@ class StageImpl extends Stage {
   void _onDataLoaded(String responseText) {
 
     var html = parse(responseText).querySelector('body');
-    var contentDivs = html.querySelectorAll('.content');
+    var contentDivs = html.querySelectorAll(contentClass);
 
     UListElement ul = document.querySelector('#all-widgets');
 

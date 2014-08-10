@@ -154,7 +154,7 @@ body {
 	resize: both;
 	overflow: auto;
 	position: relative;
-	top: 60px;
+	top: 130px;
 	left: 50%;
 	width: 960px;
 	margin-left: -480px;
@@ -179,17 +179,7 @@ body {
 	margin: 0px;
 }
 
-.selected {
-	border: 2px solid rgb(173, 216, 230) !important;
-	width: calc(100% - 4px) !important;
-	height: calc(100% - 4px) !important;
-}
 
-.highlight_off {
-  border: 2px solid #00ff00 !important;
-  width: calc(100% - 4px) !important;
-  height: calc(100% - 4px) !important;
-}
 
 .column.over {
 	border: 2px dashed #000;
@@ -203,7 +193,7 @@ body {
 	transform: scale(0.8);
 }
 
-.hide {
+.shrink {
 	height: 50% !important;
 	width: 50% !important;
 	margin-left: 25% !important;

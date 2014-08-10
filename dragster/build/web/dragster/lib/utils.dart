@@ -1,4 +1,4 @@
-library utils;
+library coreutils;
 
 import 'dart:html';
 
@@ -14,4 +14,17 @@ class NullNodeValidator implements NodeValidator {
 
 class NullTreeSanitizer implements NodeTreeSanitizer {
   void sanitizeTree(Node node) {}
+}
+
+class Utils {
+  
+  Element getFirstParentWithClass(Element element, String className) {
+    if (element == null) return null;
+    Element parent = element.parent;
+    if (parent != null) {
+      if (parent.classes.contains(className)) return parent;
+    }
+    return getFirstParentWithClass(parent, className);
+  }
+  
 }
