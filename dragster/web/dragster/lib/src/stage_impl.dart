@@ -11,22 +11,30 @@ import 'package:html5lib/parser.dart' show parse;
 
 class StageImpl extends Stage {
 
-  String classContent = '.content'; 
-  String idStage = '#columns';
+  String contentClass = '.content'; 
+  String hideClass = '.hide';
+  String stageId = '#columns';
   
   Menu _menu;
 
+  String getContentClass(){
+    return contentClass;
+  }
+  
+  String getHideClass(){
+    return hideClass;
+  }
   
   Element getStage(){
-    return document.querySelector(idStage);
+    return document.querySelector(stageId);
   }
   
   List<Element> getAllElements(){
-    return document.querySelectorAll(idStage);
+    return document.querySelectorAll(stageId);
   }
   
   List<Element> getGridElements(){
-    return document.querySelectorAll(idStage + ' .column');
+    return document.querySelectorAll(stageId + ' .column');
   }
  
   void setMenu(Menu menu){
@@ -38,7 +46,7 @@ class StageImpl extends Stage {
   }
 
   List<Element> getContentElements(){
-    return document.querySelectorAll('.content');
+    return document.querySelectorAll(contentClass);
   }
   
   void getWidgetsAndElements() {
@@ -97,14 +105,14 @@ class StageImpl extends Stage {
       if (currentElement.classes.contains('resize')) {
         currentElement.classes.remove('resize');
         currentElement.style.setProperty('overflow', 'visible');
-        Element content = currentElement.querySelector('.content');
+        Element content = currentElement.querySelector(contentClass);
         content.style.setProperty('width', '100%');
         content.style.setProperty('height', '100%');
         document.querySelector('#hover-placeholder').text = "";
       } else {
         currentElement.style.setProperty('overflow', 'auto');
         currentElement.classes.add('resize');
-        Element content = currentElement.querySelector('.content');
+        Element content = currentElement.querySelector(contentClass);
         content.style.setProperty('width', '50%');
         content.style.setProperty('height', '50%');
       }

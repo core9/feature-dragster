@@ -16,5 +16,7 @@ abstract class Stage {
   void setResizeOnColumn(Element currentElement);
   void getWidgetsAndElements();
   List<Element> getContentElements();
+  String getContentClass();
+  String getHideClass();
   
 }
