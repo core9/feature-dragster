@@ -19,67 +19,84 @@
 <script type="text/javascript" src="localforage.min.js"></script>
 <script type="text/javascript" src="gridBuilder.js"></script>
 <script type="text/javascript">
-	$(document).ready(function() {
+	$(document).ready(
+			function() {
 
-		function saveToLocal() {
-			
-			localforage.config({
-				  version     : 3,
-			    name        : 'dbGridster',
-			    storeName   : 'grids',
-			    description : 'some description'
-			});
+				function updateGrid(state) {
+					$("body").destroyGrid();
+					$("body").gridBuilder({
+						  color:          state.color,   
+					    secondaryColor: state.secondaryColor, 
+					    vertical:       parseInt(state.vertical),      
+					    horizontal:     parseInt(state.horizontal),     
+					    gutter:         parseInt(state.gutter),       
+					});
 
-			localforage.ready(function() {
-				var name = $('input[name="name"]').val();
-				var background = $('body').css('background-image');
-				if (name == '') {
-					alert('Please fill in name.');
-					return;
 				}
 
-				localforage.setItem(name, background);
-				
-				localforage.keys(function(keys) {
-				    // An array of all the key names.
-				    console.log(keys);
-				});
+				function saveToLocal(state) {
+
+					updateGrid(state);
+
+					localforage.config({
+						version : 3,
+						name : 'dbGridster',
+						storeName : 'grids',
+						description : 'some description'
+					});
+
+					localforage.ready(function() {
+
+						var background = $('body').css('background-image');
+						if (state.name == '')
+							return;
+						localforage.setItem(state.name, background);
+/* 						localforage.keys(function(keys) {
+							console.log(keys);
+						}); */
+
+					});
+				}
+
+				(function($) {
+					"use strict";
+					var gridster = {
+						body : $("body"),
+						gutter : $("[name='gutter']"),
+						button : $("button"),
+						config : {
+							useCaching : true,
+							language : "en"
+						},
+						load : function() {
+						},
+						save : function(event) {
+							event.preventDefault();
+							var state = {
+								name : $('input[name="name"]').val(),
+								color : $('input[name="color"]').val(),
+								secondaryColor : $(
+										'input[name="secondaryColor"]').val(),
+								vertical : $('input[name="vertical"]').val(),
+								horizontal : $('input[name="horizontal"]')
+										.val(),
+								gutter : $('input[name="gutter"]').val()
+							}
+							saveToLocal(state);
+						},
+						clear : function() {
+							this.body.destroyGrid();
+						},
+						start : function() {
+							this.body.gridBuilder();
+							this.button.click(this.save);
+							//console.log(this.gutter.val());
+						}
+					}
+					gridster.start();
+				})(jQuery);
 
 			});
-		}
-
-		$('body').css('background-image');
-		var name = $('input[name="name"]').val();
-
-		(function($) {
-			"use strict";
-			var gridster = {
-				body : $("body"),
-				gutter : $("[name='gutter']"),
-				button : $("button"),
-				config : {
-					useCaching : true,
-					language : "en"
-				},
-				load : function() {
-				},
-				save : function(event) {
-					event.preventDefault();
-					saveToLocal()
-				},
-				clear : function() {
-					this.body.destroyGrid();
-				},
-				start : function() {
-					this.body.gridBuilder();
-					this.button.click(this.save);
-					console.log(this.gutter.val());
-				}
-			}
-			gridster.start();
-		})(jQuery);
-
-	});
 </script>
 
 </head>
@@ -94,8 +111,8 @@
 			<input type="text" name="name"></input>
 			<input type="color" name="color"> <input type="color"
 				name="secondaryColor"> <input type="number" name="vertical"
-					value="50"> <input type="number" name="horizontal"
-						value="50"> <input type="number" name="gutter" value="50">
+					value="18"> <input type="number" name="horizontal"
+						value="140"> <input type="number" name="gutter" value="40">
 								<button type="submit" name="save" value="true">save</button>
 		</form>
 
