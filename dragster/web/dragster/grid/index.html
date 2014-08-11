@@ -16,67 +16,63 @@
 </style>
 
 <script type="text/javascript" src="jquery-2.1.1.min.js"></script>
-<script type="text/javascript" src="db.js"></script>
+<script type="text/javascript" src="localforage.min.js"></script>
 <script type="text/javascript" src="gridBuilder.js"></script>
 <script type="text/javascript">
-	$(document).ready(
-			function() {
+	$(document).ready(function() {
 
-				
+		function saveToLocal() {
 
-			         var server;
-			          db.open( {
-			              server: 'dbName',
-			              version: 4,
-			              schema: {
-			                  grid: {
-			                      key: { keyPath: 'id', autoIncrement: true }
-			                  }
-			              }
-			          } ).done( function ( s ) {
-			              server = s;
-			              server.grid.add( {
-			                    name: 'Aaron',
-			                    grid: $('body').css('background-image')
-			                } ).done( function ( item ) {
-			                    // item stored
-			                } );
-			          } );
-				
+			localforage.ready(function() {
+				var name = $('input[name="name"]').val();
+				var background = $('body').css('background-image');
+				if (name == '') {
+					alert('Please fill in name.');
+					return;
+				}
 
-
-			          
+				localforage.setItem(name, background);
 				
-				
-				
-				(function($) {
-					"use strict";
-					var gridster = {
-						body : $("body"),
-						gutter : $("[name='gutter']"),
-						button : $("button"),
-						config : {
-							useCaching : true,
-							language : "en"
-						},
-						load : function() {
-						},
-						save : function(event) {
-							event.preventDefault();
-						},
-						clear : function() {
-							this.body.destroyGrid();
-						},
-						start : function() {
-							this.body.gridBuilder();
-							this.button.click(this.save);
-							console.log(this.gutter.val());
-						}
-					}
-					gridster.start();
-				})(jQuery);
+				localforage.keys(function(keys) {
+				    // An array of all the key names.
+				    console.log(keys);
+				});
 
 			});
+		}
+
+		$('body').css('background-image');
+		var name = $('input[name="name"]').val();
+
+		(function($) {
+			"use strict";
+			var gridster = {
+				body : $("body"),
+				gutter : $("[name='gutter']"),
+				button : $("button"),
+				config : {
+					useCaching : true,
+					language : "en"
+				},
+				load : function() {
+				},
+				save : function(event) {
+					event.preventDefault();
+					saveToLocal()
+				},
+				clear : function() {
+					this.body.destroyGrid();
+				},
+				start : function() {
+					this.body.gridBuilder();
+					this.button.click(this.save);
+					console.log(this.gutter.val());
+				}
+			}
+			gridster.start();
+		})(jQuery);
+
+	});
 </script>
 
 </head>
