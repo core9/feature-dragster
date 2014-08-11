@@ -341,7 +341,16 @@ class MenuImpl extends Menu {
     String innerHtml = template.innerHtml;
     DivElement newDiv = new DivElement();
     List<Element> listDivs = document.querySelectorAll('#columns .column');
-    newDiv.id = 'elem' + listDivs.length.toString();
+    
+    List<int> listOfIds = new List();
+    
+    listDivs.forEach((e) => listOfIds.add(int.parse(e.id.substring(4))));
+    
+    listOfIds.sort();
+    
+    int lastItem = listOfIds.removeLast();
+    
+    newDiv.id = 'elem' + (lastItem + 1).toString();
     newDiv.classes.add('column');
     newDiv.setAttribute('draggable', 'true');
     newDiv.setInnerHtml(innerHtml, treeSanitizer: new NullTreeSanitizer());
