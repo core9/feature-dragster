@@ -56,7 +56,9 @@ class MenuImpl extends Menu {
 
 
 
-  var _db = new Store('dbName', 'storeName');
+  var _db = new Store('dbGridster', 'pages');
+  
+ // var _dbGrid = new Store('dbName', 'storeName');
   
 
   HighLight _highLight;
