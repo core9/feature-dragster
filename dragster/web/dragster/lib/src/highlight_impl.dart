@@ -60,6 +60,7 @@ class HighLightImpl extends HighLight {
     if (element == null) return true;
     if (element.id == _stage.getStageId().trim().split('#')[1]) return true;
     if (element.classes.contains('resize')) return true;
+    if(element.classes.contains('select'))return true;
     return false;
   }
 

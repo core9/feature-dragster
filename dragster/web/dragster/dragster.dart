@@ -13,6 +13,8 @@ import 'lib/src/menu_impl.dart';
 import 'lib/grid_api.dart';
 import 'lib/stage_api.dart';
 import 'lib/src/stage_impl.dart';
+import 'lib/select_api.dart';
+import 'lib/src/select_impl.dart';
 
 
 import 'lib/temp_main.dart';
@@ -23,6 +25,7 @@ void main() {
 
   Registry module = new Registry();
   module.registerToInstance(HighLight, new HighLightImpl());
+  module.registerToInstance(Select, new SelectImpl());
   module.registerToInstance(DragDrop, new DragDropImpl());
   module.registerToInstance(Grid, new GridImpl());
   module.registerToInstance(Menu, new MenuImpl());

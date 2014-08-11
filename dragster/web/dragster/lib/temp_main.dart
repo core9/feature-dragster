@@ -5,6 +5,7 @@ import 'menu_api.dart';
 import 'stage_api.dart';
 import 'grid_api.dart';
 import 'highlight_api.dart';
+import 'select_api.dart';
 
 import 'bootstrategy_api.dart';
 
@@ -13,29 +14,29 @@ class MainStrategy implements BootStrategy {
   void processPlugins(){
     
     Stage _stage = _injectorWrap.getInjector().getInstance(Stage);
-       
-    
     Menu _menu = _injectorWrap.getInjector().getInstance(Menu);
-
-    
-    DragDrop dragdrop = _injectorWrap.getInjector().getInstance(DragDrop);
-    
+    DragDrop _dragdrop = _injectorWrap.getInjector().getInstance(DragDrop);
     Grid _grid = _injectorWrap.getInjector().getInstance(Grid);
-    _grid.start();
-
     HighLight _highLight = _injectorWrap.getInjector().getInstance(HighLight);
+    Select _select = _injectorWrap.getInjector().getInstance(Select);
+    
+    _select.setStage(_stage);
+    _select.start();
+    
+    _grid.start();
+    
     _highLight.setStage(_stage);
     _highLight.initHighlight();
     
-    dragdrop.setStage(_stage);
-    dragdrop.setHighLight(_highLight);
+    _dragdrop.setStage(_stage);
+    _dragdrop.setHighLight(_highLight);
+    _dragdrop.start();
+
     
-    _menu.setDragDrop(dragdrop);
+    _menu.setDragDrop(_dragdrop);
     _menu.setHighLight(_highLight);
     _menu.setStage(_stage);
-    
     _menu.start();
-    dragdrop.start();
     
   }
   void setRegistry(InjectorWrap injectorWrap){
