@@ -15,6 +15,7 @@
 			style="position: absolute; top: 7px; padding-left: 20px; z-index: 99;">
 			<li><a class="menu" href="#">Account</a>
 				<ul>
+		      <li><a class="menu" href="grid/">Grid</a></li>
 					<li><a class="menu" href="#edit">Edit</a></li>
 					<li><a class="menu" href="#logout">Logout</a></li>
 				</ul></li>
@@ -27,12 +28,10 @@
 			<li><a class="menu" href="#">Add Widget</a>
 				<ul id="all-widgets">
 				</ul></li>
-			<li><a class="menu" href="#save">Remove Widget</a></li>
-			<li><a class="menu" href="#">Add Element</a>
+			<li><a class="menu" href="#add">Add Element</a>
 				<ul id="all-templates">
 				</ul></li>
-			<li><a class="menu" href="#save">Remove Element</a></li>
-			<li><a class="menu" href="grid/">Grid</a></li>
+			<li><a class="menu" href="#remove-element">Delete</a></li>
 		</ul>
 
 		<div id="page-selector"
@@ -110,7 +109,7 @@
 
 
 	<div id="selection-placeholder" 
-		style="color: #fff; position: fixed; right: 0px; top: 100px; height:100%; width: 250px; padding-top:20px; border: 0px solid #ccc; background-color:rgba(0, 0, 0, 0.25);">
+		style="color: #fff; position: fixed; right: 0px; top: 104px; height:100%; width: 250px; padding-top:20px; border: 0px solid #ccc; background-color:rgba(0, 0, 0, 0.25);">
 		<form>
 			<input type="text" id="name" name="name" value=""></input> <br> <input type="color"
 				name="color"> <br> <input type="color"

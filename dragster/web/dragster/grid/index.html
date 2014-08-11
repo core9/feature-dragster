@@ -27,7 +27,7 @@
 			         var server;
 			          db.open( {
 			              server: 'dbName',
-			              version: 3,
+			              version: 4,
 			              schema: {
 			                  grid: {
 			                      key: { keyPath: 'id', autoIncrement: true }
@@ -36,9 +36,8 @@
 			          } ).done( function ( s ) {
 			              server = s;
 			              server.grid.add( {
-			                    firstName: 'Aaron',
-			                    lastName: 'Powell',
-			                    answer: 452
+			                    name: 'Aaron',
+			                    grid: $('body').css('background-image')
 			                } ).done( function ( item ) {
 			                    // item stored
 			                } );

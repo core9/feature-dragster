@@ -377,10 +377,17 @@ class MenuImpl extends Menu {
       case 'clear':
         _clear();
         break;
+      case 'delete':
+        _deleteElement();
+        break;
       case 'save':
         _save();
         break;
     }
   }
 
+  void _deleteElement(){
+    print('delete');
+    document.querySelectorAll('.select').forEach((e) => e.remove() );
+  }
 }
