@@ -266,7 +266,7 @@ output {
 }
 
 .thumb {
-  border: 1px solid #000;
+  _border: 1px solid #000;
   _height: 75px;
   max-width: 220px;
   margin: 10px 5px 0 0;
@@ -276,23 +276,23 @@ output {
 
 /* Let's get this party started */
 ::-webkit-scrollbar {
-    width: 12px;
+    width: 8px;
 }
  
 /* Track */
 ::-webkit-scrollbar-track {
-    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
-    -webkit-border-radius: 10px;
-    border-radius: 10px;
+    _-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
+    _-webkit-border-radius: 10px;
+    _border-radius: 10px;
 }
  
 /* Handle */
 ::-webkit-scrollbar-thumb {
-    -webkit-border-radius: 10px;
-    border-radius: 10px;
-    background: rgba(255,0,0,0.8); 
-    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
+    _-webkit-border-radius: 10px;
+    _border-radius: 10px;
+    _background: rgba(255,0,0,0.8); 
+    _-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
 }
 ::-webkit-scrollbar-thumb:window-inactive {
-  background: rgba(255,0,0,0.4); 
+  _background: rgba(255,0,0,0.4); 
 }
