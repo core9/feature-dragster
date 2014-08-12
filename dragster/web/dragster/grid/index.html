@@ -21,67 +21,62 @@
 <script type="text/javascript">
 	$(document).ready(
 			function() {
-				
+
 				var dbKeyExists = false;
-				
+
 				/**
 				 * Check if a database exists
 				 * @param {string} name Database name
 				 * @param {function} callback Function to return the response
 				 * @returns {bool} True if the database exists
 				 */
-				function databaseExists(name,callback){
-				    var dbExists = true;
-				    var request = window.indexedDB.open(name);
-				    
-				    
-				    
-				    request.onupgradeneeded = function (e){
-				        if(request.result.version===1){
-				            dbExists = false;
-				            window.indexedDB.deleteDatabase(name);
-				            if(callback)
-				                callback(dbExists);
-				        }
+				function databaseExists(name, callback) {
+					var dbExists = true;
+					var request = window.indexedDB.open(name);
 
-				    };
-				    request.onsuccess = function(e) {
-				        if(dbExists){
-				            if(callback)
-				                callback(dbExists);
-				        }
-				    };
-				};
-				
-				
-				var name="dbGridster";
-				databaseExists(name,function(exists){
-				    if(exists){
-				       
-				        
-				        var req = window.indexedDB.open(name);
-				        req.onupgradeneeded = function(event) {
-				        	  var db = event.target.result;
-				        	  var transaction = db.transaction([name]);
-				        	  var objectStore = transaction.objectStore(name);
-				        	  var request2 = objectStore.get("exists");
-				        	  request2.onerror = function(event) {
-				        	    // Handle errors!
-				        	    console.log("does not exists");
-				        	  };
-				        	  request2.onsuccess = function(event) {
-				        	    // Do something with the request.result!
-				        	    alert("exists is " + request2.result.name);
-				        	  };
-				        }
-				        
-				        console.debug("database "+name+" exists");
-				        
-				    }else{
-				        console.debug("database "+name+" does not exists");
-				    }
+					request.onupgradeneeded = function(e) {
+						if (request.result.version === 1) {
+							dbExists = false;
+							window.indexedDB.deleteDatabase(name);
+							if (callback)
+								callback(dbExists);
+						}
+
+					};
+					request.onsuccess = function(e) {
+						if (dbExists) {
+							if (callback)
+								callback(dbExists);
+						}
+					};
+				}
+				;
+
+				var name = "dbGridster";
+				databaseExists(name, function(exists) {
+					if (exists) {
+
+						var req = window.indexedDB.open(name);
+						req.onupgradeneeded = function(event) {
+							var db = event.target.result;
+							var transaction = db.transaction([ name ]);
+							var objectStore = transaction.objectStore(name);
+							var request2 = objectStore.get("exists");
+							request2.onerror = function(event) {
+								// Handle errors!
+								console.log("does not exists");
+							};
+							request2.onsuccess = function(event) {
+								// Do something with the request.result!
+								alert("exists is " + request2.result.name);
+							};
+						}
+
+						console.debug("database " + name + " exists");
+					} else {
+						console.debug("database " + name + " does not exists");
+					}
 				});
-				
 
 				function updateGrid(state) {
 					$("body").destroyGrid();
@@ -106,14 +101,8 @@
 						description : 'some description'
 					});
 
-					localforage.setItem('key', 'value').then(function() {
 
-						localforage.getItem('key', function(value) {
-							console.log(value);
-							dbKeyExists = true;
-						});
 
-					});
 
 					localforage.ready(function() {
 
@@ -152,34 +141,29 @@
 										.val(),
 								gutter : $('input[name="gutter"]').val()
 							}
-							if(dbKeyExists){
+							if (dbKeyExists) {
 								saveToLocal(state);
-							}else{
+							} else {
 								console.log("Key does not exists");
+
+								localforage.config({
+									version : 3,
+									name : 'dbGridster',
+									storeName : 'grids',
+									description : 'some description'
+								});
+
 								
+					            localforage.keys(function(k) {
+					                console.log(k.toString());
+					                console.log('empty ????');
+					                
+					              });
 								
-						          localforage.config({
-						              version : 3,
-						              name : 'dbGridster',
-						              storeName : 'grids',
-						              description : 'some description'
-						            });
-								
-						            localforage.getItem('key', function(value) {
-						                console.log(value);
-						                console.log(" this is good " + value);
-						                if(value == "value"){
-						                	saveToLocal(state);
-						                }else{
-						                	localforage.clear();
-						                	saveToLocal(state);
-						                }
-						              });
-						          
-						          
-								
-								
-								
+								localforage.clear();
+								window.indexedDB.deleteDatabase("dbGridster");
+
+								saveToLocal(state);
 							}
 						},
 						clear : function() {
@@ -211,7 +195,7 @@
 				name="secondaryColor"> <input type="number" name="vertical"
 					value="18"> <input type="number" name="horizontal"
 						value="140"> <input type="number" name="gutter" value="40">
-								<button type="submit" name="save" value="true">save</button>
+								<button type="submit" name="save" value="true">to save double click</button>
 		</form>
 
 	</div>
