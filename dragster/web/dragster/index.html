@@ -15,7 +15,7 @@
 			style="position: absolute; top: 7px; padding-left: 20px; z-index: 99;">
 			<li><a class="menu" href="#">Account</a>
 				<ul>
-		      <li><a class="menu" href="grid/">Grid</a></li>
+					<li><a class="menu" href="grid/">Grid</a></li>
 					<li><a class="menu" href="#edit">Edit</a></li>
 					<li><a class="menu" href="#logout">Logout</a></li>
 				</ul></li>
@@ -108,17 +108,28 @@
 	<div id="select-placeholder" style="display: none;"></div>
 
 
-	<div id="selection-placeholder" 
-		style="color: #fff; position: fixed; right: 0px; top: 104px; height:100%; width: 250px; padding-top:20px; border: 0px solid #ccc; background-color:rgba(0, 0, 0, 0.25);">
+	<div id="selection-placeholder"
+		style="color: #fff; position: fixed; right: 0px; text-align: left; top: 104px; height: 100%; width: 250px; padding-top: 20px; border: 0px solid #ccc; background-color: rgba(0, 0, 0, 0.25);">
 		<form>
-			<input type="text" id="name" name="name" value=""></input> <br> <input type="color"
-				name="color"> <br> <input type="color"
-				name="secondaryColor"> <br>
-			<lable style="width:100px;" for="width">width : </lable>
-			<input type="number" id="width" name="vertical" value="50"> <br>
-      <lable style="width:100px;" for="height">height : </lable>
-			<input type="number" name="height" value="50"> <input
-				type="number" name="gutter" value="50"> <br>
+			<br>
+			
+	    <input type="checkbox" name="dog" value="Dog" />
+      <lable style="padding-right: 108px;" for="width">color : </lable>
+			<input type="color" name="color"> <br> 
+			
+      <input type="checkbox" name="dog" value="Dog" />
+      <lable style="padding-right: 28px;" for="width">background-color : </lable>
+			<input type="color" name="secondaryColor"> <br> 
+				
+				
+			<input type="checkbox" name="dog" value="Dog" />
+			<lable style="width:100px; padding-right: 54px;" for="width">width : > </lable>
+			<input style="width:100px; " type="number" id="width" name="vertical" value="50"> <br>
+
+			<input type="checkbox" name="animal" value="Cat" />
+			<lable style="width:100px; padding-right: 47px;" for="height">height : </lable>
+			<input style="width:100px; " type="number" name="height" value="50"> <br>
+			
 			<button type="submit" name="save" value="true">save</button>
 		</form>
 	</div>
