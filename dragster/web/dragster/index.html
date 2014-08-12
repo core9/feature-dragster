@@ -107,9 +107,32 @@
 	<div id="hover-placeholder" style="display: none;"></div>
 	<div id="select-placeholder" style="display: none;"></div>
 
+  <div id="media-placeholder"
+    style="color: #fff; position: fixed; left: 0px; text-align: left; top: 104px; height: 100%; width: 250px; padding-top: 20px; border: 0px solid #ccc; background-color: rgba(0, 0, 0, 0.25);">
+    
+        <div id="show-media-placeholder"
+      style="width: 20px; height: 20px; background: red;top:0px;  position: absolute; z-index: 999;"></div>
+      
+      <div id="inner-media-placeholder">
+      <br>
+    <h3>Upload</h3>
+    <form id="read">
+      <input type="file" id="files" name="files[]" multiple />
+    </form>
+    <div id="drop-zone">Drop files here</div>
+    <output id="list"></output>
+      
+      </div>
+      
+  </div>
 
 	<div id="selection-placeholder"
 		style="color: #fff; position: fixed; right: 0px; text-align: left; top: 104px; height: 100%; width: 250px; padding-top: 20px; border: 0px solid #ccc; background-color: rgba(0, 0, 0, 0.25);">
+        <div id="show-selection-placeholder"
+      style="width: 20px; height: 20px; background: red; right:0px; top:0px; position: absolute; z-index: 999;"></div>
+      
+      <div id="inner-selection-placeholder">
+      
 		<form>
 			<br>
 			
@@ -132,6 +155,9 @@
 			
 			<button type="submit" name="save" value="true">save</button>
 		</form>
+		
+		</div>
+		
 	</div>
 
 

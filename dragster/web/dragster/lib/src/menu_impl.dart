@@ -24,6 +24,15 @@ class MenuImpl extends Menu {
   Element _showMenuElement = document.querySelector('#show-menu');
   Element _pageSelector = document.querySelector('#page-selector');
   Element _menuSecondary = document.querySelector('#navigation-secondary');
+  Element _showMediaPlaceholder = document.querySelector('#show-media-placeholder'); 
+  Element _mediaPlaceholder = document.querySelector('#media-placeholder'); 
+  Element _innerMediaPlaceholder = document.querySelector('#inner-media-placeholder'); 
+  Element _selectionPlaceholder = document.querySelector('#selection-placeholder'); 
+  Element _showSelectionPlaceholder = document.querySelector('#show-selection-placeholder'); 
+  Element _innerSelectionPlaceholder = document.querySelector('#inner-selection-placeholder'); 
+
+  
+
 
   Element _menuGeoJsonDatalist = document.getElementById('menu-geo-json-datalist');
   InputElement _menuGeo = document.getElementById('menu-geo');
@@ -86,6 +95,7 @@ class MenuImpl extends Menu {
     _load(false);
     _redrawTop('#columns', '#menu', 30);
     _redrawTop('#selection-placeholder', '#menu', 0);
+    _redrawTop('#media-placeholder', '#menu', 0);
     _excludeFromHash[0] = 'menu-action';
     _dragdrop.setStage(_stage);
     _dragdrop.setHighLight(_highLight);
@@ -93,7 +103,24 @@ class MenuImpl extends Menu {
     _putMenuItemsInListAndAddClickEvent();
     _ulMenuAddClickEvents();
     _menuAddOptions();
+    
+    
+    _showMediaPlaceholder.onClick.listen(_showMediaMenu);
+    _showSelectionPlaceholder.onClick.listen(_showSelectionMenu);
+    
 
+  }
+
+  void _showSelectionMenu(MouseEvent event){
+      Element mediaMenuTarget = event.target;
+      _selectionPlaceholder.classes.toggle('hide-side-menu');
+      _innerSelectionPlaceholder.classes.toggle('hide-inner-side-menu');
+  }
+  
+  void _showMediaMenu(MouseEvent event){
+      Element mediaMenuTarget = event.target;
+      _mediaPlaceholder.classes.toggle('hide-side-menu');
+      _innerMediaPlaceholder.classes.toggle('hide-inner-side-menu');
   }
   
   void _countGridItems(String item){
@@ -279,6 +306,7 @@ class MenuImpl extends Menu {
     document.querySelector('#selection-placeholder').classes.toggle('sidemenu-position');
     _redrawTop('#columns', '#menu', 30);
     _redrawTop('#selection-placeholder', '#menu', 0);
+    _redrawTop('#media-placeholder', '#menu', 0);
   }
 
   void _fillMenuInputItems(Element optionList, String jsonSourceUrl) {
