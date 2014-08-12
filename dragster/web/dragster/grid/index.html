@@ -22,6 +22,8 @@
 	$(document).ready(
 			function() {
 				
+				var dbKeyExists = false;
+				
 				/**
 				 * Check if a database exists
 				 * @param {string} name Database name
@@ -108,6 +110,7 @@
 
 						localforage.getItem('key', function(value) {
 							console.log(value);
+							dbKeyExists = true;
 						});
 
 					});
@@ -149,10 +152,22 @@
 										.val(),
 								gutter : $('input[name="gutter"]').val()
 							}
-							try {
+							if(dbKeyExists){
 								saveToLocal(state);
-							} catch (e) {
-								console.log(e);
+							}else{
+								console.log("Key does not exists");
+								
+								
+						          localforage.config({
+						              version : 3,
+						              name : 'dbGridster',
+						              storeName : 'grids',
+						              description : 'some description'
+						            });
+								
+								localforage.clear();
+								
+								saveToLocal(state);
 							}
 						},
 						clear : function() {
