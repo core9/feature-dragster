@@ -127,10 +127,12 @@ class DragDropImpl extends DragDrop {
           div.style.setProperty('background-color', '#fff');
           div.style.setProperty('position', 'static');
           div.style.setProperty('overflow', 'hidden');
-          _dragSourceEl.style.setProperty('height', '100%');
-          _dragSourceEl.style.setProperty('width', '100%');
-          _dragSourceEl.style.setProperty('margin-top', '0px');
-          div.setInnerHtml(_dragSourceEl.outerHtml, treeSanitizer: new NullTreeSanitizer());
+          Element tmp =  _dragSourceEl.clone(false);
+          tmp.style.setProperty('height', '100%');
+          tmp.style.setProperty('width', '100%');
+          tmp.style.setProperty('margin-top', '0px');
+          tmp.classes.remove('thumb');
+          div.setInnerHtml(tmp.outerHtml, treeSanitizer: new NullTreeSanitizer());
           dropTarget.setInnerHtml(div.outerHtml, treeSanitizer: new NullTreeSanitizer());
           _highLight.getHighLightedElements().forEach((e) => _highLight.resetOnMouseOver(e));
           initDragAndDrop(_highLight);
