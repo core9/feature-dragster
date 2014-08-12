@@ -21,6 +21,43 @@
 <script type="text/javascript">
 	$(document).ready(
 			function() {
+				
+				/**
+				 * Check if a database exists
+				 * @param {string} name Database name
+				 * @param {function} callback Function to return the response
+				 * @returns {bool} True if the database exists
+				 */
+				function databaseExists(name,callback){
+				    var dbExists = true;
+				    var request = window.indexedDB.open(name);
+				    request.onupgradeneeded = function (e){
+				        if(request.result.version===1){
+				            dbExists = false;
+				            window.indexedDB.deleteDatabase(name);
+				            if(callback)
+				                callback(dbExists);
+				        }
+
+				    };
+				    request.onsuccess = function(e) {
+				        if(dbExists){
+				            if(callback)
+				                callback(dbExists);
+				        }
+				    };
+				};
+				
+				
+				var name="dbGridster";
+				databaseExists(name,function(exists){
+				    if(exists){
+				        console.debug("database "+name+" exists");
+				    }else{
+				        console.debug("database "+name+" does not exists");
+				    }
+				});
+				
 
 				function updateGrid(state) {
 					$("body").destroyGrid();
