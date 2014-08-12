@@ -50,6 +50,8 @@ class MenuImpl extends Menu {
 
   List<Element> _allTemplates;
 
+  List<String> _gridNames = new List();
+  
   List<Element> _menuInputItems = new List(11);
   List<String> _excludeFromHash = new List(1);
 
@@ -94,13 +96,24 @@ class MenuImpl extends Menu {
 
   }
   
+  void _countGridItems(String item){
+    print('grid : ' + item);
+    _gridNames.add(item);
+  }
+
+  void _loadGridDone(){
+    if(_gridNames.length > 0){
+      print('Has grid items ' + _gridNames.toString());
+    }else{
+      print('Has no grid items ' + _gridNames.toString());
+    }
+  }
+  
   void _loadGrids(){
 
-    
     _dbGrid.open().then((_) => _dbGrid.keys()).then((value) {
-      
-      value.listen((value) => print('grid : ' + value.toString()))
-      .onDone(() => print('all done'));
+      value.listen((value) => _countGridItems(value.toString()))
+      .onDone(() => _loadGridDone);
     });
   }
 

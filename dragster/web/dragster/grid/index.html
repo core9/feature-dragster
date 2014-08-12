@@ -25,11 +25,11 @@
 				function updateGrid(state) {
 					$("body").destroyGrid();
 					$("body").gridBuilder({
-						  color:          state.color,   
-					    secondaryColor: state.secondaryColor, 
-					    vertical:       parseInt(state.vertical),      
-					    horizontal:     parseInt(state.horizontal),     
-					    gutter:         parseInt(state.gutter),       
+						color : state.color,
+						secondaryColor : state.secondaryColor,
+						vertical : parseInt(state.vertical),
+						horizontal : parseInt(state.horizontal),
+						gutter : parseInt(state.gutter),
 					});
 
 				}
@@ -45,15 +45,23 @@
 						description : 'some description'
 					});
 
+					localforage.setItem('key', 'value').then(function() {
+
+						localforage.getItem('key', function(value) {
+							console.log(value);
+						});
+
+					});
+
 					localforage.ready(function() {
 
 						var background = $('body').css('background-image');
 						if (state.name == '')
 							return;
 						localforage.setItem(state.name, background);
-/* 						localforage.keys(function(keys) {
+						localforage.keys(function(keys) {
 							console.log(keys);
-						}); */
+						});
 
 					});
 				}
@@ -82,7 +90,11 @@
 										.val(),
 								gutter : $('input[name="gutter"]').val()
 							}
-							saveToLocal(state);
+							try {
+								saveToLocal(state);
+							} catch (e) {
+								console.log(e);
+							}
 						},
 						clear : function() {
 							this.body.destroyGrid();
