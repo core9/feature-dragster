@@ -165,9 +165,21 @@
 						              description : 'some description'
 						            });
 								
-								localforage.clear();
+						            localforage.getItem('key', function(value) {
+						                console.log(value);
+						                console.log(" this is good " + value);
+						                if(value == "value"){
+						                	saveToLocal(state);
+						                }else{
+						                	localforage.clear();
+						                	saveToLocal(state);
+						                }
+						              });
+						          
+						          
 								
-								saveToLocal(state);
+								
+								
 							}
 						},
 						clear : function() {
