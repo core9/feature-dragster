@@ -39,7 +39,9 @@ class MainStrategy implements BootStrategy {
     _menu.setStage(_stage);
     _menu.start();
     
-    new DndFiles();
+    DndFiles upload = new DndFiles();
+    upload.setHighLight(_highLight);
+    upload.setDragDrop(_dragdrop);
     
   }
   void setRegistry(InjectorWrap injectorWrap){

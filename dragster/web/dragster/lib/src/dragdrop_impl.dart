@@ -18,7 +18,7 @@ class DragDropImpl extends DragDrop {
   void setStage(Stage stage) {
     _stage = stage;
   }
-  
+
   void setHighLight(HighLight highLight) {
     _highLight = highLight;
   }
@@ -116,13 +116,37 @@ class DragDropImpl extends DragDrop {
         return;
       }
 
+      if (_dragSourceEl.parent != null && _dragSourceEl.tagName == 'IMG') {
+
+        if (!_dragSourceEl.parent.classes.contains('content')) {
+          DivElement div = new DivElement();
+          div.classes.add('content');
+          div.style.setProperty('display', 'block');
+          div.style.setProperty('height', '100%');
+          div.style.setProperty('width', '100%');
+          div.style.setProperty('background-color', '#fff');
+          div.style.setProperty('position', 'static');
+          div.style.setProperty('overflow', 'hidden');
+          _dragSourceEl.style.setProperty('height', '100%');
+          _dragSourceEl.style.setProperty('width', '100%');
+          _dragSourceEl.style.setProperty('margin-top', '0px');
+          div.setInnerHtml(_dragSourceEl.outerHtml, treeSanitizer: new NullTreeSanitizer());
+          dropTarget.setInnerHtml(div.outerHtml, treeSanitizer: new NullTreeSanitizer());
+          _highLight.getHighLightedElements().forEach((e) => _highLight.resetOnMouseOver(e));
+          initDragAndDrop(_highLight);
+        }
+
+      }
+try{
       if (container.tagName == 'DIV' && container.className.startsWith(_stage.getContentClass().split('.')[1])) {
+
         _dragSourceEl.setInnerHtml(dropTarget.innerHtml, treeSanitizer: new NullTreeSanitizer());
         dropTarget.setInnerHtml(event.dataTransfer.getData('text/html'), treeSanitizer: new NullTreeSanitizer());
         _highLight.getHighLightedElements().forEach((e) => _highLight.resetOnMouseOver(e));
 
       }
 
+}catch(e){}
     }
 
   }

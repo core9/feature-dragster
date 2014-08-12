@@ -8,6 +8,9 @@
 import 'dart:convert' show HtmlEscape;
 import 'dart:html';
 
+import 'dragdrop_api.dart';
+import 'highlight_api.dart';
+
 
 class DndFiles {
   FormElement _readForm;
@@ -15,6 +18,8 @@ class DndFiles {
   Element _dropZone;
   OutputElement _output;
   HtmlEscape sanitizer = new HtmlEscape();
+  DragDrop _dragdrop;
+  HighLight _highLight;
 
   DndFiles() {
     _output = document.querySelector('#list');
@@ -28,7 +33,15 @@ class DndFiles {
     _dropZone.onDragLeave.listen((e) => _dropZone.classes.remove('hover'));
     _dropZone.onDrop.listen(_onDrop);
   }
+  
+  void setDragDrop(DragDrop dragdrop){
+    _dragdrop = dragdrop;
+  }
 
+  void setHighLight(HighLight highLight){
+    _highLight = highLight;
+  }
+  
   void _onDragOver(MouseEvent event) {
     event.stopPropagation();
     event.preventDefault();
@@ -87,6 +100,10 @@ class DndFiles {
       list.nodes.add(item);
     }
     _output.nodes.add(list);
+    
+    
+    list.children.forEach((e) => _dragdrop.addEventsToColumn(e, _highLight));
+    
   }
 }
 
