@@ -56,9 +56,9 @@ class MenuImpl extends Menu {
 
 
 
-  var _db = new Store('dbGridster', 'pages');
+  var _dbPages = new Store('dbGridster', 'pages');
   
- // var _dbGrid = new Store('dbName', 'storeName');
+  var _dbGrid = new Store('dbGridster', 'grids');
   
 
   HighLight _highLight;
@@ -80,9 +80,10 @@ class MenuImpl extends Menu {
   void start() {
     
     _stage.setMenu(this);
-    
+    _loadGrids();
     _load(false);
-    _redrawTop('#columns', '#menu');
+    _redrawTop('#columns', '#menu', 30);
+    _redrawTop('#selection-placeholder', '#menu', 0);
     _excludeFromHash[0] = 'menu-action';
     _dragdrop.setStage(_stage);
     _dragdrop.setHighLight(_highLight);
@@ -91,6 +92,16 @@ class MenuImpl extends Menu {
     _ulMenuAddClickEvents();
     _menuAddOptions();
 
+  }
+  
+  void _loadGrids(){
+
+    
+    _dbGrid.open().then((_) => _dbGrid.keys()).then((value) {
+      
+      value.listen((value) => print('grid : ' + value.toString()))
+      .onDone(() => print('all done'));
+    });
   }
 
   void menuAddAllElementTemplates() {
@@ -118,7 +129,7 @@ class MenuImpl extends Menu {
 
   void _load(bool state) {
     String hash = _getState(state);
-    _db.open().then((_) => _db.getByKey(hash)).then((value) {
+    _dbPages.open().then((_) => _dbPages.getByKey(hash)).then((value) {
       if (value != null && value != "") {
         var innerHtml = parse(value).querySelector(stage).innerHtml;
         _stage.getStage().children.clear();
@@ -133,7 +144,7 @@ class MenuImpl extends Menu {
 
   void _clear() {
     String hash = _getState(true);
-    _db.open().then((_) => _db.save("", hash));
+    _dbPages.open().then((_) => _dbPages.save("", hash));
   }
 
   void _save() {
@@ -144,7 +155,7 @@ class MenuImpl extends Menu {
     String hash = _getState(true);
     String html = _stage.getStage().outerHtml.toString();
 
-    _db.open().then((_) => _db.save(html, hash));
+    _dbPages.open().then((_) => _dbPages.save(html, hash));
   }
 
   String _getState(bool state) {
@@ -253,7 +264,8 @@ class MenuImpl extends Menu {
     _pageSelector.classes.toggle('display-none');
     _menuSecondary.classes.toggle('display-none');
     document.querySelector('#selection-placeholder').classes.toggle('sidemenu-position');
-    _redrawTop('#columns', '#menu');
+    _redrawTop('#columns', '#menu', 30);
+    _redrawTop('#selection-placeholder', '#menu', 0);
   }
 
   void _fillMenuInputItems(Element optionList, String jsonSourceUrl) {
@@ -275,8 +287,8 @@ class MenuImpl extends Menu {
 
   }
 
-  void _redrawTop(String target, String source) {
-    document.querySelector(target).style.setProperty('top', (document.querySelector(source).borderEdge.height + 30).toString() + 'px');
+  void _redrawTop(String target, String source, int margin) {
+    document.querySelector(target).style.setProperty('top', (document.querySelector(source).borderEdge.height + margin).toString() + 'px');
   }
 
   void _onInputMenuChange(Event event) {
