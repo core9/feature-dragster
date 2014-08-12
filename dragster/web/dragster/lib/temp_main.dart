@@ -6,6 +6,7 @@ import 'stage_api.dart';
 import 'grid_api.dart';
 import 'highlight_api.dart';
 import 'select_api.dart';
+import 'dndfiles.dart';
 
 import 'bootstrategy_api.dart';
 
@@ -37,6 +38,8 @@ class MainStrategy implements BootStrategy {
     _menu.setHighLight(_highLight);
     _menu.setStage(_stage);
     _menu.start();
+    
+    new DndFiles();
     
   }
   void setRegistry(InjectorWrap injectorWrap){
