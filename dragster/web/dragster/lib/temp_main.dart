@@ -46,6 +46,7 @@ class MainStrategy implements BootStrategy {
     Upload _upload = new Upload();
     _upload.setHighLight(_highLight);
     _upload.setDragDrop(_dragdrop);
+    _upload.start();
     
   }
   void setRegistry(InjectorWrap injectorWrap){

@@ -117,17 +117,26 @@ class Upload {
     }
     document.querySelector('#media-db').nodes.add(list);
     list.children.forEach((e) => _dragdrop.addEventsToColumn(e, _highLight));
-    List<Element> uploadedMedia = document.querySelector('#list').children;
-    _dbMedia.open().then((_) => _dbMedia.save(uploadedMedia, 'media'));
+
     
-    //new Timer(new Duration(seconds:3), () => _moveMedia(uploadedMedia));
+    new Timer(new Duration(seconds:3), () => _moveMedia());
     
   }
 
-  void _moveMedia(List<Element> uploadedMedia){
+  void start(){
+    _dbMedia.open().then((_) => _dbMedia.getByKey('media')).then((value) {
+       _loadMedia(value.toString());
+    });
+  }
+  
+  void _loadMedia(String media){
+    document.querySelector('#media-db').setInnerHtml(media, treeSanitizer: new NullTreeSanitizer());
+  }
+  
+  void _moveMedia(){
     
-    //.setInnerHtml(uploadedMedia.toString(), treeSanitizer: new NullTreeSanitizer());
-    //document.querySelector('#list').children.clear();
+    String uploadedMedia = document.querySelector('#media-db').innerHtml;
+    _dbMedia.open().then((_) => _dbMedia.save(uploadedMedia, 'media'));
   }
 }
 
