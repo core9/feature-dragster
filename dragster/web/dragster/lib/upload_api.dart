@@ -117,7 +117,7 @@ class Upload {
 
     list.children.forEach((e) => _dragdrop.addEventsToColumn(e, _highLight));
     document.querySelector('#media-db').nodes.add(list);
-
+    
     new Timer(new Duration(seconds: 5), () => _saveMedia());
 
   }

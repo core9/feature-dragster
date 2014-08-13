@@ -6,6 +6,7 @@ import 'package:lawndart/lawndart.dart';
 
 import 'dart:convert';
 import 'dart:html';
+import 'dart:async';
 
 import '../menu_api.dart';
 import '../highlight_api.dart';
@@ -114,8 +115,9 @@ class MenuImpl extends Menu {
     
     _showMediaPlaceholder.onClick.listen(_showMediaMenu);
     _showSelectionPlaceholder.onClick.listen(_showSelectionMenu);
-    
 
+    
+    new Timer(new Duration(seconds: 5), () => _save());
   }
 
   void _showSelectionMenu(MouseEvent event){
@@ -176,21 +178,21 @@ class MenuImpl extends Menu {
 
   void _load(bool state) {
     String hash = _getState(state);
-    _dbPages.open().then((_) => _dbPages.getByKey(hash)).then((value) {
-      if (value != null && value != "") {
-        var innerHtml = parse(value).querySelector(_stageId).innerHtml;
-        _stage.getStage().children.clear();
-        _stage.getStage().setInnerHtml(innerHtml, treeSanitizer: new NullTreeSanitizer());
-        _dragdrop.initDragAndDrop(_highLight);
-      } else {
-        _saveLocal();
-        _load(false);
-      }
-      
-      
-      _stage.getStage().querySelectorAll('a').forEach((e) => _disableLink(e));
-      
-    });
+    try{
+      _dbPages.open().then((_) => _dbPages.getByKey(hash)).then((value) {
+        if (value != null && value != "") {
+          var innerHtml = parse(value).querySelector(_stageId).innerHtml;
+          _stage.getStage().children.clear();
+          _stage.getStage().setInnerHtml(innerHtml, treeSanitizer: new NullTreeSanitizer());
+          _dragdrop.initDragAndDrop(_highLight);
+        } else {
+          _saveLocal();
+          _load(false);
+        }
+        _stage.getStage().querySelectorAll('a').forEach((e) => _disableLink(e));
+      });      
+    }catch(e){}
+
     
     
   }
