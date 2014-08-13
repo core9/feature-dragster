@@ -11,6 +11,7 @@ import '../menu_api.dart';
 import '../highlight_api.dart';
 import '../dragdrop_api.dart';
 import '../stage_api.dart';
+import '../db_api.dart';
 import '../utils.dart';
 
 
@@ -58,23 +59,23 @@ class MenuImpl extends Menu {
   InputElement _menuRequest = document.getElementById('menu-request');
 
   List<Element> _allTemplates;
-
-  List<String> _gridNames = new List();
-  
+  List<String> _gridNames = new List();  
   List<Element> _menuInputItems = new List(11);
   List<String> _excludeFromHash = new List(1);
 
-
-
-
-  var _dbPages = new Store('dbGridster', 'pages');
   
-  var _dbGrid = new Store('dbGridster', 'grids');
-  
-
   HighLight _highLight;
   Stage _stage;
   DragDrop _dragdrop;
+  DB _db;
+  Store _dbGrid;
+  Store _dbPages;
+  
+  void setDB(DB db){
+    _db = db;
+    _dbGrid = db.getGridDB();
+    _dbPages = db.getPagesDB();
+  }
   
   void setHighLight(HighLight highLight){
     _highLight = highLight;

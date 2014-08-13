@@ -2,11 +2,16 @@ library dbimpl;
 
 import 'dart:js';
 import "package:json_object/json_object.dart";
+import 'package:lawndart/lawndart.dart';
 
 import '../db_api.dart';
-import '../nedb.dart';
+import 'nedb.dart';
 
 class DBImpl implements DB {
+  
+  Store _dbPages = new Store('dbGridster', 'pages');
+  
+  Store _dbGrid = new Store('dbGridster', 'grids');
   
   void setupDb() {
     Nedb nedb = new Nedb();
@@ -24,5 +29,13 @@ class DBImpl implements DB {
   void _calb(err, count) {
     print("Number of items found : " + count.toString());
   }
+  
+  Store getGridDB(){
+    return _dbGrid;
+  }
+  
+  Store getPagesDB(){
+      return _dbPages;
+    }
   
 }
