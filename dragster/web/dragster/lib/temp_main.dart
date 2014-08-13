@@ -7,7 +7,7 @@ import 'grid_api.dart';
 import 'highlight_api.dart';
 import 'select_api.dart';
 import 'db_api.dart';
-import 'dndfiles.dart';
+import 'upload_api.dart';
 
 import 'bootstrategy_api.dart';
 
@@ -41,7 +41,7 @@ class MainStrategy implements BootStrategy {
     _menu.setStage(_stage);
     _menu.start();
     
-    DndFiles _upload = new DndFiles();
+    Upload _upload = new Upload();
     _upload.setHighLight(_highLight);
     _upload.setDragDrop(_dragdrop);
     

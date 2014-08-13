@@ -12,7 +12,7 @@ import 'dragdrop_api.dart';
 import 'highlight_api.dart';
 
 
-class DndFiles {
+class Upload {
   FormElement _readForm;
   InputElement _fileInput;
   Element _dropZone;
@@ -21,7 +21,7 @@ class DndFiles {
   DragDrop _dragdrop;
   HighLight _highLight;
 
-  DndFiles() {
+  Upload() {
     _output = document.querySelector('#list');
     _readForm = document.querySelector('#read');
     _fileInput = document.querySelector('#files');
@@ -108,5 +108,5 @@ class DndFiles {
 }
 
 void main() {
-  new DndFiles();
+  new Upload();
 }
