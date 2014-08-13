@@ -180,9 +180,24 @@ class MenuImpl extends Menu {
         _saveLocal();
         _load(false);
       }
+      
+      
+      _stage.getStage().querySelectorAll('a').forEach((e) => _disableLink(e));
+      
     });
+    
+    
   }
 
+  void _disableLink(Element element){
+    print(element.text);
+    element.onClick.listen(_preventLink);
+  }
+  
+  void _preventLink(MouseEvent event){
+    event.preventDefault();
+  }
+  
   void _clear() {
     String hash = _getState(true);
     _dbPages.open().then((_) => _dbPages.save("", hash));
