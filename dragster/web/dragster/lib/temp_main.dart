@@ -23,6 +23,7 @@ class MainStrategy implements BootStrategy {
     HighLight _highLight = _injectorWrap.getInjector().getInstance(HighLight);
     Select _select = _injectorWrap.getInjector().getInstance(Select);
     
+    _select.setHighLight(_highLight);
     _select.setStage(_stage);
     _select.start();
     
@@ -36,6 +37,7 @@ class MainStrategy implements BootStrategy {
     _dragdrop.start();
 
     _menu.setDB(_db);
+    _menu.setSelect(_select);
     _menu.setDragDrop(_dragdrop);
     _menu.setHighLight(_highLight);
     _menu.setStage(_stage);

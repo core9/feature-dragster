@@ -4,15 +4,20 @@ library select_impl;
 import 'dart:html';
 import '../select_api.dart';
 import '../stage_api.dart';
-
+import '../highlight_api.dart';
 
 class SelectImpl extends Select {
 
   Stage _stage;
+  HighLight _highLight;
   String _selectClass = 'select';
 
   void setStage(Stage stage) {
     _stage = stage;
+  }
+  
+  void setHighLight(HighLight highLight){
+    _highLight = highLight;
   }
 
   Element _getSelectPlaceHolder(){
@@ -31,6 +36,15 @@ class SelectImpl extends Select {
     _stage.getAllElements().forEach((e) => activateSelect(e));
   }
 
+  void removeAllSelections(){
+    getSelectedElements().forEach((e) => _deSelect(e));
+  }
+  
+  void _deSelect(Element element){
+    element.classes.remove(_selectClass);
+    _highLight.resetOnMouseOver(element);
+  }
+  
   void activateSelect(Element e) {
     e.onClick.listen(_selectClick);
   }

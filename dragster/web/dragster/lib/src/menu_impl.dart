@@ -11,6 +11,7 @@ import '../menu_api.dart';
 import '../highlight_api.dart';
 import '../dragdrop_api.dart';
 import '../stage_api.dart';
+import '../select_api.dart';
 import '../db_api.dart';
 import '../utils.dart';
 
@@ -70,6 +71,11 @@ class MenuImpl extends Menu {
   DB _db;
   Store _dbGrid;
   Store _dbPages;
+  Select _select;
+  
+  void setSelect(Select select){
+    _select = select;
+  }
   
   void setDB(DB db){
     _db = db;
@@ -203,7 +209,10 @@ class MenuImpl extends Menu {
     _dbPages.open().then((_) => _dbPages.save("", hash));
   }
 
+
+  
   void _save() {
+    _select.removeAllSelections();
     _saveLocal();
   }
 
