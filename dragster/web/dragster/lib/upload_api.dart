@@ -25,8 +25,8 @@ class Upload {
   HtmlEscape sanitizer = new HtmlEscape();
   DragDrop _dragdrop;
   HighLight _highLight;
-  
-  Store _dbMedia = new Store('dbGridster', 'media');
+
+  Store _dbMedia = new Store('dbGridsterMedia', 'media');
 
   Upload() {
     _output = document.querySelector('#list');
@@ -40,15 +40,15 @@ class Upload {
     _dropZone.onDragLeave.listen((e) => _dropZone.classes.remove('hover'));
     _dropZone.onDrop.listen(_onDrop);
   }
-  
-  void setDragDrop(DragDrop dragdrop){
+
+  void setDragDrop(DragDrop dragdrop) {
     _dragdrop = dragdrop;
   }
 
-  void setHighLight(HighLight highLight){
+  void setHighLight(HighLight highLight) {
     _highLight = highLight;
   }
-  
+
   void _onDragOver(MouseEvent event) {
     event.stopPropagation();
     event.preventDefault();
@@ -95,48 +95,58 @@ class Upload {
           ..write(file.type != null ? sanitizer.convert(file.type) : 'n/a')
           ..write(') ')
           ..write(file.size)
-          ..write(' bytes')
-          // TODO(jason9t): Re-enable this when issue 5070 is resolved.
-          // http://code.google.com/p/dart/issues/detail?id=5070
-          // ..add(', last modified: ')
-          // ..add(file.lastModifiedDate != null ?
-          //       file.lastModifiedDate.toLocal().toString() :
-          //       'n/a')
+          ..write(' bytes')// TODO(jason9t): Re-enable this when issue 5070 is resolved.
+      // http://code.google.com/p/dart/issues/detail?id=5070
+      // ..add(', last modified: ')
+      // ..add(file.lastModifiedDate != null ?
+      //       file.lastModifiedDate.toLocal().toString() :
+      //       'n/a')
       ).toString();
       item.nodes.add(properties);
       list.nodes.add(item);
     }
     _output.nodes.add(list);
-    
+
     List<Element> oldList = new List();
-    try{
-      oldList = document.querySelector('#media-db ul').children;  
-      oldList.forEach((e) => list.append(e));   
-    }catch(e){
-      
+    try {
+      oldList = document.querySelectorAll('#media-db ul li');
+      oldList.forEach((e) => list.append(e));
+    } catch (e) {
+
     }
-    document.querySelector('#media-db').nodes.add(list);
+
     list.children.forEach((e) => _dragdrop.addEventsToColumn(e, _highLight));
+    document.querySelector('#media-db').nodes.add(list);
 
-    
-    new Timer(new Duration(seconds:3), () => _moveMedia());
-    
+    new Timer(new Duration(seconds: 5), () => _saveMedia());
+
   }
 
-  void start(){
-    _dbMedia.open().then((_) => _dbMedia.getByKey('media')).then((value) {
-       _loadMedia(value.toString());
-    });
+  void start() {
+    try{
+      _dbMedia.open().then((_) => _dbMedia.getByKey('media')).then((value) {
+           _loadMedia(value.toString());
+         });   
+    }catch(e){}
+   
   }
-  
-  void _loadMedia(String media){
+
+  void _loadMedia(String media) {
+    if(media == 'null')return;
     document.querySelector('#media-db').setInnerHtml(media, treeSanitizer: new NullTreeSanitizer());
-  }
-  
-  void _moveMedia(){
     
+    List<Element> list = document.querySelectorAll('#media-db ul li');
+    list.forEach((e) => _dragdrop.addEventsToColumn(e, _highLight));
+    
+  }
+
+  void _saveMedia() {
+
     String uploadedMedia = document.querySelector('#media-db').innerHtml;
-    _dbMedia.open().then((_) => _dbMedia.save(uploadedMedia, 'media'));
+    print('saving media... : ' + uploadedMedia);
+    if (uploadedMedia != 'null') {
+      _dbMedia.open().then((_) => _dbMedia.save(uploadedMedia, 'media'));
+    }
   }
 }
 
