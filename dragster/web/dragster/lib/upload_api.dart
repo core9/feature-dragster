@@ -7,6 +7,11 @@
 
 import 'dart:convert' show HtmlEscape;
 import 'dart:html';
+import 'dart:async';
+
+import 'package:lawndart/lawndart.dart';
+
+import 'utils.dart';
 
 import 'dragdrop_api.dart';
 import 'highlight_api.dart';
@@ -20,6 +25,8 @@ class Upload {
   HtmlEscape sanitizer = new HtmlEscape();
   DragDrop _dragdrop;
   HighLight _highLight;
+  
+  Store _dbMedia = new Store('dbGridster', 'media');
 
   Upload() {
     _output = document.querySelector('#list');
@@ -101,11 +108,29 @@ class Upload {
     }
     _output.nodes.add(list);
     
-    
+    List<Element> oldList = new List();
+    try{
+      oldList = document.querySelector('#media-db ul').children;  
+      oldList.forEach((e) => list.append(e));   
+    }catch(e){
+      
+    }
+    document.querySelector('#media-db').nodes.add(list);
     list.children.forEach((e) => _dragdrop.addEventsToColumn(e, _highLight));
+    List<Element> uploadedMedia = document.querySelector('#list').children;
+    _dbMedia.open().then((_) => _dbMedia.save(uploadedMedia, 'media'));
+    
+    //new Timer(new Duration(seconds:3), () => _moveMedia(uploadedMedia));
     
   }
+
+  void _moveMedia(List<Element> uploadedMedia){
+    
+    //.setInnerHtml(uploadedMedia.toString(), treeSanitizer: new NullTreeSanitizer());
+    //document.querySelector('#list').children.clear();
+  }
 }
+
 
 void main() {
   new Upload();
