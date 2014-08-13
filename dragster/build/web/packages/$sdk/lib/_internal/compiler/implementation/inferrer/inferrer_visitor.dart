@@ -76,7 +76,7 @@ abstract class TypeSystem<T> {
    * Returns a new type for holding the potential types of [element].
    * [inputType] is the first incoming type of the phi.
    */
-  T allocatePhi(Node node, Local variable, T inputType);
+  T allocatePhi(Node node, Element element, T inputType);
 
   /**
    * Simplies the phi representing [element] and of the type
@@ -84,12 +84,12 @@ abstract class TypeSystem<T> {
    * implementation of this method could just return that incoming
    * input type.
    */
-  T simplifyPhi(Node node, Local variable, T phiType);
+  T simplifyPhi(Node node, Element element, T phiType);
 
   /**
    * Adds [newType] as an input of [phiType].
    */
-  T addPhiInput(Local variable, T phiType, T newType);
+  T addPhiInput(Element element, T phiType, T newType);
 
   /**
    * Returns a new receiver type for this [selector] applied to
@@ -111,7 +111,7 @@ abstract class TypeSystem<T> {
  * once the control flow block has been visited.
  */
 class VariableScope<T> {
-  Map<Local, T> variables;
+  Map<Element, T> variables;
 
   /// The parent of this scope. Null for the root scope.
   final VariableScope<T> parent;
@@ -126,13 +126,13 @@ class VariableScope<T> {
   VariableScope.deepCopyOf(VariableScope<T> other)
       : variables = other.variables == null
             ? null
-            : new Map<Local, T>.from(other.variables),
+            : new Map<Element, T>.from(other.variables),
         block = other.block,
         parent = other.parent == null
             ? null
             : new VariableScope<T>.deepCopyOf(other.parent);
 
-  T operator [](Local variable) {
+  T operator [](Element variable) {
     T result;
     if (variables == null || (result = variables[variable]) == null) {
       return parent == null ? null : parent[variable];
@@ -140,41 +140,41 @@ class VariableScope<T> {
     return result;
   }
 
-  void operator []=(Local variable, T mask) {
+  void operator []=(Element variable, T mask) {
     assert(mask != null);
     if (variables == null) {
-      variables = new Map<Local, T>();
+      variables = new Map<Element, T>();
     }
     variables[variable] = mask;
   }
 
-  void forEachOwnLocal(void f(Local variable, T type)) {
+  void forEachOwnLocal(void f(Element element, T type)) {
     if (variables == null) return;
     variables.forEach(f);
   }
 
   void forEachLocalUntilNode(Node node,
-                             void f(Local variable, T type),
-                             [Setlet<Local> seenLocals]) {
-    if (seenLocals == null) seenLocals = new Setlet<Local>();
+                             void f(Element element, T type),
+                             [Setlet<Element> seenLocals]) {
+    if (seenLocals == null) seenLocals = new Setlet<Element>();
     if (variables != null) {
-      variables.forEach((variable, type) {
-        if (seenLocals.contains(variable)) return;
-        seenLocals.add(variable);
-        f(variable, type);
+      variables.forEach((element, type) {
+        if (seenLocals.contains(element)) return;
+        seenLocals.add(element);
+        f(element, type);
       });
     }
     if (block == node) return;
     if (parent != null) parent.forEachLocalUntilNode(node, f, seenLocals);
   }
 
-  void forEachLocal(void f(Local variable, T type)) {
+  void forEachLocal(void f(Element, T type)) {
     forEachLocalUntilNode(null, f);
   }
 
-  bool updates(Local variable) {
+  bool updates(Element element) {
     if (variables == null) return false;
-    return variables.containsKey(variable);
+    return variables.containsKey(element);
   }
 
   String toString() {
@@ -297,12 +297,12 @@ abstract class MinimalInferrerEngine<T> {
   /**
    * Records that the captured variable [local] is read.
    */
-  void recordCapturedLocalRead(Local local);
+  void recordCapturedLocalRead(Element local);
 
   /**
    * Records that the variable [local] is being updated.
    */
-  void recordLocalUpdate(Local local, T type);
+  void recordLocalUpdate(Element local, T type);
 }
 
 /**
@@ -313,8 +313,8 @@ class LocalsHandler<T> {
   final TypeSystem<T> types;
   final MinimalInferrerEngine<T> inferrer;
   final VariableScope<T> locals;
-  final Map<Local, Element> captured;
-  final Map<Local, Element> capturedAndBoxed;
+  final Map<Element, Element> captured;
+  final Map<Element, Element> capturedAndBoxed;
   final FieldInitializationScope<T> fieldScope;
   LocalsHandler<T> tryBlock;
   bool seenReturnOrThrow = false;
@@ -331,8 +331,8 @@ class LocalsHandler<T> {
                 Node block,
                 [this.fieldScope])
       : locals = new VariableScope<T>(block),
-        captured = new Map<Local, Element>(),
-        capturedAndBoxed = new Map<Local, Element>(),
+        captured = new Map<Element, Element>(),
+        capturedAndBoxed = new Map<Element, Element>(),
         tryBlock = null;
 
   LocalsHandler.from(LocalsHandler<T> other,
@@ -358,7 +358,7 @@ class LocalsHandler<T> {
         inferrer = other.inferrer,
         compiler = other.compiler;
 
-  T use(Local local) {
+  T use(Element local) {
     if (capturedAndBoxed.containsKey(local)) {
       return inferrer.typeOfElement(capturedAndBoxed[local]);
     } else {
@@ -369,7 +369,7 @@ class LocalsHandler<T> {
     }
   }
 
-  void update(LocalElement local, T type, Node node) {
+  void update(TypedElement local, T type, Node node) {
     assert(type != null);
     if (compiler.trustTypeAnnotations || compiler.enableTypeAssertions) {
       type = types.narrowType(type, local.type);
@@ -404,11 +404,11 @@ class LocalsHandler<T> {
     }
   }
 
-  void setCaptured(Local local, Element field) {
+  void setCaptured(Element local, Element field) {
     captured[local] = field;
   }
 
-  void setCapturedAndBoxed(Local local, Element field) {
+  void setCapturedAndBoxed(Element local, Element field) {
     capturedAndBoxed[local] = field;
   }
 
@@ -426,7 +426,7 @@ class LocalsHandler<T> {
     if (aborts) return;
 
     void mergeOneBranch(LocalsHandler<T> other) {
-      other.locals.forEachOwnLocal((Local local, T type) {
+      other.locals.forEachOwnLocal((Element local, T type) {
         T myType = locals[local];
         if (myType == null) return; // Variable is only defined in [other].
         if (type == myType) return;
@@ -435,7 +435,7 @@ class LocalsHandler<T> {
     }
 
     void inPlaceUpdateOneBranch(LocalsHandler<T> other) {
-      other.locals.forEachOwnLocal((Local local, T type) {
+      other.locals.forEachOwnLocal((Element local, T type) {
         T myType = locals[local];
         if (myType == null) return; // Variable is only defined in [other].
         if (type == myType) return;
@@ -451,7 +451,7 @@ class LocalsHandler<T> {
     } else if (elseBranch.aborts) {
       inPlaceUpdateOneBranch(thenBranch);
     } else {
-      void mergeLocal(Local local) {
+      void mergeLocal(Element local) {
         T myType = locals[local];
         if (myType == null) return;
         T elseType = elseBranch.locals[local];
@@ -463,10 +463,10 @@ class LocalsHandler<T> {
         }
       }
 
-      thenBranch.locals.forEachOwnLocal((Local local, _) {
+      thenBranch.locals.forEachOwnLocal((Element local, _) {
         mergeLocal(local);
       });
-      elseBranch.locals.forEachOwnLocal((Local local, _) {
+      elseBranch.locals.forEachOwnLocal((Element local, _) {
         // Discard locals we already processed when iterating over
         // [thenBranch]'s locals.
         if (!thenBranch.locals.updates(local)) mergeLocal(local);
@@ -507,7 +507,7 @@ class LocalsHandler<T> {
   void mergeAfterBreaks(List<LocalsHandler<T>> handlers,
                         {bool keepOwnLocals: true}) {
     Node level = locals.block;
-    Set<Local> seenLocals = new Setlet<Local>();
+    Set<Element> seenLocals = new Setlet<Element>();
     // If we want to keep the locals, we first merge [this] into itself to
     // create the required Phi nodes.
     if (keepOwnLocals && !seenReturnOrThrow) {
@@ -520,11 +520,11 @@ class LocalsHandler<T> {
       mergeHandler(handler, seenLocals);
     }
     // Clean up Phi nodes with single input.
-    locals.forEachLocal((Local variable, T type) {
-      if (!seenLocals.contains(variable)) return;
-      T newType = types.simplifyPhi(level, variable, type);
+    locals.forEachLocal((Element element, T type) {
+      if (!seenLocals.contains(element)) return;
+      T newType = types.simplifyPhi(level, element, type);
       if (newType != type) {
-        locals[variable] = newType;
+        locals[element] = newType;
       }
     });
     seenReturnOrThrow = allBranchesAbort &&
@@ -537,7 +537,7 @@ class LocalsHandler<T> {
    * unless the local is already present in the set [seen]. This effectively
    * overwrites the current type knowledge in this handler.
    */
-  bool mergeHandler(LocalsHandler<T> other, [Set<Local> seen]) {
+  bool mergeHandler(LocalsHandler<T> other, [Set<Element> seen]) {
     if (other.seenReturnOrThrow) return false;
     bool changed = false;
     other.locals.forEachLocalUntilNode(locals.block, (local, otherType) {
@@ -572,19 +572,19 @@ class LocalsHandler<T> {
   }
 
   void startLoop(Node loop) {
-    locals.forEachLocal((Local variable, T type) {
-      T newType = types.allocatePhi(loop, variable, type);
+    locals.forEachLocal((Element element, T type) {
+      T newType = types.allocatePhi(loop, element, type);
       if (newType != type) {
-        locals[variable] = newType;
+        locals[element] = newType;
       }
     });
   }
 
   void endLoop(Node loop) {
-    locals.forEachLocal((Local variable, T type) {
-      T newType = types.simplifyPhi(loop, variable, type);
+    locals.forEachLocal((Element element, T type) {
+      T newType = types.simplifyPhi(loop, element, type);
       if (newType != type) {
-        locals[variable] = newType;
+        locals[element] = newType;
       }
     });
   }
@@ -599,10 +599,10 @@ abstract class InferrerVisitor
   final AstElement analyzedElement;
   final TypeSystem<T> types;
   final E inferrer;
-  final Map<JumpTarget, List<LocalsHandler<T>>> breaksFor =
-      new Map<JumpTarget, List<LocalsHandler<T>>>();
-  final Map<JumpTarget, List<LocalsHandler>> continuesFor =
-      new Map<JumpTarget, List<LocalsHandler<T>>>();
+  final Map<TargetElement, List<LocalsHandler<T>>> breaksFor =
+      new Map<TargetElement, List<LocalsHandler<T>>>();
+  final Map<TargetElement, List<LocalsHandler>> continuesFor =
+      new Map<TargetElement, List<LocalsHandler<T>>>();
   LocalsHandler<T> locals;
   final List<T> cascadeReceiverStack = new List<T>();
 
@@ -630,7 +630,7 @@ abstract class InferrerVisitor
                   [LocalsHandler<T> handler])
     : this.analyzedElement = analyzedElement,
       this.locals = handler,
-      super(analyzedElement.resolvedAst.elements,
+      super(compiler.enqueuer.resolution.getCachedElements(analyzedElement),
             compiler) {
     if (handler != null) return;
     Node node = analyzedElement.node;
@@ -663,8 +663,6 @@ abstract class InferrerVisitor
     if (!compiler.enableUserAssertions) {
       return types.nullType;
     }
-    // TODO(johnniwinther): Don't handle assert like a regular static call since
-    // it break the selector name check.
     return visitStaticSend(node);
   }
 
@@ -740,13 +738,8 @@ abstract class InferrerVisitor
     return types.nonNullSubtype(compiler.symbolClass);
   }
 
-  T visitTypePrefixSend(Send node) {
-    // TODO(johnniwinther): Remove the need for handling this node.
-    return types.dynamicType;
-  }
-
-  T visitTypeLiteralSend(Send node) {
-    return types.typeType;
+  T visitTypeReferenceSend(Send node) {
+    return elements.isTypeLiteral(node) ? types.typeType : types.dynamicType;
   }
 
   bool isThisOrSuper(Node node) => node.isThis() || node.isSuper();
@@ -783,8 +776,7 @@ abstract class InferrerVisitor
     } else {
       Element element = elements[node];
       if (Elements.isLocal(element)) {
-        LocalElement local = element;
-        return locals.use(local);
+        return locals.use(element);
       }
       return null;
     }
@@ -804,11 +796,9 @@ abstract class InferrerVisitor
 
   void updateIsChecks(List<Node> tests, {bool usePositive}) {
     void narrow(Element element, DartType type, Node node) {
-      if (element is LocalElement) {
-        T existing = locals.use(element);
-        T newType = types.narrowType(existing, type, isNullable: false);
-        locals.update(element, newType, node);
-      }
+      T existing = locals.use(element);
+      T newType = types.narrowType(existing, type, isNullable: false);
+      locals.update(element, newType, node);
     }
 
     if (tests == null) return;
@@ -985,25 +975,25 @@ abstract class InferrerVisitor
     return null;
   }
 
-  void setupBreaksAndContinues(JumpTarget element) {
+  void setupBreaksAndContinues(TargetElement element) {
     if (element == null) return;
     if (element.isContinueTarget) continuesFor[element] = <LocalsHandler>[];
     if (element.isBreakTarget) breaksFor[element] = <LocalsHandler>[];
   }
 
-  void clearBreaksAndContinues(JumpTarget element) {
+  void clearBreaksAndContinues(TargetElement element) {
     continuesFor.remove(element);
     breaksFor.remove(element);
   }
 
-  List<LocalsHandler<T>> getBreaks(JumpTarget element) {
+  List<LocalsHandler<T>> getBreaks(TargetElement element) {
     List<LocalsHandler<T>> list = <LocalsHandler<T>>[locals];
     if (element == null) return list;
     if (!element.isBreakTarget) return list;
     return list..addAll(breaksFor[element]);
   }
 
-  List<LocalsHandler<T>> getLoopBackEdges(JumpTarget element) {
+  List<LocalsHandler<T>> getLoopBackEdges(TargetElement element) {
     List<LocalsHandler<T>> list = <LocalsHandler<T>>[locals];
     if (element == null) return list;
     if (!element.isContinueTarget) return list;
@@ -1013,7 +1003,7 @@ abstract class InferrerVisitor
   T handleLoop(Node node, void logic()) {
     loopLevel++;
     bool changed = false;
-    JumpTarget target = elements.getTargetDefinition(node);
+    TargetElement target = elements[node];
     LocalsHandler<T> saved = locals;
     saved.startLoop(node);
     do {
@@ -1128,7 +1118,7 @@ abstract class InferrerVisitor
       // Loops and switches handle their own labels.
       visit(body);
     } else {
-      JumpTarget targetElement = elements.getTargetDefinition(body);
+      TargetElement targetElement = elements[body];
       setupBreaksAndContinues(targetElement);
       visit(body);
       locals.mergeAfterBreaks(getBreaks(targetElement));
@@ -1138,7 +1128,7 @@ abstract class InferrerVisitor
   }
 
   T visitBreakStatement(BreakStatement node) {
-    JumpTarget target = elements.getTargetOf(node);
+    TargetElement target = elements[node];
     locals.seenBreakOrContinue = true;
     // Do a deep-copy of the locals, because the code following the
     // break will change them.
@@ -1147,7 +1137,7 @@ abstract class InferrerVisitor
   }
 
   T visitContinueStatement(ContinueStatement node) {
-    JumpTarget target = elements.getTargetOf(node);
+    TargetElement target = elements[node];
     locals.seenBreakOrContinue = true;
     // Do a deep-copy of the locals, because the code following the
     // continue will change them.
@@ -1162,14 +1152,13 @@ abstract class InferrerVisitor
   T visitSwitchStatement(SwitchStatement node) {
     visit(node.parenthesizedExpression);
 
-    setupBreaksAndContinues(elements.getTargetDefinition(node));
+    setupBreaksAndContinues(elements[node]);
     if (Elements.switchStatementHasContinue(node, elements)) {
-      void forEachLabeledCase(void action(JumpTarget target)) {
+      void forEachLabeledCase(void action(TargetElement target)) {
         for (SwitchCase switchCase in node.cases) {
           for (Node labelOrCase in switchCase.labelsAndCases) {
             if (labelOrCase.asLabel() == null) continue;
-            LabelDefinition labelElement =
-                elements.getLabelDefinition(labelOrCase);
+            LabelElement labelElement = elements[labelOrCase];
             if (labelElement != null) {
               action(labelElement.target);
             }
@@ -1177,7 +1166,7 @@ abstract class InferrerVisitor
         }
       }
 
-      forEachLabeledCase((JumpTarget target) {
+      forEachLabeledCase((TargetElement target) {
         setupBreaksAndContinues(target);
       });
 
@@ -1198,7 +1187,7 @@ abstract class InferrerVisitor
       } while (changed);
       locals.endLoop(node);
 
-      forEachLabeledCase((JumpTarget target) {
+      forEachLabeledCase((TargetElement target) {
         clearBreaksAndContinues(target);
       });
     } else {
@@ -1217,7 +1206,7 @@ abstract class InferrerVisitor
       saved.mergeAfterBreaks(localsToMerge, keepOwnLocals: !hasDefaultCase);
       locals = saved;
     }
-    clearBreaksAndContinues(elements.getTargetDefinition(node));
+    clearBreaksAndContinues(elements[node]);
     return null;
   }
 

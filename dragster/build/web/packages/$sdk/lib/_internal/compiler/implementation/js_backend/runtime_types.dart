@@ -146,7 +146,7 @@ class RuntimeTypes {
     compiler.resolverWorld.isChecks.forEach((DartType type) {
       if (type.isTypeVariable) {
         TypeVariableElement variable = type.element;
-        classesUsingTypeVariableTests.add(variable.typeDeclaration);
+        classesUsingTypeVariableTests.add(variable.enclosingElement);
       }
     });
     // Add is-checks that result from classes using type variables in checks.
@@ -398,7 +398,7 @@ class RuntimeTypes {
     String name = namer.uniqueNameForTypeConstantElement(type.element);
     if (!type.element.isClass) return name;
     InterfaceType interface = type;
-    List<DartType> variables = interface.element.typeVariables;
+    Link<DartType> variables = interface.element.typeVariables;
     // Type constants can currently only be raw types, so there is no point
     // adding ground-term type parameters, as they would just be 'dynamic'.
     // TODO(sra): Since the result string is used only in constructing constant
@@ -406,7 +406,7 @@ class RuntimeTypes {
     // legal JavaScript identifer.
     if (variables.isEmpty) return name;
     String arguments =
-        new List.filled(variables.length, 'dynamic').join(', ');
+        new List.filled(variables.slowLength(), 'dynamic').join(', ');
     return '$name<$arguments>';
   }
 
@@ -432,17 +432,16 @@ class RuntimeTypes {
     // Run through both lists of type variables and check if the type variables
     // are identical at each position. If they are not, we need to calculate a
     // substitution function.
-    List<DartType> variables = cls.typeVariables;
-    List<DartType> arguments = type.typeArguments;
-    if (variables.length != arguments.length) {
-      return false;
-    }
-    for (int index = 0; index < variables.length; index++) {
-      if (variables[index].element != arguments[index].element) {
+    Link<DartType> variables = cls.typeVariables;
+    Link<DartType> arguments = type.typeArguments;
+    while (!variables.isEmpty && !arguments.isEmpty) {
+      if (variables.head.element != arguments.head.element) {
         return false;
       }
+      variables = variables.tail;
+      arguments = arguments.tail;
     }
-    return true;
+    return (variables.isEmpty == arguments.isEmpty);
   }
 
   /**
@@ -492,7 +491,7 @@ class RuntimeTypes {
     // they are mixed into.
     InterfaceType type = cls.thisType;
     InterfaceType target = type.asInstanceOf(check);
-    List<DartType> typeVariables = cls.typeVariables;
+    Link<DartType> typeVariables = cls.typeVariables;
     if (typeVariables.isEmpty && !alwaysGenerateFunction) {
       return new Substitution.list(target.typeArguments);
     } else {
@@ -501,13 +500,14 @@ class RuntimeTypes {
   }
 
   jsAst.Expression getSubstitutionRepresentation(
-      List<DartType> types,
+      Link<DartType> types,
       OnVariableCallback onVariable) {
     List<jsAst.ArrayElement> elements = <jsAst.ArrayElement>[];
     int index = 0;
-    for (DartType type in types) {
-      jsAst.Expression representation = getTypeRepresentation(type, onVariable);
-      elements.add(new jsAst.ArrayElement(index++, representation));
+    for (; !types.isEmpty; types = types.tail, index++) {
+      jsAst.Expression representation =
+          getTypeRepresentation(types.head, onVariable);
+      elements.add(new jsAst.ArrayElement(index, representation));
     }
     return new jsAst.ArrayInitializer(index, elements);
   }
@@ -524,7 +524,7 @@ class RuntimeTypes {
     } else {
       List<String> parameters = const <String>[];
       if (contextClass != null) {
-        parameters = contextClass.typeVariables.map((type) {
+        parameters = contextClass.typeVariables.toList().map((type) {
             return type.toString();
         }).toList();
       }
@@ -567,8 +567,10 @@ class RuntimeTypes {
     if (!type.returnType.isDynamic) return false;
     if (!type.optionalParameterTypes.isEmpty) return false;
     if (!type.namedParameterTypes.isEmpty) return false;
-    for (DartType parameter in type.parameterTypes ) {
-      if (!parameter.isDynamic) return false;
+    for (Link<DartType> link = type.parameterTypes;
+        !link.isEmpty;
+        link = link.tail) {
+      if (!link.head.isDynamic) return false;
     }
     return true;
   }
@@ -583,9 +585,10 @@ class RuntimeTypes {
 
   static int getTypeVariableIndex(TypeVariableElement variable) {
     ClassElement classElement = variable.enclosingClass;
-    List<DartType> variables = classElement.typeVariables;
-    for (int index = 0; index < variables.length; index++) {
-      if (variables[index].element == variable) return index;
+    Link<DartType> variables = classElement.typeVariables;
+    for (int index = 0; !variables.isEmpty;
+         index++, variables = variables.tail) {
+      if (variables.head.element == variable) return index;
     }
     throw invariant(variable, false,
                     message: "Couldn't find type-variable index");
@@ -643,15 +646,15 @@ class TypeRepresentationGenerator extends DartTypeVisitor {
     return type.treatAsRaw ? name : visitList(type.typeArguments, head: name);
   }
 
-  jsAst.Expression visitList(List<DartType> types, {jsAst.Expression head}) {
+  jsAst.Expression visitList(Link<DartType> types, {jsAst.Expression head}) {
     int index = 0;
     List<jsAst.ArrayElement> elements = <jsAst.ArrayElement>[];
     if (head != null) {
       elements.add(new jsAst.ArrayElement(0, head));
       index++;
     }
-    for (DartType type in types) {
-      elements.add(new jsAst.ArrayElement(index++, visit(type)));
+    for (Link<DartType> link = types; !link.isEmpty; link = link.tail) {
+      elements.add(new jsAst.ArrayElement(index++, visit(link.head)));
     }
     return new jsAst.ArrayInitializer(elements.length, elements);
   }
@@ -680,12 +683,14 @@ class TypeRepresentationGenerator extends DartTypeVisitor {
     }
     if (!type.namedParameterTypes.isEmpty) {
       List<jsAst.Property> namedArguments = <jsAst.Property>[];
-      List<String> names = type.namedParameters;
-      List<DartType> types = type.namedParameterTypes;
-      assert(types.length == names.length);
-      for (int index = 0; index < types.length; index++) {
-        jsAst.Expression name = js.string(names[index]);
-        namedArguments.add(new jsAst.Property(name, visit(types[index])));
+      Link<String> names = type.namedParameters;
+      Link<DartType> types = type.namedParameterTypes;
+      while (!types.isEmpty) {
+        assert(!names.isEmpty);
+        jsAst.Expression name = js.string(names.head);
+        namedArguments.add(new jsAst.Property(name, visit(types.head)));
+        names = names.tail;
+        types = types.tail;
       }
       addProperty(namer.functionTypeNamedParametersTag(),
                   new jsAst.ObjectInitializer(namedArguments));
@@ -749,9 +754,9 @@ class ArgumentCollector extends DartTypeVisitor {
 
   /// Collect all types in the list as if they were arguments of an
   /// InterfaceType.
-  collectAll(List<DartType> types) {
-    for (DartType type in types) {
-      type.accept(this, true);
+  collectAll(Link<DartType> types) {
+    for (Link<DartType> link = types; !link.isEmpty; link = link.tail) {
+      link.head.accept(this, true);
     }
   }
 
@@ -830,12 +835,12 @@ class FunctionArgumentCollector extends DartTypeVisitor {
  */
 class Substitution {
   final bool isFunction;
-  final List<DartType> arguments;
-  final List<DartType> parameters;
+  final Link<DartType> arguments;
+  final Link<DartType> parameters;
 
   Substitution.list(this.arguments)
       : isFunction = false,
-        parameters = const <DartType>[];
+        parameters = const Link<DartType>();
 
   Substitution.function(this.arguments, this.parameters)
       : isFunction = true;
@@ -854,7 +859,7 @@ class Substitution {
     jsAst.Expression value =
         rti.getSubstitutionRepresentation(arguments, use);
     if (isFunction) {
-      Iterable<jsAst.Expression> formals = parameters.map(declaration);
+      Iterable<jsAst.Expression> formals = parameters.toList().map(declaration);
       return js('function(#) { return # }', [formals, value]);
     } else if (ensureIsFunction) {
       return js('function() { return # }', value);

@@ -2,30 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library dart2js.library_loader;
-
-import 'dart:async';
-import 'dart2jslib.dart'
-    show Compiler,
-         CompilerTask,
-         MessageKind,
-         Script,
-         invariant;
-import 'elements/elements.dart'
-    show CompilationUnitElement,
-         Element,
-         LibraryElement,
-         PrefixElement;
-import 'elements/modelx.dart'
-    show CompilationUnitElementX,
-         DeferredLoaderGetterElementX,
-         ErroneousElementX,
-         LibraryElementX,
-         PrefixElementX;
-import 'helpers/helpers.dart';
-import 'native_handler.dart' as native;
-import 'tree/tree.dart';
-import 'util/util.dart' show Link, LinkBuilder;
+part of dart2js;
 
 /**
  * [CompilerTask] for loading libraries and setting up the import/export scopes.
@@ -120,42 +97,39 @@ import 'util/util.dart' show Link, LinkBuilder;
  * point to the 'packages' folder.
  *
  */
-abstract class LibraryLoaderTask implements CompilerTask {
-  factory LibraryLoaderTask(Compiler compiler) = _LibraryLoaderTask;
+abstract class LibraryLoader extends CompilerTask {
+  LibraryLoader(Compiler compiler) : super(compiler);
 
-  /// Returns all libraries that have been loaded.
-  Iterable<LibraryElement> get libraries;
+  /**
+   * Loads the library specified by the [resolvedUri] and returns its
+   * [LibraryElement].
+   *
+   * If the library is not already loaded, the method creates the
+   * [LibraryElement] for the library and computes the import/export scope,
+   * loading and computing the import/export scopes of all required libraries in
+   * the process. The method handles cyclic dependency between libraries.
+   *
+   * This is the main entry point for [LibraryLoader].
+   */
+  // TODO(johnniwinther): Remove [canonicalUri] together with
+  // [Compiler.scanBuiltinLibrary].
+  Future<LibraryElement> loadLibrary(Uri resolvedUri, Node node,
+                                     Uri canonicalUri);
 
-  /// Looks up the library with the [canonicalUri].
-  LibraryElement lookupLibrary(Uri canonicalUri);
+  // TODO(johnniwinther): Remove this when patches don't need special parsing.
+  Future registerLibraryFromTag(LibraryDependencyHandler handler,
+                                LibraryElement library,
+                                LibraryDependency tag);
 
-  /// Loads the library specified by the [resolvedUri] and returns its
-  /// [LibraryElement].
-  ///
-  /// If the library is not already loaded, the method creates the
-  /// [LibraryElement] for the library and computes the import/export scope,
-  /// loading and computing the import/export scopes of all required libraries
-  /// in the process. The method handles cyclic dependency between libraries.
-  Future<LibraryElement> loadLibrary(Uri resolvedUri);
-
-  /// Reset the library loader task to prepare for compilation. If provided,
-  /// libraries matching [reuseLibrary] are reused.
-  ///
-  /// This method is used for incremental compilation.
-  void reset({bool reuseLibrary(LibraryElement library)});
-}
-
-/// Handle for creating synthesized/patch libraries during library loading.
-abstract class LibraryLoader {
-  /// This method must be called when a new synthesized/patch library has been
-  /// created to ensure that [library] will part of library dependency graph
-  /// used for computing import/export scopes.
-  void registerNewLibrary(LibraryElement library);
-
-  /// This method must be called when a new synthesized/patch library has been
-  /// scanned in order to process the library tags in [library] and thus handle
-  /// imports/exports/parts in the synthesized/patch library.
-  Future processLibraryTags(LibraryElement library);
+  /**
+   * Adds the elements in the export scope of [importedLibrary] to the import
+   * scope of [importingLibrary].
+   */
+  // TODO(johnniwinther): Move handling of 'js_helper' to the library loader
+  // to remove this method from the [LibraryLoader] interface.
+  void importLibrary(LibraryElement importingLibrary,
+                     LibraryElement importedLibrary,
+                     Import tag);
 }
 
 /**
@@ -244,12 +218,11 @@ class HideFilter extends CombinatorFilter {
  * [LibraryLoader] and [LibraryLoaderTask] is made to hide internal members from
  * the [LibraryLoader] interface.
  */
-class _LibraryLoaderTask extends CompilerTask implements LibraryLoaderTask {
-  _LibraryLoaderTask(Compiler compiler) : super(compiler);
+class LibraryLoaderTask extends LibraryLoader {
+  LibraryLoaderTask(Compiler compiler) : super(compiler);
   String get name => 'LibraryLoader';
+  List onLibraryLoadedCallbacks = [];
 
-  final Map<Uri, LibraryElement> libraryCanonicalUriMap =
-      new Map<Uri, LibraryElement>();
   final Map<Uri, LibraryElement> libraryResourceUriMap =
       new Map<Uri, LibraryElement>();
   final Map<String, LibraryElement> libraryNames =
@@ -257,56 +230,22 @@ class _LibraryLoaderTask extends CompilerTask implements LibraryLoaderTask {
 
   LibraryDependencyHandler currentHandler;
 
-  Iterable<LibraryElement> get libraries => libraryCanonicalUriMap.values;
-
-  LibraryElement lookupLibrary(Uri canonicalUri) {
-    return libraryCanonicalUriMap[canonicalUri];
-  }
-
-  void reset({bool reuseLibrary(LibraryElement library)}) {
-    assert(currentHandler == null);
-    Iterable<LibraryElement> libraries =
-        new List.from(libraryCanonicalUriMap.values);
-
-    libraryCanonicalUriMap.clear();
-    libraryResourceUriMap.clear();
-    libraryNames.clear();
-
-    if (reuseLibrary == null) return;
-
-    libraries.where(reuseLibrary).forEach(mapLibrary);
-  }
-
-  /// Insert [library] in the internal maps. Used for compiler reuse.
-  void mapLibrary(LibraryElement library) {
-    libraryCanonicalUriMap[library.canonicalUri] = library;
-
-    Uri resourceUri = library.entryCompilationUnit.script.resourceUri;
-    libraryResourceUriMap[resourceUri] = library;
-
-    String name = library.getLibraryOrScriptName();
-    libraryNames[name] = library;
-  }
-
-  Future<LibraryElement> loadLibrary(Uri resolvedUri) {
+  Future<LibraryElement> loadLibrary(Uri resolvedUri, Node node,
+      Uri canonicalUri) {
     return measure(() {
       assert(currentHandler == null);
       // TODO(johnniwinther): Ensure that currentHandler correctly encloses the
       // loading of a library cluster.
-      currentHandler = new LibraryDependencyHandler(this);
-      return createLibrary(currentHandler, null, resolvedUri)
-          .then((LibraryElement library) {
+      currentHandler = new LibraryDependencyHandler(compiler);
+      return createLibrary(currentHandler, null, resolvedUri, node,
+          canonicalUri).then((LibraryElement library) {
         return compiler.withCurrentElement(library, () {
           return measure(() {
             currentHandler.computeExports();
-            Map<Uri, LibraryElement> loadedLibraries = <Uri, LibraryElement>{};
-            currentHandler.loadedLibraries.forEach(
-                (LibraryElement loadedLibrary) {
-              loadedLibraries[loadedLibrary.canonicalUri] = loadedLibrary;
-            });
             currentHandler = null;
-            return compiler.onLibrariesLoaded(loadedLibraries)
-                .then((_) => library);
+            var workList = onLibraryLoadedCallbacks;
+            onLibraryLoadedCallbacks = [];
+            return Future.forEach(workList, (f) => f()).then((_) => library);
           });
         });
       });
@@ -342,7 +281,8 @@ class _LibraryLoaderTask extends CompilerTask implements LibraryLoaderTask {
     var libraryDependencies = new LinkBuilder<LibraryDependency>();
     Uri base = library.entryCompilationUnit.script.readableUri;
 
-    return Future.forEach(library.tags, (LibraryTag tag) {
+    // TODO(rnystrom): Remove .toList() here if #11523 is fixed.
+    return Future.forEach(library.tags.reverse().toList(), (LibraryTag tag) {
       return compiler.withCurrentElement(library, () {
         if (tag.isImport) {
           Import import = tag;
@@ -372,21 +312,25 @@ class _LibraryLoaderTask extends CompilerTask implements LibraryLoaderTask {
         }
       });
     }).then((_) {
-      return compiler.onLibraryScanned(library, handler);
-    }).then((_) {
       return compiler.withCurrentElement(library, () {
         checkDuplicatedLibraryName(library);
-
+        // Apply patch, if any.
+        if (library.isPlatformLibrary) {
+          return patchDartLibrary(handler, library, library.canonicalUri.path);
+        }
+      });
+    }).then((_) {
+      return compiler.withCurrentElement(library, () {
         // Import dart:core if not already imported.
-        if (!importsDartCore && library.canonicalUri != Compiler.DART_CORE) {
-          return createLibrary(handler, null, Compiler.DART_CORE)
-              .then((LibraryElement coreLibrary) {
+        if (!importsDartCore && !isDartCore(library.canonicalUri)) {
+          return loadCoreLibrary(handler).then((LibraryElement coreLibrary) {
             handler.registerDependency(library, null, coreLibrary);
           });
         }
       });
     }).then((_) {
-      return Future.forEach(libraryDependencies.toList(), (tag) {
+      // TODO(rnystrom): Remove .toList() here if #11523 is fixed.
+      return Future.forEach(libraryDependencies.toLink().toList(), (tag) {
         return compiler.withCurrentElement(library, () {
           return registerLibraryFromTag(handler, library, tag);
         });
@@ -434,6 +378,33 @@ class _LibraryLoaderTask extends CompilerTask implements LibraryLoaderTask {
     }
   }
 
+  bool isDartCore(Uri uri) => uri.scheme == "dart" && uri.path == "core";
+
+  /**
+   * Lazily loads and returns the [LibraryElement] for the dart:core library.
+   */
+  Future<LibraryElement> loadCoreLibrary(LibraryDependencyHandler handler) {
+    if (compiler.coreLibrary != null) {
+      return new Future.value(compiler.coreLibrary);
+    }
+
+    Uri coreUri = new Uri(scheme: 'dart', path: 'core');
+    return createLibrary(handler, null, coreUri, null, coreUri)
+        .then((LibraryElement library) {
+      compiler.coreLibrary = library;
+      return library;
+    });
+  }
+
+  Future patchDartLibrary(LibraryDependencyHandler handler,
+                        LibraryElement library, String dartLibraryPath) {
+    if (library.isPatched) return new Future.value();
+    Uri patchUri = compiler.resolvePatchUri(dartLibraryPath);
+    if (patchUri == null) return new Future.value();
+
+    return compiler.patchParser.patchLibrary(handler, patchUri, library);
+  }
+
   /**
    * Handle a part tag in the scope of [library]. The [resolvedUri] given is
    * used as is, any URI resolution should be done beforehand.
@@ -469,7 +440,7 @@ class _LibraryLoaderTask extends CompilerTask implements LibraryLoaderTask {
                                 LibraryDependency tag) {
     Uri base = library.entryCompilationUnit.script.readableUri;
     Uri resolvedUri = base.resolve(tag.uri.dartString.slowToString());
-    return createLibrary(handler, library, resolvedUri, tag.uri)
+    return createLibrary(handler, library, resolvedUri, tag.uri, resolvedUri)
         .then((LibraryElement loadedLibrary) {
           if (loadedLibrary == null) return;
           compiler.withCurrentElement(library, () {
@@ -484,16 +455,22 @@ class _LibraryLoaderTask extends CompilerTask implements LibraryLoaderTask {
    *
    * If a new library is created, the [handler] is notified.
    */
+  // TODO(johnniwinther): Remove [canonicalUri] and make [resolvedUri] the
+  // canonical uri when [Compiler.scanBuiltinLibrary] is removed.
   Future<LibraryElement> createLibrary(LibraryDependencyHandler handler,
                                        LibraryElement importingLibrary,
                                        Uri resolvedUri,
-                                       [Node node]) {
+                                       Node node,
+                                       Uri canonicalUri) {
     // TODO(johnniwinther): Create erroneous library elements for missing
     // libraries.
     Uri readableUri =
         compiler.translateResolvedUri(importingLibrary, resolvedUri, node);
     if (readableUri == null) return new Future.value();
-    LibraryElement library = libraryCanonicalUriMap[resolvedUri];
+    LibraryElement library;
+    if (canonicalUri != null) {
+      library = compiler.libraries[canonicalUri.toString()];
+    }
     if (library != null) {
       return new Future.value(library);
     }
@@ -501,21 +478,34 @@ class _LibraryLoaderTask extends CompilerTask implements LibraryLoaderTask {
       return compiler.readScript(node, readableUri)
           .then((Script script) {
             if (script == null) return null;
-            LibraryElement element = new LibraryElementX(script, resolvedUri);
+            LibraryElement element = new LibraryElementX(script, canonicalUri);
             compiler.withCurrentElement(element, () {
               handler.registerNewLibrary(element);
               native.maybeEnableNative(compiler, element);
-              libraryCanonicalUriMap[resolvedUri] = element;
+              if (canonicalUri != null) {
+                compiler.libraries[canonicalUri.toString()] = element;
+              }
               compiler.scanner.scanLibrary(element);
             });
             return processLibraryTags(handler, element).then((_) {
               compiler.withCurrentElement(element, () {
                 handler.registerLibraryExports(element);
+                onLibraryLoadedCallbacks.add(
+                    () => compiler.onLibraryLoaded(element, resolvedUri));
               });
               return element;
             });
           });
     });
+  }
+
+  // TODO(johnniwinther): Remove this method when 'js_helper' is handled by
+  // [LibraryLoaderTask].
+  void importLibrary(LibraryElement importingLibrary,
+                     LibraryElement importedLibrary,
+                     Import tag) {
+    new ImportLink(tag, importedLibrary).importLibrary(compiler,
+                                                       importingLibrary);
   }
 }
 
@@ -844,8 +834,8 @@ class LibraryDependencyNode {
  * libraries and to compute their import/export scopes through a fixed-point
  * algorithm.
  */
-class LibraryDependencyHandler implements LibraryLoader {
-  final _LibraryLoaderTask task;
+class LibraryDependencyHandler {
+  final Compiler compiler;
 
   /**
    * Newly loaded libraries and their corresponding node in the library
@@ -853,15 +843,10 @@ class LibraryDependencyHandler implements LibraryLoader {
    * part of the dependency graph of this handler since their export scopes have
    * already been computed.
    */
-  Map<LibraryElement, LibraryDependencyNode> nodeMap =
-      new Map<LibraryElement, LibraryDependencyNode>();
+  Map<LibraryElement,LibraryDependencyNode> nodeMap =
+      new Map<LibraryElement,LibraryDependencyNode>();
 
-  LibraryDependencyHandler(this.task);
-
-  Compiler get compiler => task.compiler;
-
-  /// The libraries loaded with this handler.
-  Iterable<LibraryElement> get loadedLibraries => nodeMap.keys;
+  LibraryDependencyHandler(Compiler this.compiler);
 
   /**
    * Performs a fixed-point computation on the export scopes of all registered
@@ -947,7 +932,6 @@ class LibraryDependencyHandler implements LibraryLoader {
    */
   void registerNewLibrary(LibraryElement library) {
     nodeMap[library] = new LibraryDependencyNode(library);
-    compiler.onLibraryCreated(library);
   }
 
   /**
@@ -956,9 +940,5 @@ class LibraryDependencyHandler implements LibraryLoader {
    */
   void registerLibraryExports(LibraryElement library) {
     nodeMap[library].registerInitialExports();
-  }
-
-  Future processLibraryTags(LibraryElement library) {
-    return task.processLibraryTags(this, library);
   }
 }

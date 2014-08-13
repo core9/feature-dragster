@@ -45,7 +45,6 @@ abstract class Name {
   /// Returns `true` if this name is the same as [other] not taking the library
   /// privacy into account.
   bool isSimilarTo(Name other);
-  int get similarHashCode;
 }
 
 class PublicName implements Name {
@@ -62,7 +61,7 @@ class PublicName implements Name {
 
   bool get isPrivate => false;
 
-  int get hashCode => similarHashCode;
+  int get hashCode => text.hashCode + 11 * isSetter.hashCode;
 
   bool operator ==(other) {
     if (other is! PublicName) return false;
@@ -71,7 +70,6 @@ class PublicName implements Name {
 
   bool isSimilarTo(Name other) =>
       text == other.text && isSetter == other.isSetter;
-  int get similarHashCode => text.hashCode + 11 * isSetter.hashCode;
 
   String toString() => isSetter ? '$text=' : text;
 }

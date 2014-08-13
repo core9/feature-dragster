@@ -54,14 +54,11 @@ class OptionHandler {
  * For example, in ['--out=fisk.js'] and ['-ohest.js'], the parameters
  * are ['fisk.js'] and ['hest.js'], respectively.
  */
-String extractParameter(String argument, {bool isOptionalArgument: false}) {
+String extractParameter(String argument) {
   // m[0] is the entire match (which will be equal to argument). m[1]
   // is something like "-o" or "--out=", and m[2] is the parameter.
   Match m = new RegExp('^(-[a-z]|--.+=)(.*)').firstMatch(argument);
-  if (m == null) {
-    if (isOptionalArgument) return null;
-    helpAndFail('Unknown option "$argument".');
-  }
+  if (m == null) helpAndFail('Unknown option "$argument".');
   return m[2];
 }
 
@@ -76,7 +73,7 @@ void parseCommandLine(List<OptionHandler> handlers, List<String> argv) {
   for (OptionHandler handler in handlers) {
     patterns.add(handler.pattern);
   }
-  var pattern = new RegExp('^(${patterns.join(")\$|^(")})\$');
+  var pattern = new RegExp('^(${patterns.join(")\$|(")})\$');
 
   Iterator<String> arguments = argv.iterator;
   OUTER: while (arguments.moveNext()) {
@@ -227,14 +224,6 @@ Future compile(List<String> argv) {
     passThrough('--categories=${categories.join(",")}');
   }
 
-  void handleThrowOnError(String argument) {
-    diagnosticHandler.throwOnError = true;
-    String parameter = extractParameter(argument, isOptionalArgument: true);
-    if (parameter != null) {
-      diagnosticHandler.throwOnErrorCount = int.parse(parameter);
-    }
-  }
-
   handleShortOptions(String argument) {
     var shortOptions = argument.substring(1).split("");
     for (var shortOption in shortOptions) {
@@ -272,7 +261,8 @@ Future compile(List<String> argv) {
   List<String> arguments = <String>[];
   List<OptionHandler> handlers = <OptionHandler>[
     new OptionHandler('-[chvm?]+', handleShortOptions),
-    new OptionHandler('--throw-on-error(?:=[0-9]+)?', handleThrowOnError),
+    new OptionHandler('--throw-on-error',
+                      (_) => diagnosticHandler.throwOnError = true),
     new OptionHandler('--suppress-warnings', (_) {
       diagnosticHandler.showWarnings = false;
       passThrough('--suppress-warnings');
@@ -417,9 +407,9 @@ Future compile(List<String> argv) {
             " \"Content-Security-Policy: script-src 'self'\"");
       } else if (extension == 'js.map' || extension == 'dart.map') {
         uri = sourceMapOut;
-      } else if (extension == 'info.html' || extension == "info.json") {
+      } else if (extension == 'info.html') {
         String outName = out.path.substring(out.path.lastIndexOf('/') + 1);
-        uri = out.resolve('$outName.$extension');
+        uri = out.resolve('${outName}.$extension');
       } else {
         fail('Unknown extension: $extension');
       }

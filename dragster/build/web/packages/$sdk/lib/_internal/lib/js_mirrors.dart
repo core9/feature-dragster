@@ -64,14 +64,6 @@ disableTreeShaking() => preserveNames();
 /// preserved at runtime.
 preserveMetadata() {}
 
-/// No-op method that is called to inform the compiler that the compiler must
-/// preserve the URIs.
-preserveUris() {}
-
-/// No-op method that is called to inform the compiler that the compiler must
-/// preserve the library names.
-preserveLibraryNames() {}
-
 String getName(Symbol symbol) {
   preserveNames();
   return n(symbol);
@@ -286,7 +278,7 @@ class JsTypeMirror extends JsDeclarationMirror implements TypeMirror {
 
 class JsLibraryMirror extends JsDeclarationMirror with JsObjectMirror
     implements LibraryMirror {
-  final Uri _uri;
+  final Uri uri;
   final List<String> _classes;
   final List<String> _functions;
   final List _metadata;
@@ -305,23 +297,16 @@ class JsLibraryMirror extends JsDeclarationMirror with JsObjectMirror
   UnmodifiableListView<InstanceMirror> _cachedMetadata;
 
   JsLibraryMirror(Symbol simpleName,
-                  this._uri,
+                  this.uri,
                   this._classes,
                   this._functions,
                   this._metadata,
                   this._compactFieldSpecification,
                   this._isRoot,
                   this._globalObject)
-      : super(simpleName) {
-    preserveLibraryNames();
-  }
+      : super(simpleName);
 
   String get _prettyName => 'LibraryMirror';
-
-  Uri get uri {
-    preserveUris();
-    return _uri;
-  }
 
   Symbol get qualifiedName => simpleName;
 
@@ -350,8 +335,8 @@ class JsLibraryMirror extends JsDeclarationMirror with JsObjectMirror
     var mirror = __functions[s('$name=')];
     if (mirror == null) mirror = __variables[fieldName];
     if (mirror == null) {
-      throw new NoSuchStaticMethodError.method(
-          null, setterSymbol(fieldName), [arg], null);
+      // TODO(ahe): What receiver to use?
+      throw new NoSuchMethodError(this, setterSymbol(fieldName), [arg], null);
     }
     mirror._setField(this, arg);
     return reflect(arg);
@@ -360,7 +345,8 @@ class JsLibraryMirror extends JsDeclarationMirror with JsObjectMirror
   InstanceMirror getField(Symbol fieldName) {
     JsMirror mirror = __members[fieldName];
     if (mirror == null) {
-      throw new NoSuchStaticMethodError.method(null, fieldName, [], null);
+      // TODO(ahe): What receiver to use?
+      throw new NoSuchMethodError(this, fieldName, [], null);
     }
     if (mirror is! MethodMirror) return reflect(mirror._getField(this));
     JsMethodMirror methodMirror = mirror;
@@ -383,8 +369,9 @@ class JsLibraryMirror extends JsDeclarationMirror with JsObjectMirror
       throwInvalidReflectionError(n(memberName));
     }
     if (mirror == null || mirror is JsMethodMirror && mirror.isSetter) {
-      throw new NoSuchStaticMethodError.method(
-          null, memberName, positionalArguments, namedArguments);
+      // TODO(ahe): What receiver to use?
+      throw new NoSuchMethodError(
+          this, memberName, positionalArguments, namedArguments);
     }
     if (mirror is JsMethodMirror && !mirror.isGetter) {
       return reflect(mirror._invoke(positionalArguments, namedArguments));
@@ -773,17 +760,19 @@ class JsMixinApplication extends JsTypeMirror with JsObjectMirror
       Symbol memberName,
       List positionalArguments,
       [Map<Symbol,dynamic> namedArguments]) {
-    throw new NoSuchStaticMethodError.method(
-        null, memberName, positionalArguments, namedArguments);
+    // TODO(ahe): What receiver to use?
+    throw new NoSuchMethodError(this, memberName,
+                                positionalArguments, namedArguments);
   }
 
   InstanceMirror getField(Symbol fieldName) {
-    throw new NoSuchStaticMethodError.method(null, fieldName, null, null);
+    // TODO(ahe): What receiver to use?
+    throw new NoSuchMethodError(this, fieldName, null, null);
   }
 
   InstanceMirror setField(Symbol fieldName, Object arg) {
-    throw new NoSuchStaticMethodError.method(
-        null, setterSymbol(fieldName), [arg], null);
+    // TODO(ahe): What receiver to use?
+    throw new NoSuchMethodError(this, setterSymbol(fieldName), [arg], null);
   }
 
   List<ClassMirror> get superinterfaces => [mixin];
@@ -1798,15 +1787,8 @@ class JsClassMirror extends JsTypeMirror with JsObjectMirror
       JS('void', '#[#] = #', JS_CURRENT_ISOLATE(), jsName, arg);
       return reflect(arg);
     }
-    Symbol setterName = setterSymbol(fieldName);
-    if (mirror == null) {
-      JsMethodMirror setter = __setters[setterName];
-      if (setter != null) {
-        setter._invoke([arg], const {});
-        return reflect(arg);
-      }
-    }
-    throw new NoSuchStaticMethodError.method(null, setterName, [arg], null);
+    // TODO(ahe): What receiver to use?
+    throw new NoSuchMethodError(this, setterSymbol(fieldName), [arg], null);
   }
 
   bool _staticFieldExists(Symbol fieldName) {
@@ -1847,7 +1829,8 @@ class JsClassMirror extends JsTypeMirror with JsObjectMirror
       if (getter == null) throw new UnimplementedError();
       return reflect(JS("", "#()", getter));
     }
-    throw new NoSuchStaticMethodError.method(null, fieldName, null, null);
+    // TODO(ahe): What receiver to use?
+    throw new NoSuchMethodError(this, fieldName, null, null);
   }
 
   _getInvokedInstance(Symbol constructorName,
@@ -1862,8 +1845,9 @@ class JsClassMirror extends JsTypeMirror with JsObjectMirror
        mirror = __constructors.values.firstWhere(
            (m) => m.constructorName == constructorName,
            orElse: () {
-             throw new NoSuchStaticMethodError.method(
-                 null, constructorName, positionalArguments, namedArguments);
+             // TODO(ahe): What receiver to use?
+             throw new NoSuchMethodError(
+                 this, constructorName, positionalArguments, namedArguments);
            });
        JsCache.update(_jsConstructorCache, n(constructorName), mirror);
      }
@@ -1947,8 +1931,9 @@ class JsClassMirror extends JsTypeMirror with JsObjectMirror
           .invoke(#call, positionalArguments, namedArguments);
     }
     if (mirror == null || !mirror.isStatic) {
-      throw new NoSuchStaticMethodError.method(
-          null, memberName, positionalArguments, namedArguments);
+      // TODO(ahe): What receiver to use?
+      throw new NoSuchMethodError(
+          this, memberName, positionalArguments, namedArguments);
     }
     if (!mirror.canInvokeReflectively()) {
       throwInvalidReflectionError(n(memberName));
@@ -2133,12 +2118,6 @@ class JsVariableMirror extends JsDeclarationMirror implements VariableMirror {
 
   void _setField(JsMirror receiver, Object arg) {
     if (isFinal) {
-      // TODO(floitsch): when the field is non-static we don't want to have
-      // a mirror as receiver.
-      if (isStatic) {
-        throw new NoSuchStaticMethodError.method(
-            null, setterSymbol(simpleName), [arg], null);
-      }
       throw new NoSuchMethodError(this, setterSymbol(simpleName), [arg], null);
     }
     receiver._storeField(_jsName, arg);
@@ -2175,7 +2154,6 @@ function(reflectee) {
     if (callName == null) {
       throw new RuntimeError('Cannot find callName on "$reflectee"');
     }
-    // TODO(floitsch): What about optional parameters?
     int parameterCount = int.parse(callName.split(r'$')[1]);
     if (reflectee is BoundClosure) {
       var target = BoundClosure.targetOf(reflectee);
@@ -2189,9 +2167,8 @@ function(reflectee) {
     } else {
       bool isStatic = true; // TODO(ahe): Compute isStatic correctly.
       var jsFunction = JS('', '#[#]', reflectee, callName);
-      var dummyOptionalParameterCount = 0;
       cachedFunction = new JsMethodMirror(
-          s(callName), jsFunction, parameterCount, dummyOptionalParameterCount,
+          s(callName), jsFunction, parameterCount,
           false, false, isStatic, false, false);
     }
     JS('void', r'#.constructor[#] = #', reflectee, cacheName, cachedFunction);
@@ -2212,8 +2189,7 @@ function(reflectee) {
 
 class JsMethodMirror extends JsDeclarationMirror implements MethodMirror {
   final _jsFunction;
-  final int _requiredParameterCount;
-  final int _optionalParameterCount;
+  final int _parameterCount;
   final bool isGetter;
   final bool isSetter;
   final bool isStatic;
@@ -2226,8 +2202,7 @@ class JsMethodMirror extends JsDeclarationMirror implements MethodMirror {
 
   JsMethodMirror(Symbol simpleName,
                  this._jsFunction,
-                 this._requiredParameterCount,
-                 this._optionalParameterCount,
+                 this._parameterCount,
                  this.isGetter,
                  this.isSetter,
                  this.isStatic,
@@ -2258,13 +2233,11 @@ class JsMethodMirror extends JsDeclarationMirror implements MethodMirror {
       optionalParameterCount = int.parse(info[2]);
     }
     return new JsMethodMirror(
-        s(name), jsFunction, requiredParameterCount, optionalParameterCount,
+        s(name), jsFunction, requiredParameterCount + optionalParameterCount,
         isGetter, isSetter, isStatic, isConstructor, isOperator);
   }
 
   String get _prettyName => 'MethodMirror';
-
-  int get _parameterCount => _requiredParameterCount + _optionalParameterCount;
 
   List<ParameterMirror> get parameters {
     if (_parameters != null) return _parameters;
@@ -2352,22 +2325,10 @@ class JsMethodMirror extends JsDeclarationMirror implements MethodMirror {
     if (!isStatic && !isConstructor) {
       throw new RuntimeError('Cannot invoke instance method without receiver.');
     }
-    int positionalLength = positionalArguments.length;
-    if (positionalLength < _requiredParameterCount ||
-        positionalLength >  _parameterCount ||
-        _jsFunction == null) {
+    if (_parameterCount != positionalArguments.length || _jsFunction == null) {
       // TODO(ahe): What receiver to use?
       throw new NoSuchMethodError(
           owner, simpleName, positionalArguments, namedArguments);
-    }
-    if (positionalLength < _parameterCount) {
-      // Fill up with default values.
-      // Make a copy so we don't modify the input.
-      positionalArguments = positionalArguments.toList();
-      for (int i = positionalLength; i < parameters.length; i++) {
-        JsParameterMirror parameter = parameters[i];
-        positionalArguments.add(parameter.defaultValue.reflectee);
-      }
     }
     // Using JS_CURRENT_ISOLATE() ('$') here is actually correct, although
     // _jsFunction may not be a property of '$', most static functions do not
@@ -2855,7 +2816,6 @@ bool isNoSuchMethodStub(var jsFunction) {
 
 class NoSuchStaticMethodError extends Error implements NoSuchMethodError {
   static const int MISSING_CONSTRUCTOR = 0;
-  static const int MISSING_METHOD = 1;
   final ClassMirror _cls;
   final Symbol _name;
   final List _positionalArguments;
@@ -2869,27 +2829,12 @@ class NoSuchStaticMethodError extends Error implements NoSuchMethodError {
       this._namedArguments)
       : _kind = MISSING_CONSTRUCTOR;
 
-  /// If the given class is `null` the static method/getter/setter is top-level.
-  NoSuchStaticMethodError.method(
-      this._cls,
-      this._name,
-      this._positionalArguments,
-      this._namedArguments)
-      : _kind = MISSING_METHOD;
-
   String toString() {
-    // TODO(floitsch): show arguments.
     switch(_kind) {
     case MISSING_CONSTRUCTOR:
       return
           "NoSuchMethodError: No constructor named '${n(_name)}' in class"
           " '${n(_cls.qualifiedName)}'.";
-    case MISSING_METHOD:
-      if (_cls == null) {
-        return "NoSuchMethodError: No top-level method named '${n(_name)}'.";
-      }
-      return "NoSuchMethodError: No static method named '${n(_name)}' in"
-             " class '${n(_cls.qualifiedName)}'";
     default:
       return 'NoSuchMethodError';
     }

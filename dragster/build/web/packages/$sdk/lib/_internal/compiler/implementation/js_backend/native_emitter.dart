@@ -6,9 +6,7 @@ part of js_backend;
 
 class NativeEmitter {
 
-  final Map<Element, ClassBuilder> cachedBuilders;
-
-  final CodeEmitterTask emitter;
+  CodeEmitterTask emitter;
   CodeBuffer nativeBuffer;
 
   // Native classes found in the application.
@@ -28,13 +26,11 @@ class NativeEmitter {
   // it finds any native class that needs noSuchMethod handling.
   bool handleNoSuchMethod = false;
 
-  NativeEmitter(CodeEmitterTask emitter)
-      : this.emitter = emitter,
-        subtypes = new Map<ClassElement, List<ClassElement>>(),
+  NativeEmitter(this.emitter)
+      : subtypes = new Map<ClassElement, List<ClassElement>>(),
         directSubtypes = new Map<ClassElement, List<ClassElement>>(),
         nativeMethods = new Set<FunctionElement>(),
-        nativeBuffer = new CodeBuffer(),
-        cachedBuilders = emitter.compiler.cacheStrategy.newMap();
+        nativeBuffer = new CodeBuffer();
 
   Compiler get compiler => emitter.compiler;
   JavaScriptBackend get backend => compiler.backend;
@@ -44,7 +40,7 @@ class NativeEmitter {
   String get N => emitter.N;
 
   jsAst.Expression get defPropFunction {
-    Element element = backend.findHelper('defineProperty');
+    Element element = compiler.findHelper('defineProperty');
     return backend.namer.elementAccess(element);
   }
 
@@ -283,16 +279,6 @@ class NativeEmitter {
   }
 
   ClassBuilder generateNativeClass(ClassElement classElement) {
-    ClassBuilder builder;
-    if (compiler.hasIncrementalSupport) {
-      builder = cachedBuilders[classElement];
-      if (builder != null) return builder;
-      builder = new ClassBuilder(classElement, backend.namer);
-      cachedBuilders[classElement] = builder;
-    } else {
-      builder = new ClassBuilder(classElement, backend.namer);
-    }
-
     // TODO(sra): Issue #13731- this is commented out as part of custom element
     // constructor work.
     //assert(!classElement.hasBackendMembers);
@@ -308,6 +294,7 @@ class NativeEmitter {
 
     String superName = backend.namer.getNameOfClass(superclass);
 
+    ClassBuilder builder = new ClassBuilder(backend.namer);
     emitter.classEmitter.emitClassConstructor(classElement, builder);
     bool hasFields = emitter.classEmitter.emitFields(
         classElement, builder, superName, classIsNative: true);
@@ -336,7 +323,8 @@ class NativeEmitter {
       FunctionElement member,
       List<jsAst.Parameter> stubParameters) {
     FunctionSignature parameters = member.functionSignature;
-    Element converter = backend.findHelper('convertDartClosureToJS');
+    Element converter =
+        compiler.findHelper('convertDartClosureToJS');
     jsAst.Expression closureConverter = backend.namer.elementAccess(converter);
     parameters.forEachParameter((ParameterElement parameter) {
       String name = parameter.name;
@@ -361,7 +349,7 @@ class NativeEmitter {
   }
 
   List<jsAst.Statement> generateParameterStubStatements(
-      FunctionElement member,
+      Element member,
       bool isInterceptedMethod,
       String invocationName,
       List<jsAst.Parameter> stubParameters,
@@ -376,7 +364,7 @@ class NativeEmitter {
     // must be turned into a JS call to:
     //   foo(null, y).
 
-    ClassElement classElement = member.enclosingClass;
+    ClassElement classElement = member.enclosingElement;
 
     List<jsAst.Statement> statements = <jsAst.Statement>[];
     potentiallyConvertDartClosuresToJs(statements, member, stubParameters);
@@ -444,10 +432,8 @@ class NativeEmitter {
   void assembleCode(CodeBuffer targetBuffer) {
     List<jsAst.Property> objectProperties = <jsAst.Property>[];
 
-    jsAst.Property addProperty(String name, jsAst.Expression value) {
-      jsAst.Property prop = new jsAst.Property(js.string(name), value);
-      objectProperties.add(prop);
-      return prop;
+    void addProperty(String name, jsAst.Expression value) {
+      objectProperties.add(new jsAst.Property(js.string(name), value));
     }
 
     if (!nativeClasses.isEmpty) {

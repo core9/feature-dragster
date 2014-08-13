@@ -6,7 +6,7 @@ import 'stage_api.dart';
 import 'grid_api.dart';
 import 'highlight_api.dart';
 import 'select_api.dart';
-import 'db_api.dart';
+//import 'database_api.dart';
 import 'upload_api.dart';
 
 import 'bootstrategy_api.dart';
@@ -15,7 +15,7 @@ class MainStrategy implements BootStrategy {
   InjectorWrap _injectorWrap;
   void processPlugins(){
 
-    DB _db = _injectorWrap.getInjector().getInstance(DB);
+    //DataBase _db = _injectorWrap.getInjector().getInstance(DataBase);
     Stage _stage = _injectorWrap.getInjector().getInstance(Stage);
     Menu _menu = _injectorWrap.getInjector().getInstance(Menu);
     DragDrop _dragdrop = _injectorWrap.getInjector().getInstance(DragDrop);
@@ -36,7 +36,7 @@ class MainStrategy implements BootStrategy {
     _dragdrop.setHighLight(_highLight);
     _dragdrop.start();
 
-    _menu.setDB(_db);
+    //_menu.setDB(_db);
     _menu.setSelect(_select);
     _menu.setDragDrop(_dragdrop);
     _menu.setHighLight(_highLight);

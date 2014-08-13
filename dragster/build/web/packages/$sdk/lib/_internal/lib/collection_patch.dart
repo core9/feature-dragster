@@ -4,14 +4,12 @@
 
 // Patch file for dart:collection classes.
 import 'dart:_foreign_helper' show JS;
-import 'dart:_js_helper' show fillLiteralMap, NoInline, patch;
+import 'dart:_js_helper' show fillLiteralMap, NoInline;
 
-@patch
-class HashMap<K, V> {
-  @patch
-  factory HashMap({ bool equals(K key1, K key2),
-                    int hashCode(K key),
-                    bool isValidKey(potentialKey) }) {
+patch class HashMap<K, V> {
+  patch factory HashMap({ bool equals(K key1, K key2),
+                          int hashCode(K key),
+                          bool isValidKey(potentialKey) }) {
     if (isValidKey == null) {
       if (hashCode == null) {
         if (equals == null) {
@@ -38,8 +36,7 @@ class HashMap<K, V> {
     return new _CustomHashMap<K, V>(equals, hashCode, isValidKey);
   }
 
-  @patch
-  factory HashMap.identity() = _IdentityHashMap<K, V>;
+  patch factory HashMap.identity() = _IdentityHashMap<K, V>;
 }
 
 class _HashMap<K, V> implements HashMap<K, V> {
@@ -481,12 +478,10 @@ class HashMapKeyIterator<E> implements Iterator<E> {
   }
 }
 
-@patch
-class LinkedHashMap<K, V> {
-  @patch
-  factory LinkedHashMap({ bool equals(K key1, K key2),
-                          int hashCode(K key),
-                          bool isValidKey(potentialKey) }) {
+patch class LinkedHashMap<K, V> {
+  patch factory LinkedHashMap({ bool equals(K key1, K key2),
+                                int hashCode(K key),
+                                bool isValidKey(potentialKey) }) {
     if (isValidKey == null) {
       if (hashCode == null) {
         if (equals == null) {
@@ -513,8 +508,7 @@ class LinkedHashMap<K, V> {
     return new _LinkedCustomHashMap<K, V>(equals, hashCode, isValidKey);
   }
 
-  @patch
-  factory LinkedHashMap.identity() = _LinkedIdentityHashMap<K, V>;
+  patch factory LinkedHashMap.identity() = _LinkedIdentityHashMap<K, V>;
 
   // Private factory constructor called by generated code for map literals.
   @NoInline()
@@ -965,12 +959,10 @@ class LinkedHashMapKeyIterator<E> implements Iterator<E> {
   }
 }
 
-@patch
-class HashSet<E> {
-  @patch
-  factory HashSet({ bool equals(E e1, E e2),
-                    int hashCode(E e),
-                    bool isValidKey(potentialKey) }) {
+patch class HashSet<E> {
+  patch factory HashSet({ bool equals(E e1, E e2),
+                          int hashCode(E e),
+                          bool isValidKey(potentialKey) }) {
     if (isValidKey == null) {
       if (hashCode == null) {
         if (equals == null) {
@@ -997,8 +989,7 @@ class HashSet<E> {
     return new _CustomHashSet<E>(equals, hashCode, isValidKey);
   }
 
-  @patch
-  factory HashSet.identity() = _IdentityHashSet<E>;
+  patch factory HashSet.identity() = _IdentityHashSet<E>;
 }
 
 class _HashSet<E> extends _HashSetBase<E> implements HashSet<E> {
@@ -1370,12 +1361,10 @@ class HashSetIterator<E> implements Iterator<E> {
   }
 }
 
-@patch
-class LinkedHashSet<E> {
-  @patch
-  factory LinkedHashSet({ bool equals(E e1, E e2),
-                          int hashCode(E e),
-                          bool isValidKey(potentialKey) }) {
+patch class LinkedHashSet<E> {
+  patch factory LinkedHashSet({ bool equals(E e1, E e2),
+                                int hashCode(E e),
+                                bool isValidKey(potentialKey) }) {
     if (isValidKey == null) {
       if (hashCode == null) {
         if (equals == null) {
@@ -1402,8 +1391,7 @@ class LinkedHashSet<E> {
     return new _LinkedCustomHashSet<E>(equals, hashCode, isValidKey);
   }
 
-  @patch
-  factory LinkedHashSet.identity() = _LinkedIdentityHashSet<E>;
+  patch factory LinkedHashSet.identity() = _LinkedIdentityHashSet<E>;
 }
 
 class _LinkedHashSet<E> extends _HashSetBase<E> implements LinkedHashSet<E> {

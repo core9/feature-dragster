@@ -12,8 +12,7 @@ import 'dart:_js_helper' show
     Null,
     Primitives,
     convertDartClosureToJS,
-    random64,
-    requiresPreamble;
+    random64;
 import 'dart:_foreign_helper' show DART_CLOSURE_TO_JS,
                                    JS,
                                    JS_CREATE_ISOLATE,
@@ -229,23 +228,14 @@ class _Manager {
         "(function (f, a) { return function (e) { f(a, e); }})(#, #)",
         DART_CLOSURE_TO_JS(IsolateNatives._processWorkerMessage),
         mainManager);
-    JS("void", r"self.onmessage = #", function);
-    // We ensure dartPrint is defined so that the implementation of the Dart
+    JS("void", r"#.onmessage = #", globalThis, function);
+    // We define dartPrint so that the implementation of the Dart
     // print method knows what to call.
-    JS('', '''self.dartPrint = self.dartPrint || (function(serialize) {
-  return function (object) {
-    if (self.console && self.console.log) {
-      self.console.log(object)
-    } else {
-      self.postMessage(serialize(object));
-    }
-  }
-})(#)''', DART_CLOSURE_TO_JS(_serializePrintMessage));
+    // TODO(ngeoffray): Should we forward to the main isolate? What if
+    // it exited?
+    JS('void', r'#.dartPrint = function (object) {}', globalThis);
   }
 
-  static _serializePrintMessage(object) {
-    return _serializeMessage({"command": "print", "msg": object});
-  }
 
   /**
    * Close the worker running this code if all isolates are done and
@@ -413,8 +403,10 @@ class _IsolateContext implements IsolateContext {
         // don't print it.
         return;
       }
-      if (JS('bool', 'self.console && self.console.error')) {
-        JS('void', 'self.console.error(#, #)', error, stackTrace);
+      if (JS('bool', '#.console != null && '
+                     'typeof #.console.error == "function"',
+                     globalThis, globalThis)) {
+        JS('void', '#.console.error(#, #)', globalThis, error, stackTrace);
       } else {
         print(error);
         if (stackTrace != null) print(stackTrace);
@@ -686,7 +678,6 @@ class _MainManagerStub {
     //
     // See: http://www.w3.org/TR/workers/#the-global-scope
     // and: http://www.w3.org/TR/Window/#dfn-self-attribute
-    requiresPreamble();
     JS("void", r"self.postMessage(#)", msg);
   }
 }
@@ -694,19 +685,11 @@ class _MainManagerStub {
 const String _SPAWNED_SIGNAL = "spawned";
 const String _SPAWN_FAILED_SIGNAL = "spawn failed";
 
-get globalWindow {
-  requiresPreamble();
-  return JS('', "self.window");
-}
-
-get globalWorker {
-  requiresPreamble();
-  return JS('', "self.Worker");
-}
-bool get globalPostMessageDefined {
-  requiresPreamble();
-  return JS('bool', "!!self.postMessage");
-}
+var globalThis = Primitives.computeGlobalThis();
+var globalWindow = JS('', "#.window", globalThis);
+var globalWorker = JS('', "#.Worker", globalThis);
+bool globalPostMessageDefined =
+    JS('', "#.postMessage !== (void 0)", globalThis);
 
 typedef _MainFunction();
 typedef _MainFunctionArgs(args);
@@ -715,15 +698,6 @@ typedef _MainFunctionArgsMessage(args, message);
 /// Note: IsolateNatives depends on _globalState which is only set up correctly
 /// when 'dart:isolate' has been imported.
 class IsolateNatives {
-
-  // We set [enableSpawnWorker] to true (not null) when calling isolate
-  // primitives that require support for spawning workers. The field starts out
-  // by being null, and dart2js' type inference will track if it can have a
-  // non-null value. So by testing if this value is not null, we generate code
-  // that dart2js knows is dead when worker support isn't needed.
-  // TODO(herhut): Initialize this to false when able to track compile-time
-  // constants.
-  static var enableSpawnWorker;
 
   static String thisScript = computeThisScript();
 
@@ -829,7 +803,14 @@ class IsolateNatives {
         _globalState.topEventLoop.run();
         break;
       case 'spawn-worker':
-        if (enableSpawnWorker != null) handleSpawnWorkerRequest(msg);
+        var replyPort = msg['replyPort'];
+        spawn(msg['functionName'], msg['uri'],
+              msg['args'], msg['msg'],
+              false, msg['isSpawnUri'], msg['startPaused']).then((msg) {
+          replyPort.send(msg);
+        }, onError: (String errorMessage) {
+          replyPort.send([_SPAWN_FAILED_SIGNAL, errorMessage]);
+        });
         break;
       case 'message':
         SendPort port = msg['port'];
@@ -860,17 +841,6 @@ class IsolateNatives {
     }
   }
 
-  static handleSpawnWorkerRequest(msg) {
-    var replyPort = msg['replyPort'];
-    spawn(msg['functionName'], msg['uri'],
-          msg['args'], msg['msg'],
-          false, msg['isSpawnUri'], msg['startPaused']).then((msg) {
-      replyPort.send(msg);
-    }, onError: (String errorMessage) {
-      replyPort.send([_SPAWN_FAILED_SIGNAL, errorMessage]);
-    });
-  }
-
   /** Log a message, forwarding to the main [_Manager] if appropriate. */
   static _log(msg) {
     if (_globalState.isWorker) {
@@ -886,8 +856,7 @@ class IsolateNatives {
   }
 
   static void _consoleLog(msg) {
-    requiresPreamble();
-    JS("void", r"self.console.log(#)", msg);
+    JS("void", r"#.console.log(#)", globalThis, msg);
   }
 
   static _getJSFunctionFromName(String functionName) {
@@ -911,7 +880,6 @@ class IsolateNatives {
   static Future<List> spawnFunction(void topLevelFunction(message),
                                     var message,
                                     bool startPaused) {
-    IsolateNatives.enableSpawnWorker = true;
     final name = _getJSFunctionName(topLevelFunction);
     if (name == null) {
       throw new UnsupportedError(
@@ -924,7 +892,6 @@ class IsolateNatives {
 
   static Future<List> spawnUri(Uri uri, List<String> args, var message,
                                bool startPaused) {
-    IsolateNatives.enableSpawnWorker = true;
     bool isLight = false;
     bool isSpawnUri = true;
     return spawn(null, uri.toString(), args, message,
@@ -1730,7 +1697,8 @@ class TimerImpl implements Timer {
 
       enterJsAsync();
 
-      _handle = JS('int', 'self.setTimeout(#, #)',
+      _handle = JS('int', '#.setTimeout(#, #)',
+                   globalThis,
                    convertDartClosureToJS(internalCallback, 0),
                    milliseconds);
     } else {
@@ -1743,7 +1711,8 @@ class TimerImpl implements Timer {
       : _once = false {
     if (hasTimer()) {
       enterJsAsync();
-      _handle = JS('int', 'self.setInterval(#, #)',
+      _handle = JS('int', '#.setInterval(#, #)',
+                   globalThis,
                    convertDartClosureToJS(() { callback(this); }, 0),
                    milliseconds);
     } else {
@@ -1759,9 +1728,9 @@ class TimerImpl implements Timer {
       if (_handle == null) return;
       leaveJsAsync();
       if (_once) {
-        JS('void', 'self.clearTimeout(#)', _handle);
+        JS('void', '#.clearTimeout(#)', globalThis, _handle);
       } else {
-        JS('void', 'self.clearInterval(#)', _handle);
+        JS('void', '#.clearInterval(#)', globalThis, _handle);
       }
       _handle = null;
     } else {
@@ -1772,10 +1741,7 @@ class TimerImpl implements Timer {
   bool get isActive => _handle != null;
 }
 
-bool hasTimer() {
-  requiresPreamble();
-  return JS('', 'self.setTimeout') != null;
-}
+bool hasTimer() => JS('', '#.setTimeout', globalThis) != null;
 
 
 /**

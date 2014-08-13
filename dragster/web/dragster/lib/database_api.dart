@@ -2,7 +2,7 @@ library db;
 
 import 'package:lawndart/lawndart.dart';
 
-abstract class DB {
+abstract class DataBase {
   
   Store getGridDB();
   Store getPagesDB();

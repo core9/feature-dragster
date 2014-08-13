@@ -501,11 +501,7 @@ abstract class Stream<T> {
       onError: result._completeError,
       onDone: () {
         if (!seenFirst) {
-          try {
-            throw IterableElementError.noElement();
-          } catch (e, s) {
-            result._completeError(e, s);
-          }
+          result._completeError(new StateError("No elements"));
         } else {
           result._complete(value);
         }
@@ -906,11 +902,7 @@ abstract class Stream<T> {
       },
       onError: future._completeError,
       onDone: () {
-        try {
-          throw IterableElementError.noElement();
-        } catch (e, s) {
-          future._completeError(e, s);
-        }
+        future._completeError(new StateError("No elements"));
       },
       cancelOnError: true);
     return future;
@@ -941,11 +933,7 @@ abstract class Stream<T> {
           future._complete(result);
           return;
         }
-        try {
-          throw IterableElementError.noElement();
-        } catch (e, s) {
-          future._completeError(e, s);
-        }
+        future._completeError(new StateError("No elements"));
       },
       cancelOnError: true);
     return future;
@@ -968,11 +956,8 @@ abstract class Stream<T> {
       (T value) {
         if (foundResult) {
           // This is the second element we get.
-          try {
-            throw IterableElementError.tooMany();
-          } catch (e, s) {
-            _cancelAndError(subscription, future, e, s);
-          }
+          Error error = new StateError("More than one element");
+          _cancelAndError(subscription, future, error, null);
           return;
         }
         foundResult = true;
@@ -984,11 +969,7 @@ abstract class Stream<T> {
           future._complete(result);
           return;
         }
-        try {
-          throw IterableElementError.noElement();
-        } catch (e, s) {
-          future._completeError(e, s);
-        }
+        future._completeError(new StateError("No elements"));
       },
       cancelOnError: true);
     return future;
@@ -1036,11 +1017,7 @@ abstract class Stream<T> {
           _runUserCode(defaultValue, future._complete, future._completeError);
           return;
         }
-        try {
-          throw IterableElementError.noElement();
-        } catch (e, s) {
-          future._completeError(e, s);
-        }
+        future._completeError(new StateError("firstMatch ended without match"));
       },
       cancelOnError: true);
     return future;
@@ -1081,11 +1058,7 @@ abstract class Stream<T> {
           _runUserCode(defaultValue, future._complete, future._completeError);
           return;
         }
-        try {
-          throw IterableElementError.noElement();
-        } catch (e, s) {
-          future._completeError(e, s);
-        }
+        future._completeError(new StateError("lastMatch ended without match"));
       },
       cancelOnError: true);
     return future;
@@ -1109,11 +1082,11 @@ abstract class Stream<T> {
           (bool isMatch) {
             if (isMatch) {
               if (foundResult) {
-                try {
-                  throw IterableElementError.tooMany();
-                } catch (e, s) {
-                  _cancelAndError(subscription, future, e, s);
-                }
+                _cancelAndError(
+                    subscription,
+                    future,
+                    new StateError('Multiple matches for "single"'),
+                    null);
                 return;
               }
               foundResult = true;
@@ -1129,11 +1102,7 @@ abstract class Stream<T> {
           future._complete(result);
           return;
         }
-        try {
-          throw IterableElementError.noElement();
-        } catch (e, s) {
-          future._completeError(e, s);
-        }
+        future._completeError(new StateError("single ended without match"));
       },
       cancelOnError: true);
     return future;

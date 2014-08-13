@@ -8,10 +8,9 @@ import '../closure.dart' show ClosureClassMap, ClosureScope;
 import '../dart_types.dart'
     show DartType, InterfaceType, FunctionType, TypeKind;
 import '../elements/elements.dart';
-import '../js_backend/js_backend.dart' as js;
 import '../native_handler.dart' as native;
 import '../tree/tree.dart' as ast;
-import '../cps_ir/cps_ir_nodes.dart' as cps_ir show Node;
+import '../ir/ir_nodes.dart' as ir show Node;
 import '../util/util.dart' show Link, Spannable, Setlet;
 import '../types/types.dart'
     show TypesInferrer, FlatTypeMask, TypeMask, ContainerTypeMask,
@@ -119,24 +118,18 @@ class TypeMaskSystem implements TypeSystem<TypeMask> {
   }
 
   Selector newTypedSelector(TypeMask receiver, Selector selector) {
-    return new TypedSelector(receiver, selector, compiler);
+    return new TypedSelector(receiver, selector);
   }
 
-  TypeMask addPhiInput(Local variable,
-                       TypeMask phiType,
-                       TypeMask newType) {
+  TypeMask addPhiInput(Element element, TypeMask phiType, TypeMask newType) {
     return computeLUB(phiType, newType);
   }
 
-  TypeMask allocatePhi(ast.Node node,
-                       Local variable,
-                       TypeMask inputType) {
+  TypeMask allocatePhi(ast.Node node, Element element, TypeMask inputType) {
     return inputType;
   }
 
-  TypeMask simplifyPhi(ast.Node node,
-                       Local variable,
-                       TypeMask phiType) {
+  TypeMask simplifyPhi(ast.Node node, Element element, TypeMask phiType) {
     return phiType;
   }
 
@@ -165,7 +158,7 @@ abstract class InferrerEngine<T, V extends TypeSystem>
   /**
    * Records the default type of parameter [parameter].
    */
-  void setDefaultTypeOfParameter(ParameterElement parameter, T type);
+  void setDefaultTypeOfParameter(Element parameter, T type);
 
   /**
    * Returns the type of [element].
@@ -359,13 +352,13 @@ abstract class InferrerEngine<T, V extends TypeSystem>
   }
 
   void updateSelectorInTree(
-      AstElement owner, Spannable node, Selector selector) {
-    if (node is cps_ir.Node) {
+      Element owner, Spannable node, Selector selector) {
+    if (node is ir.Node) {
       // TODO(lry): update selector for IrInvokeDynamic.
       throw "updateSelector for IR node $node";
     }
     ast.Node astNode = node;
-    TreeElements elements = owner.resolvedAst.elements;
+    var elements = compiler.enqueuer.resolution.getCachedElements(owner);
     if (astNode.asSendSet() != null) {
       if (selector.isSetter || selector.isIndexSet) {
         elements.setSelector(node, selector);
@@ -392,7 +385,7 @@ abstract class InferrerEngine<T, V extends TypeSystem>
 
   bool isNativeElement(Element element) {
     if (element.isNative) return true;
-    return element.isClassMember
+    return element.isMember
         && element.enclosingClass.isNative
         && element.isField;
   }
@@ -477,7 +470,7 @@ class SimpleTypeInferrerVisitor<T>
 
     FunctionElement function = analyzedElement;
     FunctionSignature signature = function.functionSignature;
-    signature.forEachOptionalParameter((ParameterElement element) {
+    signature.forEachOptionalParameter((element) {
       ast.Expression defaultValue = element.initializer;
       T type = (defaultValue == null) ? types.nullType : visit(defaultValue);
       inferrer.setDefaultTypeOfParameter(element, type);
@@ -491,21 +484,20 @@ class SimpleTypeInferrerVisitor<T>
 
     if (analyzedElement.isGenerativeConstructor) {
       isThisExposed = false;
-      signature.forEachParameter((ParameterElement element) {
+      signature.forEachParameter((element) {
         T parameterType = inferrer.typeOfElement(element);
-        if (element.isInitializingFormal) {
-          InitializingFormalElement initializingFormal = element;
-          if (initializingFormal.fieldElement.isFinal) {
+        if (element.kind == ElementKind.FIELD_PARAMETER) {
+          if (element.fieldElement.modifiers.isFinal) {
             inferrer.recordTypeOfFinalField(
                 node,
                 analyzedElement,
-                initializingFormal.fieldElement,
+                element.fieldElement,
                 parameterType);
           } else {
-            locals.updateField(initializingFormal.fieldElement, parameterType);
+            locals.updateField(element.fieldElement, parameterType);
             inferrer.recordTypeOfNonFinalField(
-                initializingFormal.node,
-                initializingFormal.fieldElement,
+                element.parseNode(compiler),
+                element.fieldElement,
                 parameterType);
           }
         }
@@ -539,8 +531,8 @@ class SimpleTypeInferrerVisitor<T>
       if (!isConstructorRedirect) {
         // Iterate over all instance fields, and give a null type to
         // fields that we haven't initialized for sure.
-        cls.forEachInstanceField((_, FieldElement field) {
-          if (field.isFinal) return;
+        cls.forEachInstanceField((_, field) {
+          if (field.modifiers.isFinal) return;
           T type = locals.fieldScope.readField(field);
           if (type == null && field.initializer == null) {
             inferrer.recordTypeOfNonFinalField(node, field, types.nullType);
@@ -591,7 +583,7 @@ class SimpleTypeInferrerVisitor<T>
         compiler.closureToClassMapper.getMappingForNestedFunction(node);
     nestedClosureData.forEachCapturedVariable((variable, field) {
       if (!nestedClosureData.isVariableBoxed(variable)) {
-        if (variable == nestedClosureData.thisLocal) {
+        if (variable == nestedClosureData.thisElement) {
           inferrer.recordType(field, thisType);
         }
         // The type is null for type parameters.
@@ -843,8 +835,7 @@ class SimpleTypeInferrerVisitor<T>
         handleDynamicSend(node, setterSelector, receiverType,
                           new ArgumentsTypes<T>([newType], null));
       } else if (Elements.isLocal(element)) {
-        LocalElement local = element;
-        getterType = locals.use(local);
+        getterType = locals.use(element);
         newType = handleDynamicSend(
             node, operatorSelector, getterType, operatorArguments);
         locals.update(element, newType, node);
@@ -965,10 +956,6 @@ class SimpleTypeInferrerVisitor<T>
 
   T visitStaticSend(ast.Send node) {
     Element element = elements[node];
-    if (elements.isAssert(node)) {
-      js.JavaScriptBackend backend = compiler.backend;
-      element = backend.assertMethod;
-    }
     ArgumentsTypes arguments = analyzeArguments(node.arguments);
     if (visitingInitializers) {
       if (ast.Initializers.isConstructorRedirect(node)) {
@@ -1008,7 +995,7 @@ class SimpleTypeInferrerVisitor<T>
               elementType, length));
     } else if (Elements.isConstructorOfTypedArraySubclass(element, compiler)) {
       int length = findLength(node);
-      ConstructorElement constructor = element.implementation;
+      ConstructorElement constructor = element;
       constructor = constructor.effectiveTarget;
       T elementType = inferrer.returnTypeOfElement(
           constructor.enclosingClass.lookupMember('[]'));
@@ -1080,9 +1067,8 @@ class SimpleTypeInferrerVisitor<T>
     } else if (Elements.isErroneousElement(element)) {
       return types.dynamicType;
     } else if (Elements.isLocal(element)) {
-      LocalElement local = element;
-      assert(locals.use(local) != null);
-      return locals.use(local);
+      assert(locals.use(element) != null);
+      return locals.use(element);
     } else {
       assert(element is PrefixElement);
       return null;
@@ -1116,9 +1102,6 @@ class SimpleTypeInferrerVisitor<T>
                      ArgumentsTypes arguments) {
     // Erroneous elements may be unresolved, for example missing getters.
     if (Elements.isUnresolved(element)) return types.dynamicType;
-    // TODO(herhut): should we follow redirecting constructors here? We would
-    // need to pay attention of the constructor is pointing to an erroneous
-    // element.
     return inferrer.registerCalledElement(
         node, selector, outermostElement, element, arguments,
         sideEffects, inLoop);
@@ -1205,7 +1188,7 @@ class SimpleTypeInferrerVisitor<T>
     }
 
     List<T> unnamed = <T>[];
-    signature.forEachRequiredParameter((ParameterElement element) {
+    signature.forEachRequiredParameter((Element element) {
       assert(locals.use(element) != null);
       unnamed.add(locals.use(element));
     });
@@ -1213,11 +1196,11 @@ class SimpleTypeInferrerVisitor<T>
     Map<String, T> named;
     if (signature.optionalParametersAreNamed) {
       named = new Map<String, T>();
-      signature.forEachOptionalParameter((ParameterElement element) {
+      signature.forEachOptionalParameter((Element element) {
         named[element.name] = locals.use(element);
       });
     } else {
-      signature.forEachOptionalParameter((ParameterElement element) {
+      signature.forEachOptionalParameter((Element element) {
         unnamed.add(locals.use(element));
       });
     }

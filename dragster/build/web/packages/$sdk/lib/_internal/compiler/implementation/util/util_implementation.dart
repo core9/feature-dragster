@@ -5,6 +5,5 @@
 library util_implementation;
 
 import 'util.dart';
-import 'dart:collection';
 
 part 'link_implementation.dart';

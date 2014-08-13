@@ -34,8 +34,6 @@ class PartialClassElement extends ClassElementX {
     super.resolutionState = state;
   }
 
-  bool get hasNode => cachedNode != null;
-
   ClassNode get node {
     assert(invariant(this, cachedNode != null,
         message: "Node has not been computed for $this."));
@@ -176,7 +174,6 @@ class MemberListener extends NodeListener {
   }
 
   void endFields(int count, Token beginToken, Token endToken) {
-    bool hasParseError = memberErrors.head;
     super.endFields(count, beginToken, endToken);
     VariableDefinitions variableDefinitions = popNode();
     Modifiers modifiers = variableDefinitions.modifiers;
@@ -188,8 +185,7 @@ class MemberListener extends NodeListener {
     }
     buildFieldElements(modifiers, variableDefinitions.definitions,
                        enclosingElement,
-                       buildFieldElement, beginToken, endToken,
-                       hasParseError);
+                       buildFieldElement, beginToken, endToken);
   }
 
   void endInitializer(Token assignmentOperator) {

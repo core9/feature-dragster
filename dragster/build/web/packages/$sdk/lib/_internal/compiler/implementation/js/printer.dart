@@ -15,15 +15,11 @@ class Printer implements NodeVisitor {
   final LocalNamer localNamer;
   bool pendingSemicolon = false;
   bool pendingSpace = false;
-  DumpInfoTask monitor = null;
-
   static final identifierCharacterRegExp = new RegExp(r'^[a-zA-Z_0-9$]');
   static final expressionContinuationRegExp = new RegExp(r'^[-+([]');
 
-  Printer(leg.Compiler compiler, DumpInfoTask monitor,
-          { allowVariableMinification: true })
+  Printer(leg.Compiler compiler, { allowVariableMinification: true })
       : shouldCompressOutput = compiler.enableMinification,
-        monitor = monitor,
         this.compiler = compiler,
         outBuffer = new leg.CodeBuffer(),
         danglingElseVisitor = new DanglingElseVisitor(compiler),
@@ -126,11 +122,7 @@ class Printer implements NodeVisitor {
 
   visit(Node node) {
     beginSourceRange(node);
-    if (monitor != null) monitor.enteringAst(node, outBuffer.length);
-
     node.accept(this);
-
-    if (monitor != null) monitor.exitingAst(node, outBuffer.length);
     endSourceRange(node);
   }
 
@@ -224,11 +216,9 @@ class Printer implements NodeVisitor {
     Node elsePart = node.otherwise;
     bool hasElse = node.hasElse;
 
-    // Handle dangling elses and a work-around for Android 4.0 stock browser.
-    // Android 4.0 requires braces for a single do-while in the `then` branch.
-    // See issue 10923.
+    // Handle dangling elses.
     if (hasElse) {
-      bool needsBraces = node.then.accept(danglingElseVisitor) || then is Do;
+      bool needsBraces = node.then.accept(danglingElseVisitor);
       if (needsBraces) {
         then = new Block(<Statement>[then]);
       }
@@ -823,7 +813,7 @@ class Printer implements NodeVisitor {
         forceLine();
         indent();
       }
-      visit(properties[i]);
+      visitProperty(properties[i]);
     }
     --indentLevel;
     if (!node.isOneLiner && !properties.isEmpty) {
@@ -1034,10 +1024,9 @@ class DanglingElseVisitor extends BaseVisitor<bool> {
 
 
 leg.CodeBuffer prettyPrint(Node node, leg.Compiler compiler,
-                           {DumpInfoTask monitor,
-                            allowVariableMinification: true}) {
+                           { allowVariableMinification: true }) {
   Printer printer =
-      new Printer(compiler, monitor,
+      new Printer(compiler,
                   allowVariableMinification: allowVariableMinification);
   printer.visit(node);
   return printer.outBuffer;

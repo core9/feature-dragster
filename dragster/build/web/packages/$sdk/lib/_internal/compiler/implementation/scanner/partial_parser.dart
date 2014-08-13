@@ -32,8 +32,6 @@ class PartialParser extends Parser {
       if ((identical(kind, EOF_TOKEN)) ||
           (identical(value, ';')) ||
           (identical(value, ',')) ||
-          (identical(value, '}')) ||
-          (identical(value, ')')) ||
           (identical(value, ']'))) {
         break;
       }

@@ -69,9 +69,7 @@ class FormattingDiagnosticHandler {
   bool isAborting = false;
   bool enableColors = false;
   bool throwOnError = false;
-  int throwOnErrorCount = 0;
   api.Diagnostic lastKind = null;
-  int fatalCount = 0;
 
   final int FATAL = api.Diagnostic.CRASH.ordinal | api.Diagnostic.ERROR.ordinal;
   final int INFO =
@@ -163,7 +161,7 @@ class FormattingDiagnosticHandler {
         throw '$uri: file is null';
       }
     }
-    if (fatal && ++fatalCount >= throwOnErrorCount && throwOnError) {
+    if (fatal && throwOnError) {
       isAborting = true;
       throw new AbortLeg(message);
     }

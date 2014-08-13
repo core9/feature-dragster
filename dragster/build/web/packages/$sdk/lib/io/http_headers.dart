@@ -42,31 +42,27 @@ class _HttpHeaders implements HttpHeaders {
 
   void add(String name, value) {
     _checkMutable();
-    _addAll(_validateField(name), value);
+    _addAll(name.toLowerCase(), value);
   }
 
   void _addAll(String name, value) {
-    assert(name == _validateField(name));
-    if (value is Iterable) {
-      for (var v in value) {
-        _add(name, _validateValue(v));
-      }
+    if (value is List) {
+      value.forEach((v) => _add(name, v));
     } else {
-      _add(name, _validateValue(value));
+      _add(name, value);
     }
   }
 
   void set(String name, Object value) {
     _checkMutable();
-    name = _validateField(name);
+    name = name.toLowerCase();
     _headers.remove(name);
     _addAll(name, value);
   }
 
   void remove(String name, Object value) {
     _checkMutable();
-    name = _validateField(name);
-    value = _validateValue(value);
+    name = name.toLowerCase();
     List<String> values = _headers[name];
     if (values != null) {
       int index = values.indexOf(value);
@@ -79,7 +75,7 @@ class _HttpHeaders implements HttpHeaders {
 
   void removeAll(String name) {
     _checkMutable();
-    name = _validateField(name);
+    name = name.toLowerCase();
     _headers.remove(name);
   }
 
@@ -254,7 +250,7 @@ class _HttpHeaders implements HttpHeaders {
 
   // [name] must be a lower-case version of the name.
   void _add(String name, value) {
-    assert(name == _validateField(name));
+    assert(name == name.toLowerCase());
     // Use the length as index on what method to call. This is notable
     // faster than computing hash and looking up in a hash-map.
     switch (name.length) {
@@ -403,15 +399,13 @@ class _HttpHeaders implements HttpHeaders {
     }
     if (value is DateTime) {
       values.add(HttpDate.format(value));
-    } else if (value is String) {
-      values.add(value);
     } else {
-      values.add(_validateValue(value.toString()));
+      values.add(value.toString());
     }
   }
 
   void _set(String name, String value) {
-    assert(name == _validateField(name));
+    assert(name == name.toLowerCase());
     List<String> values = new List<String>();
     _headers[name] = values;
     values.add(value);
@@ -567,27 +561,6 @@ class _HttpHeaders implements HttpHeaders {
       values.forEach((headerValue) => parseCookieString(headerValue));
     }
     return cookies;
-  }
-
-  static String _validateField(String field) {
-    for (var i = 0; i < field.length; i++) {
-      if (!_HttpParser._isTokenChar(field.codeUnitAt(i))) {
-        throw new FormatException(
-            "Invalid HTTP header field name: ${JSON.encode(field)}");
-      }
-    }
-    return field.toLowerCase();
-  }
-
-  static _validateValue(value) {
-    if (value is! String) return value;
-    for (var i = 0; i < value.length; i++) {
-      if (!_HttpParser._isValueChar(value.codeUnitAt(i))) {
-        throw new FormatException(
-            "Invalid HTTP header field value: ${JSON.encode(value)}");
-      }
-    }
-    return value;
   }
 }
 

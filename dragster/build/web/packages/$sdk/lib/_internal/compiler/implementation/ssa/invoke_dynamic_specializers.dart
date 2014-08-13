@@ -107,8 +107,7 @@ class IndexSpecializer extends InvokeDynamicSpecializer {
     }
     TypeMask receiverType =
         instruction.getDartReceiver(compiler).instructionType;
-    Selector refined = new TypedSelector(receiverType, instruction.selector,
-        compiler);
+    Selector refined = new TypedSelector(receiverType, instruction.selector);
     TypeMask type = TypeMaskFactory.inferredTypeForSelector(refined, compiler);
     return new HIndex(
         instruction.inputs[1], instruction.inputs[2],
@@ -228,13 +227,12 @@ abstract class BinaryArithmeticSpecializer extends InvokeDynamicSpecializer {
                                      Selector selector,
                                      Compiler compiler) {
     if (selector.name == name) return selector;
-    JavaScriptBackend backend = compiler.backend;
-    Selector newSelector = new Selector(
-        SelectorKind.CALL, name, backend.interceptorsLibrary,
-        selector.argumentCount);
-    return selector.mask == null
-        ? newSelector
-        : new TypedSelector(selector.mask, newSelector, compiler);
+    return new TypedSelector(
+        selector.mask,
+        new Selector(SelectorKind.CALL,
+                     name,
+                     compiler.interceptorsLibrary,
+                     selector.argumentCount));
   }
 }
 
@@ -637,7 +635,7 @@ class EqualsSpecializer extends RelationalSpecializer {
       return newBuiltinVariant(instruction, compiler);
     }
     Selector selector =
-        new TypedSelector(instructionType, instruction.selector, compiler);
+        new TypedSelector(instructionType, instruction.selector);
     World world = compiler.world;
     JavaScriptBackend backend = compiler.backend;
     Iterable<Element> matches = world.allFunctions.filter(selector);

@@ -12,7 +12,7 @@ import '../highlight_api.dart';
 import '../dragdrop_api.dart';
 import '../stage_api.dart';
 import '../select_api.dart';
-import '../db_api.dart';
+import '../database_api.dart';
 import '../utils.dart';
 
 
@@ -22,7 +22,7 @@ class MenuImpl extends Menu {
 
 
   
-  String stage = '#columns';
+  String _stageId = '#columns';
   Element _showMenuElement = document.querySelector('#show-menu');
   Element _pageSelector = document.querySelector('#page-selector');
   Element _menuSecondary = document.querySelector('#navigation-secondary');
@@ -68,19 +68,19 @@ class MenuImpl extends Menu {
   HighLight _highLight;
   Stage _stage;
   DragDrop _dragdrop;
-  DB _db;
-  Store _dbGrid;
-  Store _dbPages;
+  DataBase _db;
+  Store _dbGrid = new Store('dbGridster', 'grids');
+  Store _dbPages = new Store('dbGridster', 'pages');
   Select _select;
   
   void setSelect(Select select){
     _select = select;
   }
   
-  void setDB(DB db){
+  void setDB(DataBase db){
     _db = db;
-    _dbGrid = db.getGridDB();
-    _dbPages = db.getPagesDB();
+    //_dbGrid = new Store('dbGridster', 'grids');
+    //_dbPages = new Store('dbGridster', 'pages');
   }
   
   void setHighLight(HighLight highLight){
@@ -178,7 +178,7 @@ class MenuImpl extends Menu {
     String hash = _getState(state);
     _dbPages.open().then((_) => _dbPages.getByKey(hash)).then((value) {
       if (value != null && value != "") {
-        var innerHtml = parse(value).querySelector(stage).innerHtml;
+        var innerHtml = parse(value).querySelector(_stageId).innerHtml;
         _stage.getStage().children.clear();
         _stage.getStage().setInnerHtml(innerHtml, treeSanitizer: new NullTreeSanitizer());
         _dragdrop.initDragAndDrop(_highLight);

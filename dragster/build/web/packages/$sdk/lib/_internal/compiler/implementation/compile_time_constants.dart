@@ -105,11 +105,17 @@ abstract class ConstantCompilerBase implements ConstantCompiler {
       Constant result = initialVariableValues[element.declaration];
       return result;
     }
-    AstElement currentElement = element.analyzableElement;
+    Element currentElement = element;
+    if (element.isParameter ||
+        element.isFieldParameter ||
+        element.isVariable) {
+      currentElement = element.enclosingElement;
+    }
     return compiler.withCurrentElement(currentElement, () {
-      compiler.analyzeElement(currentElement.declaration);
+      TreeElements definitions =
+          compiler.analyzeElement(currentElement.declaration);
       Constant constant = compileVariableWithDefinitions(
-          element, currentElement.resolvedAst.elements, isConst: isConst);
+          element, definitions, isConst: isConst);
       return constant;
     });
   }
@@ -305,9 +311,48 @@ class CompileTimeConstantEvaluator extends Visitor {
       }
       map[key] = evaluateConstant(entry.value);
     }
+
+    bool onlyStringKeys = true;
+    Constant protoValue = null;
+    for (var key in keys) {
+      if (key.isString) {
+        if (key.value == MapConstant.PROTO_PROPERTY) {
+          protoValue = map[key];
+        }
+      } else {
+        onlyStringKeys = false;
+        // Don't handle __proto__ values specially in the general map case.
+        protoValue = null;
+        break;
+      }
+    }
+
+    bool hasProtoKey = (protoValue != null);
     List<Constant> values = map.values.toList();
     InterfaceType sourceType = elements.getType(node);
-    return constantSystem.createMap(compiler, sourceType, keys, values);
+    DartType keysType;
+    if (sourceType.treatAsRaw) {
+      keysType = compiler.listClass.rawType;
+    } else {
+      Link<DartType> arguments =
+          new Link<DartType>.fromList([sourceType.typeArguments.head]);
+      keysType = new InterfaceType(compiler.listClass, arguments);
+    }
+    ListConstant keysList = new ListConstant(keysType, keys);
+    String className = onlyStringKeys
+        ? (hasProtoKey ? MapConstant.DART_PROTO_CLASS
+                       : MapConstant.DART_STRING_CLASS)
+        : MapConstant.DART_GENERAL_CLASS;
+    ClassElement classElement = compiler.jsHelperLibrary.find(className);
+    classElement.ensureResolved(compiler);
+    Link<DartType> typeArgument = sourceType.typeArguments;
+    InterfaceType type;
+    if (sourceType.treatAsRaw) {
+      type = classElement.rawType;
+    } else {
+      type = new InterfaceType(classElement, typeArgument);
+    }
+    return new MapConstant(type, keysList, values, protoValue, onlyStringKeys);
   }
 
   Constant visitLiteralNull(LiteralNull node) {
@@ -359,8 +404,7 @@ class CompileTimeConstantEvaluator extends Visitor {
         new DartString.literal(node.slowNameString))];
     }
     return makeConstructedConstant(
-        node, type, compiler.symbolConstructor, createArguments,
-        isLiteralSymbol: true);
+        node, type, compiler.symbolConstructor, createArguments);
   }
 
   Constant makeTypeConstant(DartType elementType) {
@@ -584,12 +628,9 @@ class CompileTimeConstantEvaluator extends Visitor {
                                                  compileConstant,
                                                  compiler);
     if (!succeeded) {
-      String name = Elements.constructorNameForDiagnostics(
-          target.enclosingClass.name, target.name);
       compiler.reportFatalError(
           node,
-          MessageKind.INVALID_CONSTRUCTOR_ARGUMENTS,
-          {'constructorName': name});
+          MessageKind.INVALID_ARGUMENTS, {'methodName': target.name});
     }
     return compiledArguments;
   }
@@ -698,8 +739,7 @@ class CompileTimeConstantEvaluator extends Visitor {
 
   Constant makeConstructedConstant(
       Spannable node, InterfaceType type, ConstructorElement constructor,
-      List<Constant> getArguments(ConstructorElement constructor),
-      {bool isLiteralSymbol: false}) {
+      List<Constant> getArguments(ConstructorElement constructor)) {
     // The redirection chain of this element may not have been resolved through
     // a post-process action, so we have to make sure it is done here.
     compiler.resolver.resolveRedirectionChain(constructor, node);
@@ -718,8 +758,7 @@ class CompileTimeConstantEvaluator extends Visitor {
     evaluator.evaluateConstructorFieldValues(arguments);
     List<Constant> jsNewArguments = evaluator.buildJsNewArguments(classElement);
 
-    return new ConstructedConstant(constructedType, jsNewArguments,
-        isLiteralSymbol: isLiteralSymbol);
+    return new ConstructedConstant(constructedType, jsNewArguments);
   }
 
   Constant visitParenthesizedExpression(ParenthesizedExpression node) {
@@ -816,9 +855,9 @@ class ConstructorEvaluator extends CompileTimeConstantEvaluator {
       Node node = parameter.node;
       potentiallyCheckType(node, parameter, argument);
       definitions[parameter] = argument;
-      if (parameter.isInitializingFormal) {
-        InitializingFormalElement initializingFormal = parameter;
-        updateFieldValue(node, initializingFormal.fieldElement, argument);
+      if (parameter.kind == ElementKind.FIELD_PARAMETER) {
+        FieldParameterElement fieldParameterElement = parameter;
+        updateFieldValue(node, fieldParameterElement.fieldElement, argument);
       }
     });
   }

@@ -104,19 +104,23 @@ body {
 	display:none;
 }
 
+.sidemenu-position {
+	top:30px !important;
+}
+
 #menu {
-	background-color: #000;
+	background-color: rgba(0, 0, 0, 0.25);
 	width: 100%;
 	min-height: 30px;
-  box-shadow: 1px 3px 2px #888888;
-  margin-bottom: 24px;
+  _box-shadow: 1px 3px 2px #888888;
+  _margin-bottom: 24px;
 }
 
 
 #menu>ul>li {
 	position: relative;
 	display: inline-block;
-	background: #000;
+	background: rgba(0, 0, 0, 0.25);
 }
 
 #menu > a a:VISITED {
@@ -136,7 +140,7 @@ body {
 
 #menu>ul>li li {
 	display: block;
-	background: #000;
+	background: rgba(0, 0, 0, 0.25);
 	padding:5px;
 }
 
@@ -177,6 +181,7 @@ body {
 	width: 100px;
 	padding: 0px;
 	margin: 0px;
+	overflow: hidden !important;
 }
 
 
@@ -198,4 +203,97 @@ body {
 	width: 50% !important;
 	margin-left: 25% !important;
 	margin-top: 25% !important;
+}
+
+.hide-side-menu {
+	width: 20px !important;
+}
+
+.hide-inner-side-menu {
+	display: none;
+}
+
+/* File uploader */
+
+output {
+  display: block;
+}
+
+#byte-content {
+  margin: 5px 0;
+  max-height: 200px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#byte-range {
+  margin-top: 5px;
+}
+
+#drop-zone {
+  border: 2px dashed red;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  color: #bbb;
+  font-size: 20pt;
+  font-weight: bold;
+  padding: 25px;
+  text-align: center;
+  color:#fff;
+}
+
+#drop-zone.hover {
+  background-color: #def;
+  border-color: #777;
+  color: #777;
+}
+
+#progress-bar {
+  background-color: #9cf;
+  border: 1px solid #000;
+  font-size: 14px;
+  margin: 10px 0;
+  opacity: 0;
+  -webkit-transition: opacity 0.5s linear;
+  -moz-transition: opacity 0.5s linear;
+  -o-transition: opacity 0.5s linear;
+  transition: opacity 0.5s linear;
+  padding: 3px;
+}
+
+#progress-bar.loading {
+  opacity: 1.0;
+}
+
+.thumb {
+  _border: 1px solid #000;
+  _height: 75px;
+  max-width: 220px;
+  margin: 10px 5px 0 0;
+}
+
+/*scroll bar*/
+
+/* Let's get this party started */
+::-webkit-scrollbar {
+    width: 8px;
+}
+ 
+/* Track */
+::-webkit-scrollbar-track {
+    _-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
+    _-webkit-border-radius: 10px;
+    _border-radius: 10px;
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+    _-webkit-border-radius: 10px;
+    _border-radius: 10px;
+    _background: rgba(255,0,0,0.8); 
+    _-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
+}
+::-webkit-scrollbar-thumb:window-inactive {
+  _background: rgba(255,0,0,0.4); 
 }

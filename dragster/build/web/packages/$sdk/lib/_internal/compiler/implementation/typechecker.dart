@@ -89,23 +89,6 @@ class DynamicAccess implements ElementAccess {
   String toString() => 'DynamicAccess';
 }
 
-/// An access of the `assert` method.
-class AssertAccess implements ElementAccess {
-  const AssertAccess();
-
-  Element get element => null;
-
-  DartType computeType(Compiler compiler) {
-    return new FunctionType.synthesized(
-        const VoidType(),
-        <DartType>[const DynamicType()]);
-  }
-
-  bool isCallable(Compiler compiler) => true;
-
-  String toString() => 'AssertAccess';
-}
-
 /**
  * An access of a resolved top-level or static property or function, or an
  * access of a resolved element through [:this:].
@@ -123,12 +106,7 @@ class ResolvedAccess extends ElementAccess {
       return functionType.returnType;
     } else if (element.isSetter) {
       FunctionType functionType = element.computeType(compiler);
-      if (functionType.parameterTypes.length != 1) {
-        // TODO(johnniwinther,karlklose): this happens for malformed static
-        // setters. Treat them the same as instance members.
-        return const DynamicType();
-      }
-      return functionType.parameterTypes.first;
+      return functionType.parameterTypes.head;
     } else {
       return element.computeType(compiler);
     }
@@ -589,8 +567,8 @@ class TypeCheckerVisitor extends Visitor<DartType> {
       returnType = const VoidType();
 
       element.functionSignature.forEachParameter((ParameterElement parameter) {
-        if (parameter.isInitializingFormal) {
-          InitializingFormalElement fieldParameter = parameter;
+        if (parameter.isFieldParameter) {
+          FieldParameterElement fieldParameter = parameter;
           checkAssignable(parameter, parameter.type,
               fieldParameter.fieldElement.computeType(compiler));
         }
@@ -829,9 +807,8 @@ class TypeCheckerVisitor extends Visitor<DartType> {
     if (identical(unaliasedType.kind, TypeKind.FUNCTION)) {
       bool error = false;
       FunctionType funType = unaliasedType;
-      Iterator<DartType> parameterTypes = funType.parameterTypes.iterator;
-      Iterator<DartType> optionalParameterTypes =
-          funType.optionalParameterTypes.iterator;
+      Link<DartType> parameterTypes = funType.parameterTypes;
+      Link<DartType> optionalParameterTypes = funType.optionalParameterTypes;
       while (!arguments.isEmpty) {
         Node argument = arguments.head;
         NamedArgument namedArgument = argument.asNamedArgument();
@@ -857,8 +834,8 @@ class TypeCheckerVisitor extends Visitor<DartType> {
             }
           }
         } else {
-          if (!parameterTypes.moveNext()) {
-            if (!optionalParameterTypes.moveNext()) {
+          if (parameterTypes.isEmpty) {
+            if (optionalParameterTypes.isEmpty) {
               error = true;
               // TODO(johnniwinther): Provide better information on the
               // called function.
@@ -870,28 +847,28 @@ class TypeCheckerVisitor extends Visitor<DartType> {
               DartType argumentType = analyze(argument);
               if (argumentTypes != null) argumentTypes.addLast(argumentType);
               if (!checkAssignable(argument,
-                                   argumentType,
-                                   optionalParameterTypes.current)) {
+                                   argumentType, optionalParameterTypes.head)) {
                 error = true;
               }
+              optionalParameterTypes = optionalParameterTypes.tail;
             }
           } else {
             DartType argumentType = analyze(argument);
             if (argumentTypes != null) argumentTypes.addLast(argumentType);
-            if (!checkAssignable(argument, argumentType,
-                                 parameterTypes.current)) {
+            if (!checkAssignable(argument, argumentType, parameterTypes.head)) {
               error = true;
             }
+            parameterTypes = parameterTypes.tail;
           }
         }
         arguments = arguments.tail;
       }
-      if (parameterTypes.moveNext()) {
+      if (!parameterTypes.isEmpty) {
         error = true;
         // TODO(johnniwinther): Provide better information on the called
         // function.
         reportTypeWarning(send, MessageKind.MISSING_ARGUMENT,
-            {'argumentType': parameterTypes.current});
+            {'argumentType': parameterTypes.head});
       }
       if (error) {
         // TODO(johnniwinther): Improve access to declaring element and handle
@@ -995,7 +972,7 @@ class TypeCheckerVisitor extends Visitor<DartType> {
         return new TypeLiteralAccess(elements.getTypeLiteralType(node));
       }
       return createResolvedAccess(node, name, element);
-    } else if (element.isClassMember) {
+    } else if (element.isMember) {
       // foo() where foo is a member.
       return lookupMember(node, thisType, name, memberKind, null,
           lookupClassMember: element.isStatic);
@@ -1084,10 +1061,6 @@ class TypeCheckerVisitor extends Visitor<DartType> {
   }
 
   DartType visitSend(Send node) {
-    if (elements.isAssert(node)) {
-      return analyzeInvocation(node, const AssertAccess());
-    }
-
     Element element = elements[node];
 
     if (element != null && element.isConstructor) {
@@ -1262,16 +1235,17 @@ class TypeCheckerVisitor extends Visitor<DartType> {
   }
 
   /// Returns the first type in the list or [:dynamic:] if the list is empty.
-  DartType firstType(List<DartType> list) {
-    return list.isEmpty ? const DynamicType() : list.first;
+  DartType firstType(Link<DartType> link) {
+    return link.isEmpty ? const DynamicType() : link.head;
   }
 
   /**
    * Returns the second type in the list or [:dynamic:] if the list is too
    * short.
    */
-  DartType secondType(List<DartType> list) {
-    return list.length < 2 ? const DynamicType() : list[1];
+  DartType secondType(Link<DartType> link) {
+    return link.isEmpty || link.tail.isEmpty
+        ? const DynamicType() : link.tail.head;
   }
 
   /**

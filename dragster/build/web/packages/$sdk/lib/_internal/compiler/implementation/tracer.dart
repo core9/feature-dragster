@@ -8,20 +8,21 @@ import '../compiler.dart' as api;
 import 'dart:async' show EventSink;
 import 'ssa/ssa.dart' as ssa;
 import 'ssa/ssa_tracer.dart' show HTracer;
-import 'cps_ir/cps_ir_nodes.dart' as cps_ir;
-import 'cps_ir/cps_ir_tracer.dart' show IRTracer;
-import 'dart_backend/tree_ir_nodes.dart' as tree_ir;
-import 'dart_backend/tree_ir_tracer.dart' show TreeTracer;
+import 'ir/ir_nodes.dart' as ir;
+import 'ir/ir_tracer.dart' show IRTracer;
+import 'dart_backend/dart_tree.dart' as tree;
+import 'dart_backend/tree_tracer.dart' show TreeTracer;
 import 'dart2jslib.dart';
 
 /**
- * If non-null, we only trace methods whose name match the regexp defined by the
- * given pattern.
+ * Set to true to enable tracing.
  */
-const String TRACE_FILTER_PATTERN = const String.fromEnvironment("DUMP_IR");
+const bool GENERATE_TRACE = false;
 
-final RegExp TRACE_FILTER =
-    TRACE_FILTER_PATTERN == null ? null : new RegExp(TRACE_FILTER_PATTERN);
+/**
+ * If non-null, we only trace methods whose name contains the given substring.
+ */
+const String TRACE_FILTER = null;
 
 /**
  * Dumps the intermediate representation after each phase in a format
@@ -32,19 +33,20 @@ class Tracer extends TracerUtil {
   ItemCompilationContext context;
   bool traceActive = false;
   final EventSink<String> output;
-  final bool isEnabled = TRACE_FILTER != null;
+  final bool enabled = GENERATE_TRACE;
 
   Tracer(api.CompilerOutputProvider outputProvider) :
-    output = TRACE_FILTER != null ? outputProvider('dart', 'cfg') : null;
+    output = GENERATE_TRACE ? outputProvider('dart', 'cfg') : null;
 
   void traceCompilation(String methodName,
                         ItemCompilationContext compilationContext,
                         Compiler compiler) {
-    if (!isEnabled) return;
-    traceActive = TRACE_FILTER.hasMatch(methodName);
-    if (!traceActive) return;
+    if (!enabled) return;
     this.context = compilationContext;
     this.compiler = compiler;
+    traceActive =
+        TRACE_FILTER == null || methodName.contains(TRACE_FILTER);
+    if (!traceActive) return;
     tag("compilation", () {
       printProperty("name", methodName);
       printProperty("method", methodName);
@@ -57,10 +59,10 @@ class Tracer extends TracerUtil {
     if (irObject is ssa.HGraph) {
       new HTracer(output, compiler, context).traceGraph(name, irObject);
     }
-    else if (irObject is cps_ir.FunctionDefinition) {
+    else if (irObject is ir.FunctionDefinition) {
       new IRTracer(output).traceGraph(name, irObject);
     }
-    else if (irObject is tree_ir.FunctionDefinition) {
+    else if (irObject is tree.FunctionDefinition) {
       new TreeTracer(output).traceGraph(name, irObject);
     }
   }

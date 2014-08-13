@@ -54,14 +54,13 @@ abstract class Iterable<E> {
   }
 
   /**
-   * Returns a new `Iterator` that allows iterating the elements of this
-   * `Iterable`.
+   * Returns an Iterator that iterates over this Iterable object.
    */
   Iterator<E> get iterator;
 
   /**
-   * Returns a new lazy [Iterable] with elements that are created by
-   * calling `f` on the elements of this `Iterable`.
+   * Returns a lazy [Iterable] where each element [:e:] of `this` is replaced
+   * by the result of [:f(e):].
    *
    * This method returns a view of the mapped elements. As long as the
    * returned [Iterable] is not iterated over, the supplied function [f] will
@@ -72,7 +71,7 @@ abstract class Iterable<E> {
   Iterable map(f(E element));
 
   /**
-   * Returns a new lazy [Iterable] with all elements that satisfy the
+   * Returns a lazy [Iterable] with all elements that satisfy the
    * predicate [test].
    *
    * This method returns a view of the mapped elements. As long as the
@@ -97,7 +96,7 @@ abstract class Iterable<E> {
   /**
    * Returns true if the collection contains an element equal to [element].
    *
-   * The equality used to determine whether [element] is equal to an element of
+   * The equality used to determine wheter [element] is equal to an element of
    * the iterable, depends on the type of iterable.
    * For example, a [Set] may have a custom equality
    * (see, e.g., [Set.identical]) that its `contains` uses.

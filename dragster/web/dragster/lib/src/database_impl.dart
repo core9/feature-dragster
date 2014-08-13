@@ -4,10 +4,10 @@ import 'dart:js';
 import "package:json_object/json_object.dart";
 import 'package:lawndart/lawndart.dart';
 
-import '../db_api.dart';
+import '../database_api.dart';
 import 'nedb.dart';
 
-class DBImpl implements DB {
+class DBImpl implements DataBase {
   
   Store _dbPages = new Store('dbGridster', 'pages');
   

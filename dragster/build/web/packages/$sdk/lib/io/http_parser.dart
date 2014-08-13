@@ -912,13 +912,8 @@ class _HttpParser extends Stream<_HttpIncoming> {
     _index = null;
   }
 
-  static bool _isTokenChar(int byte) {
+  bool _isTokenChar(int byte) {
     return byte > 31 && byte < 128 && !_Const.SEPARATOR_MAP[byte];
-  }
-
-  static bool _isValueChar(int byte) {
-    return (byte > 31 && byte < 128) || (byte == _CharCode.SP) ||
-        (byte == _CharCode.HT);
   }
 
   static List<String> _tokenizeFieldValue(String headerValue) {

@@ -73,10 +73,9 @@ class CustomElementsAnalysis {
     joinFor(enqueuer).instantiatedClasses.add(classElement);
   }
 
-  void registerTypeLiteral(DartType type, Registry registry) {
-    assert(registry.isForResolution);
+  void registerTypeLiteral(DartType type, Enqueuer enqueuer) {
     // In codegen we see the TypeConstants instead.
-    if (!registry.isForResolution) return;
+    if (!enqueuer.isResolutionQueue) return;
 
     if (type.isInterfaceType) {
       // TODO(sra): If we had a flow query from the type literal expression to
@@ -101,7 +100,7 @@ class CustomElementsAnalysis {
     assert(element != null);
     if (!fetchedTableAccessorMethod) {
       fetchedTableAccessorMethod = true;
-      tableAccessorMethod = backend.findInterceptor(
+      tableAccessorMethod = compiler.findInterceptor(
           'findIndexForNativeSubclassType');
     }
     if (element == tableAccessorMethod) {
@@ -119,7 +118,7 @@ class CustomElementsAnalysis {
       codegenJoin.activeClasses.contains(classElement);
 
   List<Element> constructors(ClassElement classElement) =>
-      codegenJoin.computeEscapingConstructors(classElement);
+      codegenJoin.escapingConstructors(classElement);
 }
 
 
@@ -158,11 +157,7 @@ class CustomElementsAnalysisJoin {
           (isExtension &&
               (allClassesSelected || selectedClasses.contains(classElement)))) {
         newActiveClasses.add(classElement);
-        Iterable<Element> escapingConstructors =
-            computeEscapingConstructors(classElement);
-        escapingConstructors.forEach(enqueuer.registerStaticUse);
-        escapingConstructors
-            .forEach(compiler.globalDependencies.registerDependency);
+        escapingConstructors(classElement).forEach(enqueuer.registerStaticUse);
         // Force the generaton of the type constant that is the key to an entry
         // in the generated table.
         Constant constant = makeTypeConstant(classElement);
@@ -181,7 +176,7 @@ class CustomElementsAnalysisJoin {
     return new TypeConstant(elementType, constantType);
   }
 
-  List<Element> computeEscapingConstructors(ClassElement classElement) {
+  List<Element> escapingConstructors(ClassElement classElement) {
     List<Element> result = <Element>[];
     // Only classes that extend native classes have constructors in the table.
     // We could refine this to classes that extend Element, but that would break

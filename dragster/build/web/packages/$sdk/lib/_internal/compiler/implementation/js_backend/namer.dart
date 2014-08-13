@@ -277,8 +277,6 @@ class Namer implements ClosureNamer {
         constantHasher = new ConstantCanonicalHasher(compiler),
         functionTypeNamer = new FunctionTypeNamer(compiler);
 
-  JavaScriptBackend get backend => compiler.backend;
-
   String get isolateName => 'Isolate';
   String get isolatePropertiesName => r'$isolateProperties';
   /**
@@ -331,21 +329,21 @@ class Namer implements ClosureNamer {
     return longName;
   }
 
-  String breakLabelName(LabelDefinition label) {
+  String breakLabelName(LabelElement label) {
     return '\$${label.labelName}\$${label.target.nestingLevel}';
   }
 
-  String implicitBreakLabelName(JumpTarget target) {
+  String implicitBreakLabelName(TargetElement target) {
     return '\$${target.nestingLevel}';
   }
 
   // We sometimes handle continue targets differently from break targets,
   // so we have special continue-only labels.
-  String continueLabelName(LabelDefinition label) {
+  String continueLabelName(LabelElement label) {
     return 'c\$${label.labelName}\$${label.target.nestingLevel}';
   }
 
-  String implicitContinueLabelName(JumpTarget target) {
+  String implicitContinueLabelName(TargetElement target) {
     return 'c\$${target.nestingLevel}';
   }
 
@@ -359,10 +357,11 @@ class Namer implements ClosureNamer {
     if (!isPrivateName(name)) return nameString;
 
     // The first library asking for a short private name wins.
-    LibraryElement owner =
-        shortPrivateNameOwners.putIfAbsent(nameString, () => library);
+    LibraryElement owner = shouldMinify
+        ? library
+        : shortPrivateNameOwners.putIfAbsent(nameString, () => library);
 
-    if (owner == library && !nameString.contains('\$')) {
+    if (owner == library && !shouldMinify && !nameString.contains('\$')) {
       // Since the name doesn't contain $ it doesn't clash with any
       // of the private names that have the library name as the prefix.
       return nameString;
@@ -626,7 +625,7 @@ class Namer implements ClosureNamer {
       String className = element.enclosingClass.name;
       name = '${className}_${Elements.reconstructConstructorName(element)}';
     } else if (Elements.isStaticOrTopLevel(element)) {
-      if (element.isClassMember) {
+      if (element.isMember) {
         ClassElement enclosingClass = element.enclosingClass;
         name = "${enclosingClass.name}_"
                "${element.name}";
@@ -662,6 +661,7 @@ class Namer implements ClosureNamer {
   String getInterceptorSuffix(Iterable<ClassElement> classes) {
     String abbreviate(ClassElement cls) {
       if (cls == compiler.objectClass) return "o";
+      JavaScriptBackend backend = compiler.backend;
       if (cls == backend.jsStringClass) return "s";
       if (cls == backend.jsArrayClass) return "a";
       if (cls == backend.jsDoubleClass) return "d";
@@ -687,6 +687,7 @@ class Namer implements ClosureNamer {
   }
 
   String getInterceptorName(Element element, Iterable<ClassElement> classes) {
+    JavaScriptBackend backend = compiler.backend;
     if (classes.contains(backend.jsInterceptorClass)) {
       // If the base Interceptor class is in the set of intercepted classes, we
       // need to go through the generic getInterceptorMethod, since any subclass
@@ -699,6 +700,7 @@ class Namer implements ClosureNamer {
 
   String getOneShotInterceptorName(Selector selector,
                                    Iterable<ClassElement> classes) {
+    JavaScriptBackend backend = compiler.backend;
     // The one-shot name is a global name derived from the invocation name.  To
     // avoid instability we would like the names to be unique and not clash with
     // other global names.
@@ -830,7 +832,7 @@ class Namer implements ClosureNamer {
   String globalObjectFor(Element element) {
     if (isPropertyOfCurrentIsolate(element)) return currentIsolate;
     LibraryElement library = element.library;
-    if (library == backend.interceptorsLibrary) return 'J';
+    if (library == compiler.interceptorsLibrary) return 'J';
     if (library.isInternalLibrary) return 'H';
     if (library.isPlatformLibrary) {
       if ('${library.canonicalUri}' == 'dart:html') return 'W';
@@ -1125,7 +1127,7 @@ class ConstantNamingVisitor implements ConstantVisitor {
     }
   }
 
-  visitMap(JavaScriptMapConstant constant) {
+  visitMap(MapConstant constant) {
     // TODO(9476): Incorporate type parameters into name.
     addRoot('Map');
     if (constant.length == 0) {
@@ -1133,7 +1135,7 @@ class ConstantNamingVisitor implements ConstantVisitor {
     } else {
       // Using some bits from the keys hash tag groups the names Maps with the
       // same structure.
-      add(getHashTag(constant.keyList, 2) + getHashTag(constant, 3));
+      add(getHashTag(constant.keys, 2) + getHashTag(constant, 3));
     }
   }
 
@@ -1218,7 +1220,7 @@ class ConstantCanonicalHasher implements ConstantVisitor<int> {
   }
 
   int visitMap(MapConstant constant) {
-    int hash = _hashList(constant.length, constant.keys);
+    int hash = _visit(constant.keys);
     return _hashList(hash, constant.values);
   }
 
@@ -1346,32 +1348,38 @@ class FunctionTypeNamer extends DartTypeVisitor {
 
   visitFunctionType(FunctionType type, _) {
     if (backend.rti.isSimpleFunctionType(type)) {
-      sb.write('args${type.parameterTypes.length}');
+      sb.write('args${type.parameterTypes.slowLength()}');
       return;
     }
     visit(type.returnType);
     sb.write('_');
-    for (DartType parameter in type.parameterTypes) {
+    for (Link<DartType> link = type.parameterTypes;
+         !link.isEmpty;
+         link = link.tail) {
       sb.write('_');
-      visit(parameter);
+      visit(link.head);
     }
     bool first = false;
-    for (DartType parameter in  type.optionalParameterTypes) {
+    for (Link<DartType> link = type.optionalParameterTypes;
+         !link.isEmpty;
+         link = link.tail) {
       if (!first) {
         sb.write('_');
       }
       sb.write('_');
-      visit(parameter);
+      visit(link.head);
       first = true;
     }
     if (!type.namedParameterTypes.isEmpty) {
       first = false;
-      for (DartType parameter in type.namedParameterTypes) {
+      for (Link<DartType> link = type.namedParameterTypes;
+          !link.isEmpty;
+          link = link.tail) {
         if (!first) {
           sb.write('_');
         }
         sb.write('_');
-        visit(parameter);
+        visit(link.head);
         first = true;
       }
     }

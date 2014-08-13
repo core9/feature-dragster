@@ -166,26 +166,25 @@ class Dart2JsParameterMirror extends Dart2JsMemberMirror
   final bool isNamed;
 
   factory Dart2JsParameterMirror(Dart2JsDeclarationMirror owner,
-                                 FormalElement element,
+                                 ParameterElement element,
                                  {bool isOptional: false,
                                   bool isNamed: false}) {
-    if (element is InitializingFormalElement) {
+    if (element is FieldParameterElement) {
       return new Dart2JsFieldParameterMirror(
           owner, element, isOptional, isNamed);
-    } else {
-      return new Dart2JsParameterMirror._normal(
-          owner, element, isOptional, isNamed);
     }
+    return new Dart2JsParameterMirror._normal(
+        owner, element, isOptional, isNamed);
   }
 
   Dart2JsParameterMirror._normal(Dart2JsDeclarationMirror owner,
-                                 FormalElement element,
+                                 ParameterElement element,
                                  this.isOptional,
                                  this.isNamed)
     : this.owner = owner,
       super(owner.mirrorSystem, element);
 
-  FormalElement get _element => super._element;
+  ParameterElement get _element => super._element;
 
   TypeMirror get type => owner._getTypeMirror(_element.type);
 
@@ -197,23 +196,18 @@ class Dart2JsParameterMirror extends Dart2JsMemberMirror
     if (hasDefaultValue) {
       // TODO(johnniwinther): Get the constant from the [TreeElements]
       // associated with the enclosing method.
-      ParameterElement parameter = _element;
       Constant constant = mirrorSystem.compiler.constants
-          .getConstantForVariable(parameter);
-      assert(invariant(parameter, constant != null,
+          .getConstantForVariable(_element);
+      assert(invariant(_element, constant != null,
           message: "Missing constant for parameter "
-                   "$parameter with default value."));
+                   "$_element with default value."));
       return _convertConstantToInstanceMirror(mirrorSystem, constant);
     }
     return null;
   }
 
   bool get hasDefaultValue {
-    if (_element is ParameterElement) {
-      ParameterElement parameter = _element;
-      return parameter.initializer != null;
-    }
-    return false;
+    return _element.initializer != null;
   }
 
   bool get isInitializingFormal => false;
@@ -224,12 +218,12 @@ class Dart2JsParameterMirror extends Dart2JsMemberMirror
 class Dart2JsFieldParameterMirror extends Dart2JsParameterMirror {
 
   Dart2JsFieldParameterMirror(Dart2JsDeclarationMirror method,
-                              InitializingFormalElement element,
+                              FieldParameterElement element,
                               bool isOptional,
                               bool isNamed)
       : super._normal(method, element, isOptional, isNamed);
 
-  InitializingFormalElement get _fieldParameterElement => _element;
+  FieldParameterElement get _fieldParameterElement => _element;
 
   bool get isInitializingFormal => true;
 

@@ -11,10 +11,7 @@ class ElementAst {
   final Node ast;
   final TreeElements treeElements;
 
-  ElementAst(AstElement element)
-      : this.internal(element.resolvedAst.node, element.resolvedAst.elements);
-
-  ElementAst.internal(this.ast, this.treeElements);
+  ElementAst(this.ast, this.treeElements);
 }
 
 class DartBackend extends Backend {
@@ -45,7 +42,7 @@ class DartBackend extends Backend {
   /// field is set.
   Element mirrorHelperSymbolsMap;
 
-  Iterable<Element> get resolvedElements =>
+  Map<Element, TreeElements> get resolvedElements =>
       compiler.enqueuer.resolution.resolvedElements;
 
   ConstantSystem get constantSystem {
@@ -55,8 +52,6 @@ class DartBackend extends Backend {
   BackendConstantEnvironment get constants => constantCompilerTask;
 
   DartConstantTask constantCompilerTask;
-
-  DartResolutionCallbacks resolutionCallbacks;
 
   final Set<ClassElement> usedTypeLiterals = new Set<ClassElement>();
 
@@ -92,11 +87,11 @@ class DartBackend extends Backend {
       if (type is InterfaceType) {
         InterfaceType interfaceType = type;
         // Check all type arguments.
-        interfaceType.typeArguments.forEach(workQueue.add);
+        workQueue.addAll(interfaceType.typeArguments.toList());
         ClassElement element = type.element;
         // Check all supertypes.
         if (element.allSupertypes != null) {
-          element.allSupertypes.forEach(workQueue.add);
+          workQueue.addAll(element.allSupertypes.toList());
         }
       }
     }
@@ -112,9 +107,7 @@ class DartBackend extends Backend {
         forceStripTypes = strips.indexOf('types') != -1,
         stripAsserts = strips.indexOf('asserts') != -1,
         constantCompilerTask  = new DartConstantTask(compiler),
-        super(compiler) {
-    resolutionCallbacks = new DartResolutionCallbacks(this);
-  }
+        super(compiler);
 
   bool classNeedsRti(ClassElement cls) => false;
   bool methodNeedsRti(FunctionElement function) => false;
@@ -133,28 +126,23 @@ class DartBackend extends Backend {
     // Enqueue the methods that the VM might invoke on user objects because
     // we don't trust the resolution to always get these included.
     world.registerInvocation(
-        null, new Selector.call("toString", null, 0));
+        new Selector.call("toString", null, 0));
     world.registerInvokedGetter(
-        null, new Selector.getter("hashCode", null));
+        new Selector.getter("hashCode", null));
     world.registerInvocation(
-        null, new Selector.binaryOperator("=="));
+        new Selector.binaryOperator("=="));
     world.registerInvocation(
-        null, new Selector.call("compareTo", null, 1));
+        new Selector.call("compareTo", null, 1));
   }
 
   void codegen(CodegenWorkItem work) { }
 
-  bool isUserLibrary(LibraryElement lib) => !lib.isPlatformLibrary;
-
-  /**
-   * Tells whether we should output given element. Corelib classes like
-   * Object should not be in the resulting code.
-   */
-  bool shouldOutput(Element element) {
-    return (isUserLibrary(element.library) &&
-            !element.isSynthesized &&
-            element is !AbstractFieldElement)
-        || element.library == mirrorHelperLibrary;
+  bool isUserLibrary(LibraryElement lib) {
+    final INTERNAL_HELPERS = [
+      compiler.jsHelperLibrary,
+      compiler.interceptorsLibrary,
+    ];
+    return INTERNAL_HELPERS.indexOf(lib) == -1 && !lib.isPlatformLibrary;
   }
 
   void assembleProgram() {
@@ -163,13 +151,11 @@ class DartBackend extends Backend {
     // however as of today there are problems with names of some core library
     // interfaces, most probably for interfaces of literals.
     final fixedMemberNames = new Set<String>();
-    for (final library in compiler.libraryLoader.libraries) {
+    for (final library in compiler.libraries.values) {
       if (!library.isPlatformLibrary) continue;
-      library.forEachLocalMember((Element element) {
+      library.implementation.forEachLocalMember((Element element) {
         if (element.isClass) {
           ClassElement classElement = element;
-          assert(invariant(classElement, classElement.isResolved,
-              message: "Unresolved platform class."));
           classElement.forEachLocalMember((member) {
             final name = member.name;
             // Skip operator names.
@@ -200,12 +186,12 @@ class DartBackend extends Backend {
     }
     // As of now names of named optionals are not renamed. Therefore add all
     // field names used as named optionals into [fixedMemberNames].
-    for (final element in resolvedElements) {
+    for (final element in resolvedElements.keys) {
       if (!element.isConstructor) continue;
       Link<Element> optionalParameters =
-          element.functionSignature.optionalParameters;
+          element.computeSignature(compiler).optionalParameters;
       for (final optional in optionalParameters) {
-        if (!optional.isInitializingFormal) continue;
+        if (optional.kind != ElementKind.FIELD_PARAMETER) continue;
         fixedMemberNames.add(optional.name);
       }
     }
@@ -224,36 +210,38 @@ class DartBackend extends Backend {
       useMirrorHelperLibrary = false;
     }
 
+    /**
+     * Tells whether we should output given element. Corelib classes like
+     * Object should not be in the resulting code.
+     */
+    bool shouldOutput(Element element) {
+      return (isUserLibrary(element.library)
+          && !element.isSynthesized
+          && element is !AbstractFieldElement)
+          || element.library == mirrorHelperLibrary;
+    }
+
     final elementAsts = new Map<Element, ElementAst>();
 
-    ElementAst parse(AstElement element) {
+    ElementAst parse(AstElement element, TreeElements treeElements) {
+      Node node;
       if (!compiler.irBuilder.hasIr(element)) {
-        return new ElementAst(element);
+        node = element.node;
       } else {
-        cps_ir.FunctionDefinition function = compiler.irBuilder.getIr(element);
-        new cps_ir.RedundantPhiEliminator().rewrite(function);
-        compiler.tracer.traceGraph("Redundant phi elimination", function);
-        tree_builder.Builder builder = new tree_builder.Builder(compiler);
-        tree_ir.FunctionDefinition definition = builder.build(function);
+        ir.FunctionDefinition function = compiler.irBuilder.getIr(element);
+        tree.Builder builder = new tree.Builder(compiler);
+        tree.FunctionDefinition definition = builder.build(function);
         assert(definition != null);
         compiler.tracer.traceCompilation(element.name, null, compiler);
         compiler.tracer.traceGraph('Tree builder', definition);
-        TreeElementMapping treeElements = new TreeElementMapping(element);
-        new StatementRewriter().rewrite(definition);
+        treeElements = new TreeElementMapping(element);
+        new tree.StatementRewriter().rewrite(definition);
         compiler.tracer.traceGraph('Statement rewriter', definition);
-        new CopyPropagator().rewrite(definition);
-        compiler.tracer.traceGraph('Copy propagation', definition);
-        new LoopRewriter().rewrite(definition);
-        compiler.tracer.traceGraph('Loop rewriter', definition);
-        new LogicalRewriter().rewrite(definition);
+        new tree.LogicalRewriter().rewrite(definition);
         compiler.tracer.traceGraph('Logical rewriter', definition);
-        new backend_ast_emitter.UnshadowParameters().unshadow(definition);
-        compiler.tracer.traceGraph('Unshadow parameters', definition);
-        backend_ast.Node backendAst =
-            backend_ast_emitter.emit(definition);
-        Node frontend_ast = backend2frontend.emit(treeElements, backendAst);
-        return new ElementAst.internal(frontend_ast, treeElements);
+        node = dart_codegen.emit(element, treeElements, definition);
       }
+      return new ElementAst(node, treeElements);
     }
 
     Set<Element> topLevelElements = new Set<Element>();
@@ -281,13 +269,16 @@ class DartBackend extends Backend {
     }
 
     addClass(ClassElement classElement) {
-      addTopLevel(classElement, new ElementAst(classElement));
+      addTopLevel(classElement,
+                  new ElementAst(classElement.node,
+                                 classElement.treeElements));
       classMembers.putIfAbsent(classElement, () => new Set());
     }
 
     newTypedefElementCallback = (TypedefElement element) {
       if (!shouldOutput(element)) return;
-      addTopLevel(element, new ElementAst(element));
+      addTopLevel(element, new ElementAst(element.node,
+                                          element.treeElements));
     };
     newClassElementCallback = (ClassElement classElement) {
       if (!shouldOutput(classElement)) return;
@@ -298,14 +289,11 @@ class DartBackend extends Backend {
         (ClassElement classElement) {
       if (shouldOutput(classElement)) addClass(classElement);
     });
-    resolvedElements.forEach((element) {
-      if (!shouldOutput(element) ||
-          !compiler.enqueuer.resolution.hasBeenResolved(element)) {
-        return;
-      }
-      ElementAst elementAst = parse(element);
+    resolvedElements.forEach((element, treeElements) {
+      if (!shouldOutput(element) || treeElements == null) return;
+      ElementAst elementAst = parse(element, treeElements);
 
-      if (element.isClassMember) {
+      if (element.isMember) {
         ClassElement enclosingClass = element.enclosingClass;
         assert(enclosingClass.isClass);
         assert(enclosingClass.isTopLevel);
@@ -366,7 +354,7 @@ class DartBackend extends Backend {
           null, Modifiers.EMPTY, null, null);
 
       elementAsts[constructor] =
-          new ElementAst.internal(node, new TreeElementMapping(null));
+          new ElementAst(node, new TreeElementMapping(null));
     }
 
     // Create all necessary placeholders.
@@ -441,8 +429,7 @@ class DartBackend extends Backend {
       mirrorRenamer.addRenames(renames, topLevelNodes, collector);
     }
 
-    final unparser = new EmitterUnparser(renames, stripTypes: forceStripTypes,
-        minify: compiler.enableMinification);
+    final unparser = new EmitterUnparser(renames);
     emitCode(unparser, imports, topLevelNodes, memberNodes);
     String assembledCode = unparser.result;
     compiler.outputProvider('', 'dart')
@@ -457,7 +444,7 @@ class DartBackend extends Backend {
 
   void logResultBundleSizeInfo(Set<Element> topLevelElements) {
     Iterable<LibraryElement> referencedLibraries =
-        compiler.libraryLoader.libraries.where(isUserLibrary);
+        compiler.libraries.values.where(isUserLibrary);
     // Sum total size of scripts in each referenced library.
     int nonPlatformSize = 0;
     for (LibraryElement lib in referencedLibraries) {
@@ -472,25 +459,10 @@ class DartBackend extends Backend {
 
   log(String message) => compiler.log('[DartBackend] $message');
 
-  Future onLibrariesLoaded(Map<Uri, LibraryElement> loadedLibraries) {
-    // All platform classes must be resolved to ensure that their member names
-    // are preserved.
-    loadedLibraries.values.forEach((LibraryElement library) {
-      if (library.isPlatformLibrary) {
-        library.forEachLocalMember((Element element) {
-          if (element.isClass) {
-            ClassElement classElement = element;
-            classElement.ensureResolved(compiler);
-          }
-        });
-      }
-    });
-    if (useMirrorHelperLibrary &&
-        loadedLibraries.containsKey(Compiler.DART_MIRRORS)) {
-      return compiler.libraryLoader.loadLibrary(
-          compiler.translateResolvedUri(
-              loadedLibraries[Compiler.DART_MIRRORS],
-              MirrorRenamer.DART_MIRROR_HELPER, null)).
+  Future onLibraryLoaded(LibraryElement library, Uri uri) {
+    if (useMirrorHelperLibrary && library == compiler.mirrorsLibrary) {
+      return compiler.scanBuiltinLibrary(
+          MirrorRenamer.MIRROR_HELPER_LIBRARY_NAME).
           then((LibraryElement element) {
         mirrorHelperLibrary = element;
         mirrorHelperGetNameFunction = mirrorHelperLibrary.find(
@@ -500,6 +472,14 @@ class DartBackend extends Backend {
       });
     }
     return new Future.value();
+  }
+
+  void registerTypeLiteral(DartType type,
+                           Enqueuer enqueuer,
+                           Registry registry) {
+    if (type.isInterfaceType) {
+      usedTypeLiterals.add(type.element);
+    }
   }
 
   void registerStaticSend(Element element, Node node) {
@@ -523,27 +503,14 @@ class DartBackend extends Backend {
   }
 }
 
-class DartResolutionCallbacks extends ResolutionCallbacks {
-  final DartBackend backend;
-
-  DartResolutionCallbacks(this.backend);
-
-  void onTypeLiteral(DartType type, Registry registry) {
-    if (type.isInterfaceType) {
-      backend.usedTypeLiterals.add(type.element);
-    }
-  }
-}
-
 class EmitterUnparser extends Unparser {
   final Map<Node, String> renames;
 
-  EmitterUnparser(this.renames, {bool minify, bool stripTypes})
-      : super(minify: minify, stripTypes: stripTypes);
+  EmitterUnparser(this.renames);
 
   visit(Node node) {
     if (node != null && renames.containsKey(node)) {
-      write(renames[node]);
+      sb.write(renames[node]);
     } else {
       super.visit(node);
     }
@@ -557,7 +524,7 @@ class EmitterUnparser extends Unparser {
 
   unparseFunctionName(Node name) {
     if (name != null && renames.containsKey(name)) {
-      write(renames[name]);
+      sb.write(renames[name]);
     } else {
       super.unparseFunctionName(name);
     }

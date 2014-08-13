@@ -7,9 +7,6 @@ library dart2js;
 import 'dart:async';
 import 'dart:collection' show Queue;
 
-import 'dart:profiler' show
-    UserTag;
-
 import 'closure.dart' as closureMapping;
 import 'dart_backend/dart_backend.dart' as dart_backend;
 import 'dart_types.dart';
@@ -25,14 +22,11 @@ import 'elements/modelx.dart'
          DeferredLoaderGetterElementX;
 import 'helpers/helpers.dart';
 import 'js_backend/js_backend.dart' as js_backend;
-import 'library_loader.dart'
-    show LibraryLoader,
-         LibraryLoaderTask;
 import 'native_handler.dart' as native;
 import 'scanner/scannerlib.dart';
 import 'ssa/ssa.dart';
 import 'tree/tree.dart';
-import 'cps_ir/cps_ir_builder.dart' show IrBuilderTask;
+import 'ir/ir_builder.dart' show IrBuilderTask;
 import 'universe/universe.dart';
 import 'util/util.dart';
 import 'util/characters.dart' show $_;
@@ -47,8 +41,6 @@ import 'deferred_load.dart' show DeferredLoadTask, OutputUnit;
 import 'mirrors_used.dart' show MirrorUsageAnalyzerTask;
 import 'dump_info.dart';
 import 'tracer.dart' show Tracer;
-import 'cache_strategy.dart';
-import 'compilation_info.dart';
 
 export 'resolution/resolution.dart' show TreeElements, TreeElementMapping;
 export 'scanner/scannerlib.dart' show isUserDefinableOperator,
@@ -71,6 +63,7 @@ part 'constant_system.dart';
 part 'constant_system_dart.dart';
 part 'diagnostic_listener.dart';
 part 'enqueue.dart';
+part 'library_loader.dart';
 part 'resolved_visitor.dart';
 part 'script.dart';
 part 'tree_validator.dart';

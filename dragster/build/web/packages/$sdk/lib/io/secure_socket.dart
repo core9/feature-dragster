@@ -609,10 +609,6 @@ class _RawSecureSocket extends Stream<RawSocketEvent>
 
   int get remotePort => _socket.remotePort;
 
-  void set _owner(owner) {
-    (_socket as dynamic)._owner = owner;
-  }
-
   int available() {
     return _status != CONNECTED ? 0
                                 : _secureFilter.buffers[READ_PLAINTEXT].length;

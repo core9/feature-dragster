@@ -17,66 +17,6 @@ abstract class ByteBuffer {
    */
   int get lengthInBytes;
 
-  /**
-   * Creates a new [Uint8List] view of this buffer.
-   */
-  Uint8List asUint8List([int offsetInBytes = 0, int length]);
-  /**
-   * Creates a new [Int8List] view of this buffer.
-   */
-  Int8List asInt8List([int offsetInBytes = 0, int length]);
-  /**
-   * Creates a new [Uint8Clamped] view of this buffer.
-   */
-  Uint8ClampedList asUint8ClampedList([int offsetInBytes = 0, int length]);
-  /**
-   * Creates a new [Uint16List] view of this buffer.
-   */
-  Uint16List asUint16List([int offsetInBytes = 0, int length]);
-  /**
-   * Creates a new [Int16List] view of this buffer.
-   */
-  Int16List asInt16List([int offsetInBytes = 0, int length]);
-  /**
-   * Creates a new [Uint32List] view of this buffer.
-   */
-  Uint32List asUint32List([int offsetInBytes = 0, int length]);
-  /**
-   * Creates a new [Int32List] view of this buffer.
-   */
-  Int32List asInt32List([int offsetInBytes = 0, int length]);
-  /**
-   * Creates a new [Uint64List] view of this buffer.
-   */
-  Uint64List asUint64List([int offsetInBytes = 0, int length]);
-  /**
-   * Creates a new [Int64List] view of this buffer.
-   */
-  Int64List asInt64List([int offsetInBytes = 0, int length]);
-  /**
-   * Creates a new [Int32x4List] view of this buffer.
-   */
-  Int32x4List asInt32x4List([int offsetInBytes = 0, int length]);
-  /**
-   * Creates a new [Float32List] view of this buffer.
-   */
-  Float32List asFloat32List([int offsetInBytes = 0, int length]);
-  /**
-   * Creates a new [Float64List] view of this buffer.
-   */
-  Float64List asFloat64List([int offsetInBytes = 0, int length]);
-  /**
-   * Creates a new [Float32x4List] view of this buffer.
-   */
-  Float32x4List asFloat32x4List([int offsetInBytes = 0, int length]);
-  /**
-   * Creates a new [Float64x2List] view of this buffer.
-   */
-  Float64x2List asFloat64x2List([int offsetInBytes = 0, int length]);
-  /**
-   * Creates a new [ByteData] view of this buffer.
-   */
-  ByteData asByteData([int offsetInBytes = 0, int length]);
 }
 
 
@@ -162,10 +102,8 @@ abstract class ByteData implements TypedData {
    * if [offsetInBytes] + ([length] * elementSizeInBytes) is greater than
    * the length of [buffer].
    */
-  factory ByteData.view(ByteBuffer buffer,
-                        [int offsetInBytes = 0, int length]) {
-    return buffer.asByteData(offsetInBytes, length);
-  }
+  external factory ByteData.view(ByteBuffer buffer,
+                                 [int offsetInBytes = 0, int length]);
 
   /**
    * Returns the (possibly negative) integer represented by the byte at the
@@ -443,10 +381,8 @@ abstract class Int8List implements List<int>, TypedData {
    * if [offsetInBytes] + ([length] * elementSizeInBytes) is greater than
    * the length of [buffer].
    */
-  factory Int8List.view(ByteBuffer buffer,
-                        [int offsetInBytes = 0, int length]) {
-    return buffer.asInt8List(offsetInBytes, length);
-  }
+  external factory Int8List.view(ByteBuffer buffer,
+                                 [int offsetInBytes = 0, int length]);
 
   static const int BYTES_PER_ELEMENT = 1;
 }
@@ -482,10 +418,8 @@ abstract class Uint8List implements List<int>, TypedData {
    * if [offsetInBytes] + ([length] * elementSizeInBytes) is greater than
    * the length of [buffer].
    */
-  factory Uint8List.view(ByteBuffer buffer,
-                         [int offsetInBytes = 0, int length]) {
-    return buffer.asUint8List(offsetInBytes, length);
-  }
+  external factory Uint8List.view(ByteBuffer buffer,
+                                  [int offsetInBytes = 0, int length]);
 
   static const int BYTES_PER_ELEMENT = 1;
 }
@@ -522,10 +456,8 @@ abstract class Uint8ClampedList implements List<int>, TypedData {
    * if [offsetInBytes] + ([length] * elementSizeInBytes) is greater than
    * the length of [buffer].
    */
-  factory Uint8ClampedList.view(ByteBuffer buffer,
-                                [int offsetInBytes = 0, int length]) {
-    return buffer.asUint8ClampedList(offsetInBytes, length);
-  }
+  external factory Uint8ClampedList.view(ByteBuffer buffer,
+                                         [int offsetInBytes = 0, int length]);
 
   static const int BYTES_PER_ELEMENT = 1;
 }
@@ -564,10 +496,8 @@ abstract class Int16List implements List<int>, TypedData {
    * Throws [ArgumentError] if [offsetInBytes] is not a multiple of
    * [BYTES_PER_ELEMENT].
    */
-  factory Int16List.view(ByteBuffer buffer,
-                         [int offsetInBytes = 0, int length]) {
-    return buffer.asInt16List(offsetInBytes, length);
-  }
+  external factory Int16List.view(ByteBuffer buffer,
+                                  [int offsetInBytes = 0, int length]);
 
   static const int BYTES_PER_ELEMENT = 2;
 }
@@ -606,10 +536,8 @@ abstract class Uint16List implements List<int>, TypedData {
    * Throws [ArgumentError] if [offsetInBytes] is not a multiple of
    * [BYTES_PER_ELEMENT].
    */
-  factory Uint16List.view(ByteBuffer buffer,
-                          [int offsetInBytes = 0, int length]) {
-    return buffer.asUint16List(offsetInBytes, length);
-  }
+  external factory Uint16List.view(ByteBuffer buffer,
+                                   [int offsetInBytes = 0, int length]);
 
   static const int BYTES_PER_ELEMENT = 2;
 }
@@ -648,10 +576,8 @@ abstract class Int32List implements List<int>, TypedData {
    * Throws [ArgumentError] if [offsetInBytes] is not a multiple of
    * [BYTES_PER_ELEMENT].
    */
-  factory Int32List.view(ByteBuffer buffer,
-                         [int offsetInBytes = 0, int length]) {
-    return buffer.asInt32List(offsetInBytes, length);
-  }
+  external factory Int32List.view(ByteBuffer buffer,
+                                  [int offsetInBytes = 0, int length]);
 
   static const int BYTES_PER_ELEMENT = 4;
 }
@@ -690,10 +616,8 @@ abstract class Uint32List implements List<int>, TypedData {
    * Throws [ArgumentError] if [offsetInBytes] is not a multiple of
    * [BYTES_PER_ELEMENT].
    */
-  factory Uint32List.view(ByteBuffer buffer,
-                          [int offsetInBytes = 0, int length]) {
-    return buffer.asUint32List(offsetInBytes, length);
-  }
+  external factory Uint32List.view(ByteBuffer buffer,
+                                   [int offsetInBytes = 0, int length]);
 
   static const int BYTES_PER_ELEMENT = 4;
 }
@@ -732,10 +656,8 @@ abstract class Int64List implements List<int>, TypedData {
    * Throws [ArgumentError] if [offsetInBytes] is not a multiple of
    * [BYTES_PER_ELEMENT].
    */
-  factory Int64List.view(ByteBuffer buffer,
-                         [int offsetInBytes = 0, int length]) {
-    return buffer.asInt64List(offsetInBytes, length);
-  }
+  external factory Int64List.view(ByteBuffer buffer,
+                                  [int offsetInBytes = 0, int length]);
 
   static const int BYTES_PER_ELEMENT = 8;
 }
@@ -775,10 +697,8 @@ abstract class Uint64List implements List<int>, TypedData {
    * Throws [ArgumentError] if [offsetInBytes] is not a multiple of
    * [BYTES_PER_ELEMENT].
    */
-  factory Uint64List.view(ByteBuffer buffer,
-                          [int offsetInBytes = 0, int length]) {
-    return buffer.asUint64List(offsetInBytes, length);
-  }
+  external factory Uint64List.view(ByteBuffer buffer,
+                                   [int offsetInBytes = 0, int length]);
 
   static const int BYTES_PER_ELEMENT = 8;
 }
@@ -818,10 +738,8 @@ abstract class Float32List implements List<double>, TypedData {
    * Throws [ArgumentError] if [offsetInBytes] is not a multiple of
    * [BYTES_PER_ELEMENT].
    */
-  factory Float32List.view(ByteBuffer buffer,
-                           [int offsetInBytes = 0, int length]) {
-    return buffer.asFloat32List(offsetInBytes, length);
-  }
+  external factory Float32List.view(ByteBuffer buffer,
+                                    [int offsetInBytes = 0, int length]);
 
   static const int BYTES_PER_ELEMENT = 4;
 }
@@ -861,10 +779,8 @@ abstract class Float64List implements List<double>, TypedData {
    * Throws [ArgumentError] if [offsetInBytes] is not a multiple of
    * [BYTES_PER_ELEMENT].
    */
-  factory Float64List.view(ByteBuffer buffer,
-                           [int offsetInBytes = 0, int length]) {
-    return buffer.asFloat64List(offsetInBytes, length);
-  }
+  external factory Float64List.view(ByteBuffer buffer,
+                                    [int offsetInBytes = 0, int length]);
 
   static const int BYTES_PER_ELEMENT = 8;
 }
@@ -903,10 +819,8 @@ abstract class Float32x4List implements List<Float32x4>, TypedData {
    * Throws [ArgumentError] if [offsetInBytes] is not a multiple of
    * [BYTES_PER_ELEMENT].
    */
-  factory Float32x4List.view(ByteBuffer buffer,
-                             [int offsetInBytes = 0, int length]) {
-    return buffer.asFloat32x4List(offsetInBytes, length);
-  }
+  external factory Float32x4List.view(ByteBuffer buffer,
+                                      [int offsetInBytes = 0, int length]);
 
   static const int BYTES_PER_ELEMENT = 16;
 }
@@ -945,10 +859,8 @@ abstract class Int32x4List implements List<Int32x4>, TypedData {
    * Throws [ArgumentError] if [offsetInBytes] is not a multiple of
    * [BYTES_PER_ELEMENT].
    */
-  factory Int32x4List.view(ByteBuffer buffer,
-                             [int offsetInBytes = 0, int length]) {
-    return buffer.asInt32x4List(offsetInBytes, length);
-  }
+  external factory Int32x4List.view(ByteBuffer buffer,
+                                      [int offsetInBytes = 0, int length]);
 
   static const int BYTES_PER_ELEMENT = 16;
 }
@@ -987,10 +899,8 @@ abstract class Float64x2List implements List<Float64x2>, TypedData {
    * Throws [ArgumentError] if [offsetInBytes] is not a multiple of
    * [BYTES_PER_ELEMENT].
    */
-  factory Float64x2List.view(ByteBuffer buffer,
-                             [int offsetInBytes = 0, int length]) {
-    return buffer.asFloat64x2List(offsetInBytes, length);
-  }
+  external factory Float64x2List.view(ByteBuffer buffer,
+                                      [int offsetInBytes = 0, int length]);
 
   static const int BYTES_PER_ELEMENT = 16;
 }

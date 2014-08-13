@@ -17,8 +17,6 @@ class ResolutionRegistry extends Registry {
 
   ResolutionRegistry.internal(this.compiler, this.mapping);
 
-  bool get isForResolution => true;
-
   Element get currentElement => mapping.currentElement;
 
   ResolutionEnqueuer get world => compiler.enqueuer.resolution;
@@ -40,6 +38,12 @@ class ResolutionRegistry extends Registry {
   /// Register [node] as a declaration of [element].
   void defineElement(Node node, Element element) {
     mapping[node] = element;
+  }
+
+  /// Unregister the element declared by [node].
+  // TODO(johnniwinther): Try to remove this.
+  void undefineElement(Node node) {
+    mapping.remove(node);
   }
 
   /// Returns the [Element] defined by [node].
@@ -104,45 +108,52 @@ class ResolutionRegistry extends Registry {
   //////////////////////////////////////////////////////////////////////////////
 
   /// Register [node] to be the declaration of [label].
-  void defineLabel(Label node, LabelDefinition label) {
-    mapping.defineLabel(node, label);
+  void defineLabel(Label node, LabelElement label) {
+    defineElement(node, label);
   }
 
   /// Undefine the label of [node].
   /// This is used to cleanup and detect unused labels.
   void undefineLabel(Label node) {
-    mapping.undefineLabel(node);
+    undefineElement(node);
   }
 
   /// Register the target of [node] as reference to [label].
-  void useLabel(GotoStatement node, LabelDefinition label) {
-    mapping.registerTargetLabel(node, label);
+  void useLabel(GotoStatement node, LabelElement label) {
+    mapping[node.target] = label;
   }
 
   /// Register [node] to be the declaration of [target].
-  void defineTarget(Node node, JumpTarget target) {
+  void defineTarget(Node node, TargetElement target) {
     assert(invariant(node, node is Statement || node is SwitchCase,
         message: "Only statements and switch cases can define targets."));
-    mapping.defineTarget(node, target);
+    defineElement(node, target);
   }
 
-  /// Returns the [JumpTarget] defined by [node].
-  JumpTarget getTargetDefinition(Node node) {
+  /// Returns the [TargetElement] defined by [node].
+  TargetElement getTargetDefinition(Node node) {
     assert(invariant(node, node is Statement || node is SwitchCase,
         message: "Only statements and switch cases can define targets."));
-    return mapping.getTargetDefinition(node);
+    return getDefinition(node);
   }
 
   /// Undefine the target of [node]. This is used to cleanup unused targets.
   void undefineTarget(Node node) {
     assert(invariant(node, node is Statement || node is SwitchCase,
         message: "Only statements and switch cases can define targets."));
-    mapping.undefineTarget(node);
+    undefineElement(node);
   }
 
   /// Register the target of [node] to be [target].
-  void registerTargetOf(GotoStatement node, JumpTarget target) {
-    mapping.registerTargetOf(node, target);
+  void registerTargetOf(GotoStatement node, TargetElement target) {
+    mapping[node] = target;
+  }
+
+  /// Returns the target of [node].
+  // TODO(johnniwinther): Change [Node] to [GotoStatement] when we store
+  // target def and use in separate locations.
+  TargetElement getTargetOf(Node node) {
+    return mapping[node];
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -185,7 +196,7 @@ class ResolutionRegistry extends Registry {
   }
 
   void registerLazyField() {
-    backend.resolutionCallbacks.onLazyField(this);
+    backend.registerLazyField(this);
   }
 
   void registerMetadataConstant(Constant constant) {
@@ -193,28 +204,26 @@ class ResolutionRegistry extends Registry {
   }
 
   void registerThrowRuntimeError() {
-    backend.resolutionCallbacks.onThrowRuntimeError(this);
+    backend.registerThrowRuntimeError(this);
   }
 
   void registerTypeVariableBoundCheck() {
-    backend.resolutionCallbacks.onTypeVariableBoundCheck(this);
+    backend.registerTypeVariableBoundCheck(this);
   }
 
   void registerThrowNoSuchMethod() {
-    backend.resolutionCallbacks.onThrowNoSuchMethod(this);
+    backend.registerThrowNoSuchMethod(this);
   }
 
   void registerIsCheck(DartType type) {
     world.registerIsCheck(type, this);
-    backend.resolutionCallbacks.onIsCheck(type, this);
   }
 
   void registerAsCheck(DartType type) {
-    registerIsCheck(type);
-    backend.resolutionCallbacks.onAsCheck(type, this);
+    world.registerAsCheck(type, this);
   }
 
-  void registerClosure(LocalFunctionElement element) {
+  void registerClosure(Element element) {
     world.registerClosure(element, this);
   }
 
@@ -223,11 +232,11 @@ class ResolutionRegistry extends Registry {
   }
 
   void registerDynamicInvocation(Selector selector) {
-    world.registerDynamicInvocation(currentElement, selector);
+    world.registerDynamicInvocation(selector);
   }
 
   void registerSuperNoSuchMethod() {
-    backend.resolutionCallbacks.onSuperNoSuchMethod(this);
+    backend.registerSuperNoSuchMethod(this);
   }
 
   void registerClassUsingVariableExpression(ClassElement element) {
@@ -235,13 +244,12 @@ class ResolutionRegistry extends Registry {
   }
 
   void registerTypeVariableExpression() {
-    backend.resolutionCallbacks.onTypeVariableExpression(this);
+    backend.registerTypeVariableExpression(this);
   }
 
   void registerTypeLiteral(Send node, DartType type) {
     mapping.setType(node, type);
-    backend.resolutionCallbacks.onTypeLiteral(type, this);
-    world.registerInstantiatedClass(compiler.typeClass, this);
+    world.registerTypeLiteral(type, this);
   }
 
   // TODO(johnniwinther): Remove the [ResolverVisitor] dependency. Its only
@@ -255,19 +263,19 @@ class ResolutionRegistry extends Registry {
   }
 
   void registerDynamicGetter(Selector selector) {
-    world.registerDynamicGetter(currentElement, selector);
+    world.registerDynamicGetter(selector);
   }
 
   void registerDynamicSetter(Selector selector) {
-    world.registerDynamicSetter(currentElement, selector);
+    world.registerDynamicSetter(selector);
   }
 
   void registerConstSymbol(String name) {
-    backend.registerConstSymbol(name, this);
+    world.registerConstSymbol(name, this);
   }
 
   void registerSymbolConstructor() {
-    backend.resolutionCallbacks.onSymbolConstructor(this);
+    backend.registerSymbolConstructor(this);
   }
 
   void registerInstantiatedType(InterfaceType type) {
@@ -279,11 +287,11 @@ class ResolutionRegistry extends Registry {
   }
 
   void registerAbstractClassInstantiation() {
-    backend.resolutionCallbacks.onAbstractClassInstantiation(this);
+    backend.registerAbstractClassInstantiation(this);
   }
 
   void registerNewSymbol() {
-    backend.registerNewSymbol(this);
+    world.registerNewSymbol(this);
   }
 
   void registerRequiredType(DartType type, Element enclosingElement) {
@@ -291,23 +299,23 @@ class ResolutionRegistry extends Registry {
   }
 
   void registerStringInterpolation() {
-    backend.resolutionCallbacks.onStringInterpolation(this);
+    backend.registerStringInterpolation(this);
   }
 
   void registerConstantMap() {
-    backend.resolutionCallbacks.onConstantMap(this);
+    backend.registerConstantMap(this);
   }
 
   void registerFallThroughError() {
-    backend.resolutionCallbacks.onFallThroughError(this);
+    backend.registerFallThroughError(this);
   }
 
   void registerCatchStatement() {
-    backend.resolutionCallbacks.onCatchStatement(this);
+    backend.registerCatchStatement(world, this);
   }
 
   void registerStackTraceInCatch() {
-    backend.resolutionCallbacks.onStackTraceInCatch(this);
+    backend.registerStackTraceInCatch(this);
   }
 
   ClassElement defaultSuperclass(ClassElement element) {
@@ -320,7 +328,7 @@ class ResolutionRegistry extends Registry {
   }
 
   void registerThrowExpression() {
-    backend.resolutionCallbacks.onThrowExpression(this);
+    backend.registerThrowExpression(this);
   }
 
   void registerDependency(Element element) {
@@ -328,24 +336,4 @@ class ResolutionRegistry extends Registry {
   }
 
   Setlet<Element> get otherDependencies => mapping.otherDependencies;
-
-  void registerStaticInvocation(Element element) {
-    if (element == null) return;
-    world.addToWorkList(element);
-    registerDependency(element);
-  }
-
-  void registerInstantiation(ClassElement element) {
-    if (element == null) return;
-    world.registerInstantiatedClass(element, this);
-  }
-
-  void registerAssert(Send node) {
-    mapping.setAssert(node);
-    backend.resolutionCallbacks.onAssert(node, this);
-  }
-
-  bool isAssert(Send node) {
-    return mapping.isAssert(node);
-  }
 }

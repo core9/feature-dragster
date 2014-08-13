@@ -84,7 +84,7 @@ class SsaCodeGeneratorTask extends CompilerTask {
   }
 }
 
-typedef void EntityAction(Entity element);
+typedef void ElementAction(Element element);
 
 class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
   /**
@@ -114,8 +114,8 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
 
   final Set<HInstruction> generateAtUseSite;
   final Set<HInstruction> controlFlowOperators;
-  final Map<Entity, EntityAction> breakAction;
-  final Map<Entity, EntityAction> continueAction;
+  final Map<Element, ElementAction> breakAction;
+  final Map<Element, ElementAction> continueAction;
   final List<js.Parameter> parameters;
 
   js.Block currentContainer;
@@ -163,8 +163,8 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
       oldContainerStack = <js.Block>[],
       generateAtUseSite = new Set<HInstruction>(),
       controlFlowOperators = new Set<HInstruction>(),
-      breakAction = new Map<Entity, EntityAction>(),
-      continueAction = new Map<Entity, EntityAction>();
+      breakAction = new Map<Element, ElementAction>(),
+      continueAction = new Map<Element, ElementAction>();
 
   Compiler get compiler => backend.compiler;
   NativeEmitter get nativeEmitter => backend.emitter.nativeEmitter;
@@ -609,21 +609,21 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
     }
   }
 
-  void continueAsBreak(LabelDefinition target) {
+  void continueAsBreak(LabelElement target) {
     pushStatement(new js.Break(backend.namer.continueLabelName(target)));
   }
 
-  void implicitContinueAsBreak(JumpTarget target) {
+  void implicitContinueAsBreak(TargetElement target) {
     pushStatement(new js.Break(
         backend.namer.implicitContinueLabelName(target)));
   }
 
-  void implicitBreakWithLabel(JumpTarget target) {
+  void implicitBreakWithLabel(TargetElement target) {
     pushStatement(new js.Break(backend.namer.implicitBreakLabelName(target)));
   }
 
-  js.Statement wrapIntoLabels(js.Statement result, List<LabelDefinition> labels) {
-    for (LabelDefinition label in labels) {
+  js.Statement wrapIntoLabels(js.Statement result, List<LabelElement> labels) {
+    for (LabelElement label in labels) {
       if (label.isTarget) {
         String breakLabelString = backend.namer.breakLabelName(label);
         result = new js.LabeledStatement(breakLabelString, result);
@@ -772,18 +772,7 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
             initialization = null;
           }
         }
-
-        // We inserted a basic block to avoid critical edges. This block is
-        // part of the LoopBlockInformation and must therefore be handled here.
-        js.Block oldContainer = currentContainer;
-        js.Block avoidContainer = new js.Block.empty();
-        currentContainer = avoidContainer;
-        assignPhisOfSuccessors(condition.end.successors.last);
-        bool hasPhiUpdates = !avoidContainer.statements.isEmpty;
-        currentContainer = oldContainer;
-
         if (isConditionExpression &&
-            !hasPhiUpdates &&
             info.updates != null && isJSExpression(info.updates)) {
           // If we have an updates graph, and it's expressible as an
           // expression, generate a for-loop.
@@ -839,7 +828,7 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
           // subgraph.
           // TODO(lrn): Remove this extra labeling when handling all loops
           // using subgraphs.
-          oldContainer = currentContainer;
+          js.Block oldContainer = currentContainer;
           js.Statement body = new js.Block.empty();
           currentContainer = body;
           visitBodyIgnoreLabels(info);
@@ -855,7 +844,7 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
           js.Expression jsCondition;
           js.Block oldContainer = currentContainer;
           js.Statement body = new js.Block.empty();
-          if (isConditionExpression && !hasPhiUpdates) {
+          if (isConditionExpression) {
             jsCondition = generateExpression(condition);
             currentContainer = body;
           } else {
@@ -864,15 +853,8 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
             generateStatements(condition);
             use(condition.conditionExpression);
             js.Expression ifTest = new js.Prefix("!", pop());
-            js.Statement jsBreak = new js.Break(null);
-            js.Statement exitLoop;
-            if (avoidContainer.statements.isEmpty) {
-              exitLoop = jsBreak;
-            } else {
-              avoidContainer.statements.add(jsBreak);
-              exitLoop = avoidContainer;
-            }
-            pushStatement(new js.If.noElse(ifTest, exitLoop));
+            js.Break jsBreak = new js.Break(null);
+            pushStatement(new js.If.noElse(ifTest, jsBreak));
           }
           if (info.updates != null) {
             wrapLoopBodyForContinue(info);
@@ -889,17 +871,7 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
         if (info.initializer != null) {
           generateStatements(info.initializer);
         }
-        // We inserted a basic block to avoid critical edges. This block is
-        // part of the LoopBlockInformation and must therefore be handled here.
         js.Block oldContainer = currentContainer;
-        js.Block exitAvoidContainer = new js.Block.empty();
-        currentContainer = exitAvoidContainer;
-        assignPhisOfSuccessors(condition.end.successors.last);
-        bool hasExitPhiUpdates = !exitAvoidContainer.statements.isEmpty;
-        currentContainer = oldContainer;
-
-
-        oldContainer = currentContainer;
         js.Block body = new js.Block.empty();
         // If there are phi copies in the block that jumps to the
         // loop entry, we must emit the condition like this:
@@ -935,18 +907,10 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
           // at the end of the loop anyway.
           loop = new js.While(newLiteralBool(true), unwrapStatement(body));
         } else {
-          if (hasPhiUpdates || hasExitPhiUpdates) {
+          if (hasPhiUpdates) {
             updateBody.statements.add(new js.Continue(null));
-            js.Statement jsBreak = new js.Break(null);
-            js.Statement exitLoop;
-            if (exitAvoidContainer.statements.isEmpty) {
-              exitLoop = jsBreak;
-            } else {
-              exitAvoidContainer.statements.add(jsBreak);
-              exitLoop = exitAvoidContainer;
-            }
             body.statements.add(
-                new js.If(jsCondition, updateBody, exitLoop));
+                new js.If(jsCondition, updateBody, new js.Break(null)));
             jsCondition = newLiteralBool(true);
           }
           loop = new js.Do(unwrapStatement(body), jsCondition);
@@ -969,7 +933,7 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
   }
 
   bool visitLabeledBlockInfo(HLabeledBlockInformation labeledBlockInfo) {
-    Link<Entity> continueOverrides = const Link<Entity>();
+    Link<Element> continueOverrides = const Link<Element>();
 
     js.Block oldContainer = currentContainer;
     js.Block body = new js.Block.empty();
@@ -982,7 +946,7 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
     // continues of the loop can be written as breaks of the body
     // block.
     if (labeledBlockInfo.isContinue) {
-      for (LabelDefinition label in labeledBlockInfo.labels) {
+      for (LabelElement label in labeledBlockInfo.labels) {
         if (label.isContinueTarget) {
           String labelName = backend.namer.continueLabelName(label);
           result = new js.LabeledStatement(labelName, result);
@@ -993,20 +957,20 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
       // For handling unlabeled continues from the body of a loop.
       // TODO(lrn): Consider recording whether the target is in fact
       // a target of an unlabeled continue, and not generate this if it isn't.
-      JumpTarget target = labeledBlockInfo.target;
+      TargetElement target = labeledBlockInfo.target;
       String labelName = backend.namer.implicitContinueLabelName(target);
       result = new js.LabeledStatement(labelName, result);
       continueAction[target] = implicitContinueAsBreak;
       continueOverrides = continueOverrides.prepend(target);
     } else {
-      for (LabelDefinition label in labeledBlockInfo.labels) {
+      for (LabelElement label in labeledBlockInfo.labels) {
         if (label.isBreakTarget) {
           String labelName = backend.namer.breakLabelName(label);
           result = new js.LabeledStatement(labelName, result);
         }
       }
     }
-    JumpTarget target = labeledBlockInfo.target;
+    TargetElement target = labeledBlockInfo.target;
     if (target.isSwitch) {
       // This is an extra block around a switch that is generated
       // as a nested if/else chain. We add an extra break target
@@ -1036,13 +1000,13 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
   // Wraps a loop body in a block to make continues have a target to break
   // to (if necessary).
   void wrapLoopBodyForContinue(HLoopBlockInformation info) {
-    JumpTarget target = info.target;
+    TargetElement target = info.target;
     if (target != null && target.isContinueTarget) {
       js.Block oldContainer = currentContainer;
       js.Block body = new js.Block.empty();
       currentContainer = body;
       js.Statement result = body;
-      for (LabelDefinition label in info.labels) {
+      for (LabelElement label in info.labels) {
         if (label.isContinueTarget) {
           String labelName = backend.namer.continueLabelName(label);
           result = new js.LabeledStatement(labelName, result);
@@ -1054,7 +1018,7 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
       continueAction[info.target] = implicitContinueAsBreak;
       visitBodyIgnoreLabels(info);
       continueAction.remove(info.target);
-      for (LabelDefinition label in info.labels) {
+      for (LabelElement label in info.labels) {
         if (label.isContinueTarget) {
           continueAction.remove(label);
         }
@@ -1355,26 +1319,26 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
   }
 
   /**
-   * Checks if [map] contains an [EntityAction] for [entity], and
+   * Checks if [map] contains an [ElementAction] for [element], and
    * if so calls that action and returns true.
    * Otherwise returns false.
    */
-  bool tryCallAction(Map<Entity, EntityAction> map, Entity entity) {
-    EntityAction action = map[entity];
+  bool tryCallAction(Map<Element, ElementAction> map, Element element) {
+    ElementAction action = map[element];
     if (action == null) return false;
-    action(entity);
+    action(element);
     return true;
   }
 
   visitBreak(HBreak node) {
     assert(node.block.successors.length == 1);
     if (node.label != null) {
-      LabelDefinition label = node.label;
+      LabelElement label = node.label;
       if (!tryCallAction(breakAction, label)) {
         pushStatement(new js.Break(backend.namer.breakLabelName(label)), node);
       }
     } else {
-      JumpTarget target = node.target;
+      TargetElement target = node.target;
       if (!tryCallAction(breakAction, target)) {
         if (node.breakSwitchContinueLoop) {
           pushStatement(new js.Break(
@@ -1389,14 +1353,14 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
   visitContinue(HContinue node) {
     assert(node.block.successors.length == 1);
     if (node.label != null) {
-      LabelDefinition label = node.label;
+      LabelElement label = node.label;
       if (!tryCallAction(continueAction, label)) {
         // TODO(floitsch): should this really be the breakLabelName?
         pushStatement(new js.Continue(backend.namer.breakLabelName(label)),
                       node);
       }
     } else {
-      JumpTarget target = node.target;
+      TargetElement target = node.target;
       if (!tryCallAction(continueAction, target)) {
         if (target.statement is ast.SwitchStatement) {
           pushStatement(new js.Continue(
@@ -1503,7 +1467,7 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
     String name = backend.namer.getInterceptorName(
         backend.getInterceptorMethod, node.interceptedClasses);
     var isolate = new js.VariableUse(
-        backend.namer.globalObjectFor(backend.interceptorsLibrary));
+        backend.namer.globalObjectFor(compiler.interceptorsLibrary));
     use(node.receiver);
     List<js.Expression> arguments = <js.Expression>[pop()];
     push(jsPropertyCall(isolate, name, arguments), node);
@@ -1556,7 +1520,7 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
   void visitOneShotInterceptor(HOneShotInterceptor node) {
     List<js.Expression> arguments = visitArguments(node.inputs);
     var isolate = new js.VariableUse(
-        backend.namer.globalObjectFor(backend.interceptorsLibrary));
+        backend.namer.globalObjectFor(compiler.interceptorsLibrary));
     Selector selector = getOptimizedSelectorFor(node, node.selector);
     String methodName = backend.registerOneShotInterceptor(selector);
     push(jsPropertyCall(isolate, methodName, arguments), node);
@@ -1578,7 +1542,7 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
       // invoke dynamic knows more than the receiver.
       ClassElement enclosing = node.element.enclosingClass;
       TypeMask receiverType = new TypeMask.nonNullExact(enclosing.declaration);
-      return new TypedSelector(receiverType, selector, compiler);
+      return new TypedSelector(receiverType, selector);
     }
     // If [JSInvocationMirror._invokeOn] is enabled, and this call
     // might hit a `noSuchMethod`, we register an untyped selector.
@@ -1676,7 +1640,7 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
         // [world]. The emitter needs to know if it needs to emit a
         // bound closure for a method.
         TypeMask receiverType = new TypeMask.nonNullExact(superClass);
-        selector = new TypedSelector(receiverType, selector, compiler);
+        selector = new TypedSelector(receiverType, selector);
         // TODO(floitsch): we know the target. We shouldn't register a
         // dynamic getter.
         registry.registerDynamicGetter(selector);
@@ -2018,7 +1982,7 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
   }
 
   void generateThrowWithHelper(String helperName, argument) {
-    Element helper = backend.findHelper(helperName);
+    Element helper = compiler.findHelper(helperName);
     registry.registerStaticUse(helper);
     js.Expression jsHelper = backend.namer.elementAccess(helper);
     List arguments = [];
@@ -2050,7 +2014,7 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
     HInstruction argument = node.inputs[0];
     use(argument);
 
-    Element helper = backend.findHelper("throwExpression");
+    Element helper = compiler.findHelper("throwExpression");
     registry.registerStaticUse(helper);
 
     js.Expression jsHelper = backend.namer.elementAccess(helper);
@@ -2661,7 +2625,7 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
 
   void visitReadTypeVariable(HReadTypeVariable node) {
     TypeVariableElement element = node.dartType.element;
-    Element helperElement = backend.findHelper('convertRtiToRuntimeType');
+    Element helperElement = compiler.findHelper('convertRtiToRuntimeType');
     registry.registerStaticUse(helperElement);
 
     use(node.inputs[0]);
@@ -2680,7 +2644,7 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
     } else {
       push(js.js('#(#)', [
           backend.namer.elementAccess(
-              backend.findHelper('convertRtiToRuntimeType')),
+              compiler.findHelper('convertRtiToRuntimeType')),
           pop()]));
     }
   }
@@ -2709,7 +2673,7 @@ class SsaCodeGenerator implements HVisitor, HBlockInformationVisitor {
   }
 
   js.PropertyAccess accessHelper(String name) {
-    Element helper = backend.findHelper(name);
+    Element helper = compiler.findHelper(name);
     if (helper == null) {
       // For mocked-up tests.
       return js.js('(void 0).$name');

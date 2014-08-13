@@ -112,8 +112,10 @@ abstract class Dart2JsGenericTypeMirror extends Dart2JsTypeElementMirror {
     if (_typeArguments == null) {
       _typeArguments = <TypeMirror>[];
       if (!_type.isRaw) {
-        for (DartType type in _type.typeArguments) {
-          _typeArguments.add(_getTypeMirror(type));
+        Link<DartType> type = _type.typeArguments;
+        while (type != null && type.head != null) {
+          _typeArguments.add(_getTypeMirror(type.head));
+          type = type.tail;
         }
       }
     }
@@ -155,20 +157,20 @@ abstract class Dart2JsGenericTypeMirror extends Dart2JsTypeElementMirror {
                               'with ${newTypeArguments.length} arguments, '
                               'expect ${typeVariables.length} arguments.');
     }
-    List<DartType> builder = <DartType>[];
+    LinkBuilder<DartType> builder = new LinkBuilder<DartType>();
     for (TypeSourceMirror newTypeArgument in newTypeArguments) {
       if (newTypeArgument.isVoid) {
         throw new ArgumentError('Cannot use void as type argument.');
       }
       if (newTypeArgument is Dart2JsTypeMirror) {
-        builder.add(newTypeArgument._type);
+        builder.addLast(newTypeArgument._type);
       } else {
         throw new UnsupportedError(
             'Cannot create instantiation using a type '
             'mirror from a different mirrorSystem implementation.');
       }
     }
-    return owner._getTypeMirror(_type.createInstantiation(builder));
+    return owner._getTypeMirror(_type.createInstantiation(builder.toLink()));
   }
 }
 
@@ -330,7 +332,7 @@ class Dart2JsTypeVariableMirror extends Dart2JsTypeElementMirror
   Dart2JsDeclarationMirror get owner {
     if (_owner == null) {
       _owner = mirrorSystem._getTypeDeclarationMirror(
-          _type.element.typeDeclaration);
+          _type.element.enclosingElement);
     }
     return _owner;
   }

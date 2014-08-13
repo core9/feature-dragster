@@ -20,6 +20,5 @@ void emitCode(
     } else {
       unparser.unparse(node);
     }
-    unparser.newline();
   }
 }

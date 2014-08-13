@@ -4,7 +4,6 @@
 
 // Patch file for the dart:isolate library.
 
-import 'dart:_js_helper' show patch;
 import 'dart:_isolate_helper' show CapabilityImpl,
                                    CloseToken,
                                    IsolateNatives,
@@ -12,10 +11,8 @@ import 'dart:_isolate_helper' show CapabilityImpl,
                                    ReceivePortImpl,
                                    RawReceivePortImpl;
 
-@patch
-class Isolate {
-  @patch
-  static Future<Isolate> spawn(void entryPoint(message), var message,
+patch class Isolate {
+  patch static Future<Isolate> spawn(void entryPoint(message), var message,
                                      { bool paused: false }) {
     try {
       return IsolateNatives.spawnFunction(entryPoint, message, paused)
@@ -27,8 +24,7 @@ class Isolate {
     }
   }
 
-  @patch
-  static Future<Isolate> spawnUri(
+  patch static Future<Isolate> spawnUri(
       Uri uri, List<String> args, var message, { bool paused: false }) {
     try {
       if (args is List<String>) {
@@ -49,8 +45,7 @@ class Isolate {
     }
   }
 
-  @patch
-  void _pause(Capability resumeCapability) {
+  patch void _pause(Capability resumeCapability) {
     var message = new List(3)
         ..[0] = "pause"
         ..[1] = pauseCapability
@@ -58,16 +53,14 @@ class Isolate {
     controlPort.send(message);
   }
 
-  @patch
-  void resume(Capability resumeCapability) {
+  patch void resume(Capability resumeCapability) {
     var message = new List(2)
         ..[0] = "resume"
         ..[1] = resumeCapability;
     controlPort.send(message);
   }
 
-  @patch
-  void addOnExitListener(SendPort responsePort) {
+  patch void addOnExitListener(SendPort responsePort) {
     // TODO(lrn): Can we have an internal method that checks if the receiving
     // isolate of a SendPort is still alive?
     var message = new List(2)
@@ -76,16 +69,14 @@ class Isolate {
     controlPort.send(message);
   }
 
-  @patch
-  void removeOnExitListener(SendPort responsePort) {
+  patch void removeOnExitListener(SendPort responsePort) {
     var message = new List(2)
         ..[0] = "remove-ondone"
         ..[1] = responsePort;
     controlPort.send(message);
   }
 
-  @patch
-  void setErrorsFatal(bool errorsAreFatal) {
+  patch void setErrorsFatal(bool errorsAreFatal) {
     var message = new List(3)
         ..[0] = "set-errors-fatal"
         ..[1] = terminateCapability
@@ -93,13 +84,11 @@ class Isolate {
     controlPort.send(message);
   }
 
-  @patch
-  void kill([int priority = BEFORE_NEXT_EVENT]) {
+  patch void kill([int priority = BEFORE_NEXT_EVENT]) {
     controlPort.send(["kill", terminateCapability, priority]);
   }
 
-  @patch
-  void ping(SendPort responsePort, [int pingType = IMMEDIATE]) {
+  patch void ping(SendPort responsePort, [int pingType = IMMEDIATE]) {
     var message = new List(3)
         ..[0] = "ping"
         ..[1] = responsePort
@@ -107,16 +96,14 @@ class Isolate {
     controlPort.send(message);
   }
 
-  @patch
-  void addErrorListener(SendPort port) {
+  patch void addErrorListener(SendPort port) {
     var message = new List(2)
         ..[0] = "getErrors"
         ..[1] = port;
     controlPort.send(message);
   }
 
-  @patch
-  void removeErrorListener(SendPort port) {
+  patch void removeErrorListener(SendPort port) {
     var message = new List(2)
         ..[0] = "stopErrors"
         ..[1] = port;
@@ -125,27 +112,20 @@ class Isolate {
 }
 
 /** Default factory for receive ports. */
-@patch
-class ReceivePort {
-  @patch
-  factory ReceivePort() = ReceivePortImpl;
+patch class ReceivePort {
+  patch factory ReceivePort() = ReceivePortImpl;
 
-  @patch
-  factory ReceivePort.fromRawReceivePort(RawReceivePort rawPort) {
+  patch factory ReceivePort.fromRawReceivePort(RawReceivePort rawPort) {
     return new ReceivePortImpl.fromRawReceivePort(rawPort);
   }
 }
 
-@patch
-class RawReceivePort {
-  @patch
-  factory RawReceivePort([void handler(event)]) {
+patch class RawReceivePort {
+  patch factory RawReceivePort([void handler(event)]) {
     return new RawReceivePortImpl(handler);
   }
 }
 
-@patch
-class Capability {
-  @patch
-  factory Capability() = CapabilityImpl;
+patch class Capability {
+  patch factory Capability() = CapabilityImpl;
 }

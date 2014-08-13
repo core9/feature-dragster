@@ -329,8 +329,7 @@ class SsaInstructionSimplifier extends HBaseVisitor
     }
 
     TypeMask receiverType = node.getDartReceiver(compiler).instructionType;
-    Selector selector = new TypedSelector(receiverType, node.selector,
-        compiler);
+    Selector selector = new TypedSelector(receiverType, node.selector);
     Element element = compiler.world.locateSingleElement(selector);
     // TODO(ngeoffray): Also fold if it's a getter or variable.
     if (element != null
@@ -678,7 +677,7 @@ class SsaInstructionSimplifier extends HBaseVisitor
                                                     Selector selector) {
     TypeMask receiverType = receiver.instructionType;
     return compiler.world.locateSingleField(
-        new TypedSelector(receiverType, selector, compiler));
+        new TypedSelector(receiverType, selector));
   }
 
   HInstruction visitFieldGet(HFieldGet node) {

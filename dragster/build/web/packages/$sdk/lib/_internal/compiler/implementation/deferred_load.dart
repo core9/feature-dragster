@@ -31,9 +31,9 @@ import 'elements/elements.dart' show
     MetadataAnnotation,
     ScopeContainerElement,
     PrefixElement,
+    ClosureContainer,
     VoidElement,
-    TypedefElement,
-    AstElement;
+    TypedefElement;
 
 import 'util/util.dart' show
     Link;
@@ -55,8 +55,6 @@ import 'tree/tree.dart' as ast;
 import 'resolution/resolution.dart' show
     TreeElements,
     AnalyzableElementX;
-
-import "dart:math" show min;
 
 /// A "hunk" of the program that will be loaded whenever one of its [imports]
 /// are loaded.
@@ -175,15 +173,6 @@ class DeferredLoadTask extends CompilerTask {
 
     element = element.implementation;
     while (!_elementToOutputUnit.containsKey(element)) {
-      // Hack: it looks like we output annotation constants for classes that we
-      // don't include in the output. This seems to happen when we have
-      // reflection but can see that some classes are not needed. We still add
-      // the annotation but don't run through it below (where we assign every
-      // element to its output unit).
-      if (element.enclosingElement == null) {
-        _elementToOutputUnit[element] = mainOutputUnit;
-        break;
-      }
       element = element.enclosingElement.implementation;
     }
     return _elementToOutputUnit[element];
@@ -289,7 +278,7 @@ class DeferredLoadTask extends CompilerTask {
 
   /// Returns a [Link] of every [Import] that imports [element] into [library].
   Link<Import> _getImports(Element element, LibraryElement library) {
-    if (element.isClassMember) {
+    if (element.isMember) {
       element = element.enclosingClass;
     }
     if (element.isAccessor) {
@@ -305,8 +294,7 @@ class DeferredLoadTask extends CompilerTask {
   void _collectAllElementsAndConstantsResolvedFrom(
       Element element,
       Set<Element> elements,
-      Set<Constant> constants,
-      isMirrorUsage) {
+      Set<Constant> constants) {
 
     /// Recursively add the constant and its dependencies to [constants].
     void addConstants(Constant constant) {
@@ -323,25 +311,18 @@ class DeferredLoadTask extends CompilerTask {
     /// The collected dependent elements and constants are are added to
     /// [elements] and [constants] respectively.
     void collectDependencies(Element element) {
-      // TODO(johnniwinther): Remove this when [AbstractFieldElement] has been
-      // removed.
-      if (element is! AstElement) return;
-      AstElement astElement = element;
+      TreeElements treeElements = element is TypedefElement
+          ? element.treeElements
+          : compiler.enqueuer.resolution.getCachedElements(element);
 
       // TODO(sigurdm): We want to be more specific about this - need a better
       // way to query "liveness".
-      if (astElement is! TypedefElement &&
-          !compiler.enqueuer.resolution.hasBeenResolved(astElement)) {
-        return;
-      }
-
-      TreeElements treeElements = astElement.resolvedAst.elements;
-
-      assert(treeElements != null);
+      if (treeElements == null) return;
 
       for (Element dependency in treeElements.allElements) {
         if (Elements.isLocal(dependency) && !dependency.isFunction) continue;
         if (dependency.isErroneous) continue;
+        if (dependency.isStatement) continue;
         if (dependency.isTypeVariable) continue;
 
         elements.add(dependency);
@@ -363,11 +344,10 @@ class DeferredLoadTask extends CompilerTask {
     }
     if (element.isClass) {
       // If we see a class, add everything its live instance members refer
-      // to.  Static members are not relevant, unless we are processing
-      // extra dependencies due to mirrors.
+      // to.  Static members are not relevant.
       void addLiveInstanceMember(Element element) {
         if (!compiler.enqueuer.resolution.isLive(element)) return;
-        if (!isMirrorUsage && !element.isInstanceMember) return;
+        if (!element.isInstanceMember) return;
         collectDependencies(element.implementation);
       }
       ClassElement cls = element.declaration;
@@ -391,7 +371,7 @@ class DeferredLoadTask extends CompilerTask {
       ClassElement implementation =
           element.enclosingClass.implementation;
       _collectAllElementsAndConstantsResolvedFrom(
-          implementation, elements, constants, isMirrorUsage);
+          implementation, elements, constants);
     }
 
     // Other elements, in particular instance members, are ignored as
@@ -434,16 +414,13 @@ class DeferredLoadTask extends CompilerTask {
   /// Recursively traverses the graph of dependencies from [element], mapping
   /// deferred imports to each dependency it needs in the sets
   /// [_importedDeferredBy] and [_constantsDeferredBy].
-  void _mapDependencies(Element element, Import import,
-                        {isMirrorUsage: false}) {
+  void _mapDependencies(Element element, Import import) {
     Set<Element> elements = _importedDeferredBy.putIfAbsent(import,
         () => new Set<Element>());
     Set<Constant> constants = _constantsDeferredBy.putIfAbsent(import,
         () => new Set<Constant>());
 
-    // Only process elements once, unless we are doing dependencies due to
-    // mirrors, which are added in additional traversals.
-    if (!isMirrorUsage && elements.contains(element)) return;
+    if (elements.contains(element)) return;
     // Anything used directly by main will be loaded from the start
     // We do not need to traverse it again.
     if (import != _fakeMainImport && _mainElements.contains(element)) return;
@@ -455,7 +432,7 @@ class DeferredLoadTask extends CompilerTask {
 
     // This call can modify [_importedDeferredBy] and [_constantsDeferredBy].
     _collectAllElementsAndConstantsResolvedFrom(
-        element, dependentElements, constants, isMirrorUsage);
+        element, dependentElements, constants);
 
     LibraryElement library = element.library;
     for (Element dependency in dependentElements) {
@@ -480,8 +457,8 @@ class DeferredLoadTask extends CompilerTask {
       // asked isNeededForReflection. Instead an internal error is triggered.
       // So we have to filter them out here.
       if (element is AnalyzableElementX && !element.hasTreeElements) return;
-      if (compiler.backend.isAccessibleByReflection(element)) {
-        _mapDependencies(element, deferredImport, isMirrorUsage: true);
+      if (compiler.backend.isNeededForReflection(element)) {
+        _mapDependencies(element, deferredImport);
       }
     }
 
@@ -573,21 +550,9 @@ class DeferredLoadTask extends CompilerTask {
 
     void computeOutputUnitName(OutputUnit outputUnit) {
       if (generatedNames[outputUnit] != null) return;
-      Iterable<String> importNames = outputUnit.imports.map((import) {
+      String suggestedName = outputUnit.imports.map((import) {
         return importDeferName[import];
-      });
-      String suggestedName = importNames.join('_');
-      // Avoid the name getting too long.
-      // Try to abbreviate the prefix-names
-      if (suggestedName.length > 15) {
-        suggestedName = importNames.map((name) {
-          return name.substring(0, min(2, name.length));
-        }).join('_');
-      }
-      // If this is still too long, truncate the whole name.
-      if (suggestedName.length > 15) {
-        suggestedName = suggestedName.substring(0, 15);
-      }
+      }).join('_');
       outputUnit.name = makeUnique(suggestedName, usedOutputUnitNames);
       generatedNames[outputUnit] = outputUnit.name;
     }
@@ -694,7 +659,6 @@ class DeferredLoadTask extends CompilerTask {
   }
 
   void ensureMetadataResolved(Compiler compiler) {
-    if (compiler.mainApp == null) return;
     _allDeferredImports[_fakeMainImport] = compiler.mainApp;
     var lastDeferred;
     // When detecting duplicate prefixes of deferred libraries there are 4
@@ -717,7 +681,7 @@ class DeferredLoadTask extends CompilerTask {
     Setlet<String> usedPrefixes = new Setlet<String>();
     // The last deferred import we saw with a given prefix (if any).
     Map<String, Import> prefixDeferredImport = new Map<String, Import>();
-    for (LibraryElement library in compiler.libraryLoader.libraries) {
+    for (LibraryElement library in compiler.libraries.values) {
       compiler.withCurrentElement(library, () {
         prefixDeferredImport.clear();
         usedPrefixes.clear();
@@ -763,7 +727,8 @@ class DeferredLoadTask extends CompilerTask {
     }
     if (splitProgram && backend is DartBackend) {
       // TODO(sigurdm): Implement deferred loading for dart2dart.
-      compiler.reportFatalError(
+      splitProgram = false;
+      compiler.reportInfo(
           lastDeferred,
           MessageKind.DEFERRED_LIBRARY_DART_2_DART);
     }
