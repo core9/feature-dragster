@@ -8,6 +8,7 @@ import 'highlight_api.dart';
 import 'select_api.dart';
 //import 'database_api.dart';
 import 'upload_api.dart';
+import 'selectionproperties_api.dart';
 
 import 'bootstrategy_api.dart';
 
@@ -22,6 +23,8 @@ class MainStrategy implements BootStrategy {
     Grid _grid = _injectorWrap.getInjector().getInstance(Grid);
     HighLight _highLight = _injectorWrap.getInjector().getInstance(HighLight);
     Select _select = _injectorWrap.getInjector().getInstance(Select);
+    
+    SelectionProperties _selectionProperties = _injectorWrap.getInjector().getInstance(SelectionProperties);
     
     _select.setHighLight(_highLight);
     _select.setStage(_stage);
@@ -47,6 +50,9 @@ class MainStrategy implements BootStrategy {
     _upload.setHighLight(_highLight);
     _upload.setDragDrop(_dragdrop);
     _upload.start();
+    
+    _selectionProperties.start();
+    
     
   }
   void setRegistry(InjectorWrap injectorWrap){
