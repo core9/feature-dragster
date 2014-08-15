@@ -10,15 +10,13 @@
 
 	<section style="position: fixed; width: 100%; min-height: 30px; z-index: 9999;" id="menu">
 		<ul id="navigation-primary" style="position: absolute; top: 7px; padding-left: 20px; z-index: 99;">
-			<li><a class="menu" href="#">Account</a>
-				<ul>
-					<li><a class="menu" href="grid/">Grid</a></li>
-					<li><a class="menu" href="#edit">Edit</a></li>
-					<li><a class="menu" href="#logout">Logout</a></li>
-				</ul></li>
+			<li><a class="menu" href="#">Account</a></li>
 			<li><a class="menu" href="#save">Save</a></li>
 			<li><a class="menu" href="#load">Load</a></li>
 			<li><a class="menu" href="#clear">Clear</a></li>
+      <li><a class="menu" href="grid/">Grid</a></li>
+      <li><a class="menu" href="#logout">Logout</a></li>
+			
 		</ul>
 		<ul id="navigation-secondary" style="position: absolute; top: 45px; padding-left: 20px;">
 			<li><a class="menu" href="#">Add Widget</a>
@@ -127,13 +125,13 @@
 				
 				<br> 
 				
-				<input type="checkbox" name="dog" value="Dog" />
+				<input type="checkbox" name="width" value="Dog" />
 				<lable style="width:100px; padding-right: 33px;" for="width">width : <img style="vertical-align: bottom; margin-bottom: 6px;" src="images/arrow-straight.png"> </lable>
-				<input style="width: 100px;" type="number" id="width" name="vertical" value="50"> 
+				<input style="width: 100px;" type="number" id="width" name="width" value="50"> 
 				
 				<br> 
 				
-				<input type="checkbox" name="animal" value="Cat" />
+				<input type="checkbox" name="height" value="Cat" />
 				<lable style="width:100px; padding-right: 26px;" for="height">height : <img style="vertical-align: bottom; margin-bottom: 6px;" src="images/arrow-straight.png"></lable>
 				<input style="width: 100px;" type="number" name="height" value="50">
 
@@ -175,8 +173,9 @@
 	</div>
 
 
+
 	<div id="columns" class="columns-wrapper" data-source="test.html">
-		<div id="elem1" class="column" draggable="true">
+		<div id="elem1" class="column" draggable="true" >
 			<div class="content" style="display: block; height: inherit; width: inherit; background: red; position: static;">
 				<header>A</header>
 			</div>
