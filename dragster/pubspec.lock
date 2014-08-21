@@ -81,10 +81,6 @@ packages:
     description: source_span
     source: hosted
     version: "1.0.0"
-  stagexl:
-    description: stagexl
-    source: hosted
-    version: "0.9.4+1"
   utf:
     description: utf
     source: hosted

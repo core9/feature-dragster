@@ -12,5 +12,4 @@ dependencies:
   js: any
   json_object: any
   lawndart: any
-  stagexl : any
   pubsub: ">=1.1.9 <2.0.0"
