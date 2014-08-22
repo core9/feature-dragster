@@ -36,7 +36,7 @@ pkg.DemoPan = Class(Panel, [
 ]);
 
 zebra.ui.configure(function(conf) {
-    conf.loadByUrl(pkg.$url + "demo.json");
+    conf.loadByUrl("http://127.0.0.1:8080/dragster/zebra/samples/" + "demo.json");
 });
 
 })(zebra("ui.demo"), zebra.Class);
