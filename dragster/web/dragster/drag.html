@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Drag.js - Small Drag & Drop library for JavaScript</title>
+    <script src="vendor/bean.js"></script>
+    <script src="vendor/drag.js"></script>
+    
+    <style>
+      body {
+        margin: 0px;
+        font: 14px/1.5 "helvetica neue", helvetica, arial, sans-serif;
+        color: #8b8b8b;
+        background-color: #eee;
+      }
+      a, a:active, a:visited {
+        color: #4081af;
+      }
+      a:hover {
+        text-decoration: none;
+      }
+      h1, h2, h3 {
+        font-size: 33px;
+        font-weight: normal;
+        color: #333;
+        -webkit-font-smoothing: antialiased;
+      }
+      h2 {
+        display: none;
+        font-size: 33px;
+      }
+      h3 {
+        padding: 5px 0;
+        font-size: 18px;
+        border-bottom: 3px solid #eee;
+      }
+      p.bold {
+        font-weight: bold;
+        margin-bottom: 0px;
+      }
+      #navigation {
+        width: 160px;
+        padding: 10px 19px 10px 20px;
+        position: fixed;
+        top: 0px;
+        bottom: 0px;
+        border-left: 1px solid #EEE;
+        left: 50%;
+        margin-left: 280px;
+        color: #777; 
+      }
+      #navigation p {
+        font-size: 11px;
+      }
+      #navigation ul {
+        padding: 0px 0px 0px 15px;
+        margin: 0px;
+      }
+      #navigation ul li {
+        font-size: 11px;
+      }
+      #page {
+        margin: 0px auto;
+        border-left: 1px solid #EEE;
+        border-right: 1px solid #EEE;
+        padding: 20px 239px 20px 19px;
+        width: 700px;
+        background: white;
+      }
+      .container {
+        position: relative;
+        border: 1px #ccc solid;
+        height: 140px;
+      }
+      .box {
+        border: 1px solid #888;
+        background: #fff;
+        font-size: 11px;
+        text-align: center;
+        line-height: 50px;
+        width: 50px;
+        height: 50px;
+        position: absolute;
+        top: 40px;
+        left: 40px;
+      }
+      .box .handle {
+        background: #aaa;
+        color: #fff;
+        font-size: 10px;
+        text-transform: uppercase;
+        text-align: center;
+        line-height: 12px;
+      }
+      .source {
+        font-family: monaco, monospace;
+        font-size: 12px;
+        color: #999;
+        margin: 
+      }
+      
+      
+    </style>
+  </head>
+  <body  id="container1">
+
+            <div id="box1" class="box"></div>
+            <div id="box2" class="box" style="left: 100px;"></div>
+            <div id="box3" class="box" style="left: 160px;"></div>
+
+          <script>
+            drag('#container1 #box1')
+              .bind();
+            drag('#container1 #box2')
+              .bind();
+            drag('#container1 #box3')
+              .bind();
+          </script>
+  </body>
+</html>
