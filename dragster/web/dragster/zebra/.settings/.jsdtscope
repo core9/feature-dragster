@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry excluding="samples/demo/|lib/zebra/|.lithium/|samples/js/|yuidoc/themes/simple/assets/js/|yuidoc/themes/default/assets/js/|yuidoc/themes/default/assets/vendor/prettify/|.lithium/lib/zebra/|yuidoc/themes/simple/assets/vendor/prettify/|apidoc/assets/js/|tests/|apidoc/|apidoc/assets/vendor/prettify/|.lithium/samples/demo/" kind="src" path=""/>
+	<classpathentry excluding="lib/zebra/|samples/demo/" kind="src" path=".lithium"/>
+	<classpathentry kind="src" path=".lithium/lib/zebra"/>
+	<classpathentry kind="src" path=".lithium/samples/demo"/>
+	<classpathentry excluding="assets/js/|assets/vendor/prettify/" kind="src" path="apidoc"/>
+	<classpathentry kind="src" path="apidoc/assets/js"/>
+	<classpathentry kind="src" path="apidoc/assets/vendor/prettify"/>
+	<classpathentry kind="src" path="lib/zebra"/>
+	<classpathentry kind="src" path="samples/demo"/>
+	<classpathentry kind="src" path="samples/js"/>
+	<classpathentry kind="src" path="tests"/>
+	<classpathentry kind="src" path="yuidoc/themes/default/assets/js"/>
+	<classpathentry kind="src" path="yuidoc/themes/default/assets/vendor/prettify"/>
+	<classpathentry kind="src" path="yuidoc/themes/simple/assets/js"/>
+	<classpathentry kind="src" path="yuidoc/themes/simple/assets/vendor/prettify"/>
+	<classpathentry kind="con" path="org.eclipse.wst.jsdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path=""/>
+</classpath>
